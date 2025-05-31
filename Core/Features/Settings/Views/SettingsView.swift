@@ -10,27 +10,26 @@ struct SettingsView: View {
             Form {
                 Section("Duración de las sesiones") {
                     DurationSlider(
-                        title: "Trabajo",
+                        title: String(localized: "Trabajo"),
                         value: $viewModel.workDuration,
                         range: 10...60
                     )
                     
                     DurationSlider(
-                        title: "Descanso corto",
+                        title: String(localized: "Descanso corto"),
                         value: $viewModel.shortBreakDuration,
                         range: 3...15
                     )
                     
                     DurationSlider(
-                        title: "Descanso largo",
+                        title: String(localized: "Descanso largo"),
                         value: $viewModel.longBreakDuration,
                         range: 10...30
                     )
                 }
                 
                 Section("Configuración") {
-                    Stepper(
-                        "Sesiones hasta descanso largo: \(viewModel.sessionsUntilLongBreak)",
+                    Stepper(String(localized: "Sesiones hasta descanso largo: \(viewModel.sessionsUntilLongBreak)"),
                         value: $viewModel.sessionsUntilLongBreak,
                         in: 2...6
                     )

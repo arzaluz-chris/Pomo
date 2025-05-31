@@ -61,7 +61,7 @@ class TimerViewModel: ObservableObject {
     }
     
     var buttonTitle: String {
-        isActive ? "PAUSAR" : "INICIAR"
+        isActive ? String(localized: "PAUSAR") : String(localized: "INICIAR")
     }
     
     init() {
@@ -74,8 +74,6 @@ class TimerViewModel: ObservableObject {
         setupNotifications()
         setupSettingsObservers()
     }
-    
-
     
     private func setupNotifications() {
         // Observar cuando la app entra en background
@@ -143,7 +141,7 @@ class TimerViewModel: ObservableObject {
         guard timeRemaining > 0 else { return }
         
         let content = UNMutableNotificationContent()
-        content.title = "¡Tiempo completado!"
+        content.title = String(localized: "¡Tiempo completado!")
         
         // Usar sonido personalizado si está habilitado
         if UserDefaults.standard.bool(forKey: Constants.UserDefaults.isSoundEnabled) {
@@ -154,11 +152,11 @@ class TimerViewModel: ObservableObject {
         
         switch currentType {
         case .work:
-            content.body = "Has completado una sesión de trabajo. ¡Toma un descanso!"
+            content.body = String(localized: "Has completado una sesión de trabajo. ¡Toma un descanso!")
         case .shortBreak:
-            content.body = "El descanso ha terminado. ¡Es hora de trabajar!"
+            content.body = String(localized: "El descanso ha terminado. ¡Es hora de trabajar!")
         case .longBreak:
-            content.body = "El descanso largo ha terminado. ¡Vamos a por otra ronda!"
+            content.body = String(localized: "El descanso largo ha terminado. ¡Vamos a por otra ronda!")
         }
         
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: TimeInterval(timeRemaining), repeats: false)
@@ -255,24 +253,16 @@ class TimerViewModel: ObservableObject {
             notificationFeedback.notificationOccurred(.warning)
         }
         
-        // Guardar sesión - AQUÍ ESTÁ LA CORRECCIÓN
+        // Guardar sesión
         if let startTime = startTime {
             let totalDuration = getDuration(for: currentType)
             let elapsedTime = totalDuration - timeRemaining
-            
-            // Debug para verificar los valores
-            print("DEBUG - Guardando sesión:")
-            print("  Tipo: \(currentType)")
-            print("  Duración total: \(totalDuration) segundos")
-            print("  Tiempo restante: \(timeRemaining) segundos")
-            print("  Tiempo transcurrido: \(elapsedTime) segundos")
-            print("  Completada: \(wasCompleted)")
             
             Task {
                 await dataService.saveSession(
                     startDate: startTime,
                     endDate: Date(),
-                    duration: elapsedTime, // Tiempo real transcurrido
+                    duration: elapsedTime,
                     type: currentType,
                     wasCompleted: wasCompleted
                 )

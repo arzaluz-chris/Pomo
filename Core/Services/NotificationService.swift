@@ -22,16 +22,16 @@ class NotificationService {
         guard UserDefaults.standard.bool(forKey: Constants.UserDefaults.isNotificationEnabled) else { return }
         
         let content = UNMutableNotificationContent()
-        content.title = "¡Sesión completada!"
+        content.title = String(localized: "¡Sesión completada!")
         content.sound = .default
         
         switch type {
         case .work:
-            content.body = "Has completado una sesión de trabajo. ¡Toma un descanso!"
+            content.body = String(localized: "Has completado una sesión de trabajo. ¡Toma un descanso!")
         case .shortBreak:
-            content.body = "El descanso ha terminado. ¡Es hora de trabajar!"
+            content.body = String(localized: "El descanso ha terminado. ¡Es hora de trabajar!")
         case .longBreak:
-            content.body = "El descanso largo ha terminado. ¡Vamos a por otra ronda!"
+            content.body = String(localized: "El descanso largo ha terminado. ¡Vamos a por otra ronda!")
         }
         
         let request = UNNotificationRequest(

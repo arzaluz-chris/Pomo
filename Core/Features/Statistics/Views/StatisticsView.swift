@@ -21,13 +21,13 @@ struct StatisticsView: View {
                             StatCard(
                                 emoji: "🍅",
                                 value: "\(viewModel.todayPomodoros)",
-                                label: "Pomodoros"
+                                label: String(localized: "Pomodoros")
                             )
                             
                             StatCard(
                                 emoji: "⏱️",
                                 value: viewModel.todayTimeString,
-                                label: "Tiempo total"
+                                label: String(localized: "Tiempo total")
                             )
                         }
                     }
@@ -57,7 +57,7 @@ struct StatisticsView: View {
                                 Text("Racha actual")
                                     .font(.subheadline)
                                     .foregroundColor(.secondary)
-                                Text("\(viewModel.currentStreak) días")
+                                Text("\(viewModel.currentStreak) \(viewModel.currentStreak == 1 ? String(localized: "día") : String(localized: "días"))")
                                     .font(.title3)
                                     .fontWeight(.semibold)
                             }

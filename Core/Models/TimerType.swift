@@ -10,11 +10,11 @@ enum TimerType: String, CaseIterable {
     var displayName: String {
         switch self {
         case .work:
-            return "Trabajo"
+            return String(localized: "Trabajo")
         case .shortBreak:
-            return "Descanso"
+            return String(localized: "Descanso")
         case .longBreak:
-            return "Descanso Largo"
+            return String(localized: "Descanso Largo")
         }
     }
     

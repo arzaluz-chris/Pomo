@@ -17,11 +17,11 @@ class StatisticsViewModel: ObservableObject {
         let minutes = todayMinutes % 60
         
         if hours > 0 {
-            return "\(hours)h \(minutes)min"
+            return String(localized: "\(hours)h \(minutes)min")
         } else if minutes > 0 {
-            return "\(minutes) min"
+            return String(localized: "\(minutes) min")
         } else {
-            return "0 min"
+            return String(localized: "0 min")
         }
     }
     
@@ -34,9 +34,6 @@ class StatisticsViewModel: ObservableObject {
     private func loadTodayStats() async {
         let sessions = await dataService.fetchTodaySessions()
         
-        // Debug
-        print("DEBUG - Sesiones de hoy: \(sessions.count)")
-        
         let workSessions = sessions.filter { session in
             session.timerType == .work && session.wasCompleted
         }
@@ -46,12 +43,10 @@ class StatisticsViewModel: ObservableObject {
         // Calcular tiempo total de TODAS las sesiones (no solo work)
         var totalSeconds = 0
         for session in sessions {
-            print("DEBUG - Sesión: tipo=\(session.type), duración=\(session.duration)s, completada=\(session.wasCompleted)")
             totalSeconds += session.duration
         }
         
         todayMinutes = totalSeconds / 60
-        print("DEBUG - Tiempo total hoy: \(todayMinutes) minutos")
     }
     
     private func loadWeeklyStats() async {

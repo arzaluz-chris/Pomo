@@ -46,6 +46,7 @@ struct DailyStats: Identifiable {
     
     var dayName: String {
         let formatter = DateFormatter()
+        formatter.locale = Locale.current
         formatter.dateFormat = "EEE"
         return formatter.string(from: date).capitalized
     }
