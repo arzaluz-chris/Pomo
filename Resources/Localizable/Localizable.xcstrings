@@ -1,0 +1,69 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "%lld" : {
+
+    },
+    "%lld días" : {
+
+    },
+    "%lld min" : {
+
+    },
+    "🍅 Pomo" : {
+
+    },
+    "🔥" : {
+
+    },
+    "Ajustes" : {
+
+    },
+    "Configuración" : {
+
+    },
+    "Día" : {
+
+    },
+    "Duración de las sesiones" : {
+
+    },
+    "Esta semana" : {
+
+    },
+    "Estadísticas" : {
+
+    },
+    "Hoy" : {
+
+    },
+    "Notificaciones" : {
+
+    },
+    "Pomodoros" : {
+
+    },
+    "Racha actual" : {
+
+    },
+    "Reiniciar" : {
+
+    },
+    "Restablecer valores predeterminados" : {
+
+    },
+    "Saltar" : {
+
+    },
+    "Sesiones hasta descanso largo: %lld" : {
+
+    },
+    "Sonido" : {
+
+    },
+    "Timer" : {
+
+    }
+  },
+  "version" : "1.0"
+}
