@@ -1,17 +1,6 @@
 {
   "sourceLanguage" : "es",
   "strings" : {
-    "¡Sesión completada!" : {
-      "extractionState" : "stale",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Session completed!"
-          }
-        }
-      }
-    },
     "¡Tiempo completado!" : {
       "localizations" : {
         "en" : {
@@ -54,6 +43,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld min"
+          }
+        }
+      }
+    },
+    "%lld pomodoros" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld pomodoros"
           }
         }
       }
@@ -261,6 +260,16 @@
         }
       }
     },
+    "No hay datos esta semana" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "There is no data this week"
+          }
+        }
+      }
+    },
     "Notificaciones" : {
       "localizations" : {
         "en" : {
@@ -373,6 +382,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Temporizador"
+          }
+        }
+      }
+    },
+    "Total semanal:" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Weekly total:"
           }
         }
       }

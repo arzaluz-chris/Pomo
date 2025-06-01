@@ -17,7 +17,7 @@ class DataService {
         let session = TimerSession(
             startDate: startDate,
             endDate: endDate,
-            duration: duration, // Esto ya viene en segundos
+            duration: duration, // En segundos
             type: type,
             wasCompleted: wasCompleted
         )
@@ -71,6 +71,44 @@ class DataService {
             return try modelContext.fetch(descriptor)
         } catch {
             print("Error fetching sessions: \(error)")
+            return []
+        }
+    }
+    
+    // Nuevo método para obtener todas las sesiones de trabajo completadas
+    func fetchAllWorkSessions() async -> [TimerSession] {
+        guard let modelContext = modelContext else { return [] }
+        
+        let descriptor = FetchDescriptor<TimerSession>(
+            predicate: #Predicate { session in
+                session.type == "work" && session.wasCompleted == true
+            },
+            sortBy: [SortDescriptor(\.startDate)]
+        )
+        
+        do {
+            return try modelContext.fetch(descriptor)
+        } catch {
+            print("Error fetching all work sessions: \(error)")
+            return []
+        }
+    }
+    
+    // Método adicional para debugging
+    func fetchSessionsForDateRange(from startDate: Date, to endDate: Date) async -> [TimerSession] {
+        guard let modelContext = modelContext else { return [] }
+        
+        let descriptor = FetchDescriptor<TimerSession>(
+            predicate: #Predicate { session in
+                session.startDate >= startDate && session.startDate <= endDate
+            },
+            sortBy: [SortDescriptor(\.startDate)]
+        )
+        
+        do {
+            return try modelContext.fetch(descriptor)
+        } catch {
+            print("Error fetching sessions for date range: \(error)")
             return []
         }
     }
