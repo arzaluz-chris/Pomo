@@ -34,10 +34,16 @@ class TimerViewModel: ObservableObject {
             }
         }
     }
+    @AppStorage(Constants.UserDefaults.sessionsUntilLongBreak) private var sessionsUntilLongBreakSetting: Int = Constants.Defaults.sessionsUntilLongBreak
+    
+    // Nuevas propiedades para manejar el estado persistente
+    @AppStorage("timerEndTime") private var timerEndTime: Double = 0
+    @AppStorage("timerIsActive") private var timerIsActive: Bool = false
+    @AppStorage("timerType") private var timerTypeRaw: String = TimerType.work.rawValue
+    @AppStorage("completedWorkSessions") private var persistedCompletedSessions: Int = 0
     
     private var timer: Timer?
     private var startTime: Date?
-    private var backgroundTime: Date?
     private let soundService = SoundService()
     private let notificationService = NotificationService()
     let dataService = DataService()
@@ -69,8 +75,38 @@ class TimerViewModel: ObservableObject {
         impactFeedback.prepare()
         notificationFeedback.prepare()
         selectionFeedback.prepare()
-
-        resetTimer()
+        
+        // Cargar el estado persistido
+        completedSessions = persistedCompletedSessions
+        if let savedType = TimerType(rawValue: timerTypeRaw) {
+            currentType = savedType
+        }
+        
+        // IMPORTANTE: Limpiar todas las notificaciones al iniciar
+        UNUserNotificationCenter.current().removeAllDeliveredNotifications()
+        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+        
+        // Verificar si hay un timer activo guardado
+        if timerIsActive && timerEndTime > Date().timeIntervalSince1970 {
+            // Restaurar el timer activo
+            isActive = true
+            timeRemaining = Int(timerEndTime - Date().timeIntervalSince1970)
+            if timeRemaining > 0 {
+                startTimer(isRestoring: true)
+            } else {
+                // El timer expiró mientras la app estaba cerrada
+                timeRemaining = 0
+                DispatchQueue.main.async { [weak self] in
+                    self?.completeSession(wasCompleted: true)
+                }
+            }
+        } else {
+            // No hay timer activo, resetear
+            timerIsActive = false
+            timerEndTime = 0
+            resetTimer()
+        }
+        
         setupNotifications()
         setupSettingsObservers()
     }
@@ -89,6 +125,13 @@ class TimerViewModel: ObservableObject {
                 Task { @MainActor in
                     self?.handleEnterForeground()
                 }
+            }
+            .store(in: &cancellables)
+        
+        // Observar cuando la app se va a terminar
+        NotificationCenter.default.publisher(for: UIApplication.willTerminateNotification)
+            .sink { [weak self] _ in
+                self?.handleAppTermination()
             }
             .store(in: &cancellables)
     }
@@ -111,58 +154,60 @@ class TimerViewModel: ObservableObject {
     }
     
     private func handleEnterBackground() {
+        // LIMPIAR notificaciones existentes
+        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+        UNUserNotificationCenter.current().removeAllDeliveredNotifications()
+        
         if isActive {
-            backgroundTime = Date()
-            scheduleBackgroundNotification()
+            // Guardar el estado
+            timerEndTime = Date().timeIntervalSince1970 + Double(timeRemaining)
+            timerIsActive = true
+            timerTypeRaw = currentType.rawValue
+            persistedCompletedSessions = completedSessions
+            
+            // Programar UNA SOLA notificación para cuando termine el timer
+            if timeRemaining > 0 {
+                Task {
+                    await notificationService.scheduleFutureNotification(
+                        type: currentType,
+                        timeInterval: TimeInterval(timeRemaining)
+                    )
+                }
+            }
         }
     }
     
     private func handleEnterForeground() {
-        guard isActive, let backgroundTime = backgroundTime else { return }
+        // LIMPIAR todas las notificaciones
+        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
+        UNUserNotificationCenter.current().removeAllDeliveredNotifications()
         
-        // Calcular cuánto tiempo pasó
-        let elapsed = Int(Date().timeIntervalSince(backgroundTime))
+        guard timerIsActive, timerEndTime > 0 else { return }
         
-        // Actualizar el tiempo restante
-        timeRemaining = max(0, timeRemaining - elapsed)
+        let now = Date().timeIntervalSince1970
         
-        // Si el tiempo se acabó mientras estaba en background
-        if timeRemaining == 0 {
+        if timerEndTime > now {
+            // El timer aún no ha terminado
+            timeRemaining = Int(timerEndTime - now)
+            if !isActive {
+                isActive = true
+                startTimer(isRestoring: true)
+            }
+        } else {
+            // El timer terminó mientras estaba en background
+            timeRemaining = 0
             completeSession(wasCompleted: true)
         }
-        
-        self.backgroundTime = nil
-        
-        // Cancelar notificaciones pendientes ya que la app está activa
-        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
     }
     
-    private func scheduleBackgroundNotification() {
-        guard timeRemaining > 0 else { return }
-        
-        let content = UNMutableNotificationContent()
-        content.title = String(localized: "¡Tiempo completado!")
-        
-        // Usar sonido personalizado si está habilitado
-        if UserDefaults.standard.bool(forKey: Constants.UserDefaults.isSoundEnabled) {
-            content.sound = UNNotificationSound(named: UNNotificationSoundName(rawValue: "\(currentType.soundFileName).mp3"))
-        } else {
-            content.sound = .default
+    private func handleAppTermination() {
+        if isActive {
+            // Asegurar que el estado se guarde cuando la app se cierra
+            timerEndTime = Date().timeIntervalSince1970 + Double(timeRemaining)
+            timerIsActive = true
+            timerTypeRaw = currentType.rawValue
+            persistedCompletedSessions = completedSessions
         }
-        
-        switch currentType {
-        case .work:
-            content.body = String(localized: "Has completado una sesión de trabajo. ¡Toma un descanso!")
-        case .shortBreak:
-            content.body = String(localized: "El descanso ha terminado. ¡Es hora de trabajar!")
-        case .longBreak:
-            content.body = String(localized: "El descanso largo ha terminado. ¡Vamos a por otra ronda!")
-        }
-        
-        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: TimeInterval(timeRemaining), repeats: false)
-        let request = UNNotificationRequest(identifier: "timerComplete", content: content, trigger: trigger)
-        
-        UNUserNotificationCenter.current().add(request)
     }
     
     func toggleTimer() {
@@ -173,7 +218,7 @@ class TimerViewModel: ObservableObject {
         if isActive {
             pauseTimer()
         } else {
-            startTimer()
+            startTimer(isRestoring: false)
         }
     }
     
@@ -185,7 +230,8 @@ class TimerViewModel: ObservableObject {
         pauseTimer()
         timeRemaining = getDuration(for: currentType)
         startTime = nil
-        backgroundTime = nil
+        timerEndTime = 0
+        timerIsActive = false
     }
     
     func skipSession() {
@@ -205,12 +251,18 @@ class TimerViewModel: ObservableObject {
         selectionFeedback.selectionChanged()
         
         currentType = type
-        resetTimer()
+        timerTypeRaw = type.rawValue
+        timeRemaining = getDuration(for: type)
     }
     
-    private func startTimer() {
+    private func startTimer(isRestoring: Bool) {
         isActive = true
-        startTime = Date()
+        timerIsActive = true
+        
+        if !isRestoring {
+            startTime = Date()
+            timerEndTime = Date().timeIntervalSince1970 + Double(timeRemaining)
+        }
         
         timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { _ in
             Task { @MainActor in
@@ -225,9 +277,10 @@ class TimerViewModel: ObservableObject {
     
     private func pauseTimer() {
         isActive = false
+        timerIsActive = false
+        timerEndTime = 0
         timer?.invalidate()
         timer = nil
-        backgroundTime = nil
         
         // Cancelar notificaciones si se pausa el timer
         UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
@@ -238,11 +291,9 @@ class TimerViewModel: ObservableObject {
         
         // Haptic feedback para sesión completada
         if wasCompleted {
-            // Patrón de vibración personalizado para completar
             notificationFeedback.prepare()
             notificationFeedback.notificationOccurred(.success)
             
-            // Vibración adicional más fuerte
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                 let heavyImpact = UIImpactFeedbackGenerator(style: .heavy)
                 heavyImpact.prepare()
@@ -270,21 +321,17 @@ class TimerViewModel: ObservableObject {
         }
         
         if wasCompleted {
-            // Reproducir sonido
-            if UserDefaults.standard.bool(forKey: Constants.UserDefaults.isSoundEnabled) {
-                soundService.playSound(for: currentType)
-            }
-            
-            // Enviar notificación solo si la app está en background
-            if UIApplication.shared.applicationState != .active {
-                Task {
-                    await notificationService.scheduleSessionComplete(type: currentType)
+            // Solo reproducir sonido si la app está activa
+            if UIApplication.shared.applicationState == .active {
+                if UserDefaults.standard.bool(forKey: Constants.UserDefaults.isSoundEnabled) {
+                    soundService.playSound(for: currentType)
                 }
             }
             
-            // Actualizar contador de sesiones
+            // Actualizar contador de sesiones ANTES de cambiar el tipo
             if currentType == .work {
                 completedSessions += 1
+                persistedCompletedSessions = completedSessions
             }
         }
         
@@ -294,10 +341,11 @@ class TimerViewModel: ObservableObject {
     }
     
     private func switchToNextType() {
+        let previousType = currentType
+        
         switch currentType {
         case .work:
-            let sessionsUntilLong = UserDefaults.standard.integer(forKey: Constants.UserDefaults.sessionsUntilLongBreak)
-            if completedSessions > 0 && completedSessions % sessionsUntilLong == 0 {
+            if completedSessions > 0 && completedSessions % sessionsUntilLongBreakSetting == 0 {
                 currentType = .longBreak
             } else {
                 currentType = .shortBreak
@@ -305,6 +353,9 @@ class TimerViewModel: ObservableObject {
         case .shortBreak, .longBreak:
             currentType = .work
         }
+        
+        // Persistir inmediatamente el nuevo tipo
+        timerTypeRaw = currentType.rawValue
     }
     
     private func getDuration(for type: TimerType) -> Int {

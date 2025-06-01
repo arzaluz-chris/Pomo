@@ -2,6 +2,7 @@
   "sourceLanguage" : "es",
   "strings" : {
     "¡Sesión completada!" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
