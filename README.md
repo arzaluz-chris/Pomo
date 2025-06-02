@@ -83,7 +83,7 @@ Pomo/
 ### Installation
 1. Clone the repository
    ```bash
-   git clone https://github.com/yourusername/pomo.git
+   git clone https://github.com/arzaluz-chris/pomo.git
    ```
 
 2. Open the project in Xcode
@@ -142,7 +142,7 @@ This is a personal MVP project, but feedback and suggestions are welcome! Feel f
 
 ## 📬 Contact
 
-Created by [Christian Arzaluz](mailto:your.email@example.com)
+Created by [Christian Arzaluz](mailto:christian.arzaluz@gmail.com)
 
 ---
 
