@@ -5,15 +5,15 @@ A clean, modern iOS Pomodoro timer app built with Swift and SwiftUI. Boost your 
 ## 📱 Screenshots
 
 <p align="center">
-  <img src="screenshots/timer-interface.png" width="180" alt="Clean Timer Interface">
-  &nbsp;&nbsp;&nbsp;&nbsp;
-  <img src="screenshots/notification-feature.png" width="180" alt="Smart Notifications">
-  &nbsp;&nbsp;&nbsp;&nbsp;
-  <img src="screenshots/customization.png" width="180" alt="Customizable Settings">
-  &nbsp;&nbsp;&nbsp;&nbsp;
-  <img src="screenshots/statistics-tracking.png" width="180" alt="Progress Tracking">
-  &nbsp;&nbsp;&nbsp;&nbsp;
-  <img src="screenshots/dark-light-mode.png" width="180" alt="Light & Dark Mode">
+  <img src="screenshots/timer-interface.png" width="160" alt="Clean Timer Interface">
+  &nbsp;&nbsp;&nbsp;
+  <img src="screenshots/notification-feature.png" width="160" alt="Smart Notifications">
+  &nbsp;&nbsp;&nbsp;
+  <img src="screenshots/customization.png" width="160" alt="Customizable Settings">
+  &nbsp;&nbsp;&nbsp;
+  <img src="screenshots/statistics-tracking.png" width="160" alt="Progress Tracking">
+  &nbsp;&nbsp;&nbsp;
+  <img src="screenshots/dark-light-mode.png" width="160" alt="Light & Dark Mode">
 </p>
 
 ## ✨ Features
