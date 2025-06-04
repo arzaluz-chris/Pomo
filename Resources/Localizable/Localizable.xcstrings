@@ -1,5 +1,5 @@
 {
-  "sourceLanguage" : "es",
+  "sourceLanguage" : "en",
   "strings" : {
     "¡Tiempo completado!" : {
       "localizations" : {
@@ -8,12 +8,24 @@
             "state" : "translated",
             "value" : "Time completed!"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¡Tiempo completado!"
+          }
         }
       }
     },
     "%lld" : {
       "localizations" : {
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld"
+          }
+        },
+        "es" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld"
@@ -31,7 +43,7 @@
         },
         "es" : {
           "stringUnit" : {
-            "state" : "new",
+            "state" : "translated",
             "value" : "%1$lld %2$@"
           }
         }
@@ -40,6 +52,12 @@
     "%lld min" : {
       "localizations" : {
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld min"
+          }
+        },
+        "es" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lld min"
@@ -54,12 +72,24 @@
             "state" : "translated",
             "value" : "%lld pomodoros"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld pomodoros"
+          }
         }
       }
     },
     "%lldh %lldmin" : {
       "localizations" : {
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lldh %lldmin"
+          }
+        },
+        "es" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "%lldh %lldmin"
@@ -74,15 +104,40 @@
             "state" : "translated",
             "value" : "🍅 Pomo"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🍅 Pomo"
+          }
         }
       }
     },
     "🔥" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🔥"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "🔥"
+          }
+        }
+      }
     },
     "0 min" : {
       "localizations" : {
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "0 min"
+          }
+        },
+        "es" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "0 min"
@@ -97,6 +152,12 @@
             "state" : "translated",
             "value" : "Settings"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajustes"
+          }
         }
       }
     },
@@ -106,6 +167,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Configuration"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Configuración"
           }
         }
       }
@@ -117,6 +184,12 @@
             "state" : "translated",
             "value" : "Break"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descanso"
+          }
         }
       }
     },
@@ -126,6 +199,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Short break"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descanso corto"
           }
         }
       }
@@ -137,6 +216,12 @@
             "state" : "translated",
             "value" : "Long break"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descanso largo"
+          }
         }
       }
     },
@@ -146,6 +231,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Long Break"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Descanso Largo"
           }
         }
       }
@@ -157,6 +248,12 @@
             "state" : "translated",
             "value" : "day"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "día"
+          }
         }
       }
     },
@@ -165,7 +262,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Dag"
+            "value" : "Day"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Día"
           }
         }
       }
@@ -177,6 +280,12 @@
             "state" : "translated",
             "value" : "days"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "días"
+          }
         }
       }
     },
@@ -186,6 +295,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Session duration"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duración de las sesiones"
           }
         }
       }
@@ -197,6 +312,12 @@
             "state" : "translated",
             "value" : "Break is over. Time to work!"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El descanso ha terminado. ¡Es hora de trabajar!"
+          }
         }
       }
     },
@@ -206,6 +327,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Long break is over. Let's go for another round!"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "El descanso largo ha terminado. ¡Vamos a por otra ronda!"
           }
         }
       }
@@ -217,6 +344,12 @@
             "state" : "translated",
             "value" : "This week"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esta semana"
+          }
         }
       }
     },
@@ -226,6 +359,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Statistics"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estadísticas"
           }
         }
       }
@@ -237,6 +376,12 @@
             "state" : "translated",
             "value" : "You've completed a work session. Take a break!"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Has completado una sesión de trabajo. ¡Toma un descanso!"
+          }
         }
       }
     },
@@ -246,6 +391,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Today"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hoy"
           }
         }
       }
@@ -257,6 +408,12 @@
             "state" : "translated",
             "value" : "START"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "INICIAR"
+          }
         }
       }
     },
@@ -265,7 +422,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "There is no data this week"
+            "value" : "No data this week"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay datos esta semana"
           }
         }
       }
@@ -277,6 +440,12 @@
             "state" : "translated",
             "value" : "Notifications"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notificaciones"
+          }
         }
       }
     },
@@ -287,12 +456,24 @@
             "state" : "translated",
             "value" : "PAUSE"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PAUSAR"
+          }
         }
       }
     },
     "Pomodoros" : {
       "localizations" : {
         "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pomodoros"
+          }
+        },
+        "es" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Pomodoros"
@@ -307,6 +488,12 @@
             "state" : "translated",
             "value" : "Current streak"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Racha actual"
+          }
         }
       }
     },
@@ -316,6 +503,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Reset"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reiniciar"
           }
         }
       }
@@ -327,6 +520,12 @@
             "state" : "translated",
             "value" : "Reset to defaults"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restablecer valores predeterminados"
+          }
         }
       }
     },
@@ -336,6 +535,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Skip"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saltar"
           }
         }
       }
@@ -347,6 +552,12 @@
             "state" : "translated",
             "value" : "Sessions until long break: %lld"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sesiones hasta descanso largo: %lld"
+          }
         }
       }
     },
@@ -357,6 +568,12 @@
             "state" : "translated",
             "value" : "Sound"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sonido"
+          }
         }
       }
     },
@@ -366,6 +583,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Total time"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tiempo total"
           }
         }
       }
@@ -393,6 +616,12 @@
             "state" : "translated",
             "value" : "Weekly total:"
           }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Total semanal:"
+          }
         }
       }
     },
@@ -402,6 +631,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Work"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Trabajo"
           }
         }
       }

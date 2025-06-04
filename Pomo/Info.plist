@@ -19,7 +19,7 @@
     <key>CFBundleShortVersionString</key>
     <string>1.0</string>
     <key>CFBundleVersion</key>
-    <string>1</string>
+    <string>2</string>
     <key>LSRequiresIPhoneOS</key>
     <true/>
     <key>UIApplicationSceneManifest</key>
@@ -29,10 +29,6 @@
     </dict>
     <key>UIApplicationSupportsIndirectInputEvents</key>
     <true/>
-    <key>UIBackgroundModes</key>
-    <array>
-        <string>audio</string>
-    </array>
     <key>UILaunchScreen</key>
     <dict/>
     <key>UIRequiredDeviceCapabilities</key>
@@ -43,18 +39,17 @@
     <array>
         <string>UIInterfaceOrientationPortrait</string>
     </array>
-    <key>UISupportedInterfaceOrientations~ipad</key>
-    <array>
-        <string>UIInterfaceOrientationPortrait</string>
-        <string>UIInterfaceOrientationPortraitUpsideDown</string>
-        <string>UIInterfaceOrientationLandscapeLeft</string>
-        <string>UIInterfaceOrientationLandscapeRight</string>
-    </array>
     <key>NSUserNotificationUsageDescription</key>
-    <string>Pomo necesita permisos de notificación para avisarte cuando termine cada sesión.</string>
+    <string>Pomo needs notification permissions to alert you when your work or break sessions complete, helping you maintain your productivity rhythm.</string>
     <key>UIUserInterfaceStyle</key>
     <string>Automatic</string>
     <key>ITSAppUsesNonExemptEncryption</key>
+    <false/>
+    <key>LSApplicationCategoryType</key>
+    <string>public.app-category.productivity</string>
+    <key>NSHumanReadableCopyright</key>
+    <string>© 2025 Christian Arzaluz. All rights reserved.</string>
+    <key>UIRequiresFullScreen</key>
     <false/>
 </dict>
 </plist>
