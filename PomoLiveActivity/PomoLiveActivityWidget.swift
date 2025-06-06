@@ -18,7 +18,7 @@ struct PomoLiveActivityWidget: Widget {
                 // Vista expandida
                 DynamicIslandExpandedRegion(.leading) {
                     HStack {
-                        Image(systemName: getIconForSessionType(context.attributes.sessionType))
+                        Image(systemName: context.attributes.sessionType == "work" ? "brain.fill" : "cup.and.saucer.fill")
                             .font(.title2)
                             .foregroundColor(Color("PomoPrimary"))
                     }
@@ -69,7 +69,7 @@ struct PomoLiveActivityWidget: Widget {
                     }
                 }
             } compactLeading: {
-                Image(systemName: getIconForSessionType(context.attributes.sessionType))
+                Image(systemName: context.attributes.sessionType == "work" ? "brain.fill" : "cup.and.saucer.fill")
                     .font(.caption)
                     .foregroundColor(Color("PomoPrimary"))
             } compactTrailing: {
@@ -84,7 +84,7 @@ struct PomoLiveActivityWidget: Widget {
                         .frame(width: 40)
                 }
             } minimal: {
-                Image(systemName: getIconForSessionType(context.attributes.sessionType))
+                Image(systemName: context.attributes.sessionType == "work" ? "brain.fill" : "cup.and.saucer.fill")
                     .font(.caption)
                     .foregroundColor(Color("PomoPrimary"))
             }
