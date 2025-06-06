@@ -12,7 +12,10 @@ class NotificationService {
     
     func requestPermission() async {
         do {
-            let granted = try await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge])
+            // Solicitar permisos incluyendo Time Sensitive
+            let granted = try await UNUserNotificationCenter.current().requestAuthorization(
+                options: [.alert, .sound, .badge, .timeSensitive]
+            )
             print("Notification permission granted: \(granted)")
         } catch {
             print("Error requesting notification permission: \(error)")
@@ -46,15 +49,19 @@ class NotificationService {
         case .work:
             content.body = String(localized: "Has completado una sesión de trabajo. ¡Toma un descanso!")
         case .shortBreak:
-            content.body = String(localized: "El descanso ha terminado. ¡Es hora de trabajar!" )
+            content.body = String(localized: "El descanso ha terminado. ¡Es hora de trabajar!")
         case .longBreak:
-            content.body = String(localized: "El descanso largo ha terminado. ¡Vamos a por otra ronda!" )
+            content.body = String(localized: "El descanso largo ha terminado. ¡Vamos a por otra ronda!")
         }
         
         // Configurar sonido si está habilitado
         if UserDefaults.standard.bool(forKey: Constants.UserDefaults.isSoundEnabled) {
             content.sound = .default
         }
+        
+        // IMPORTANTE: Marcar como Time Sensitive
+        content.interruptionLevel = .timeSensitive
+        content.relevanceScore = 1.0
         
         // Programar la notificación
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: seconds, repeats: false)
@@ -66,7 +73,7 @@ class NotificationService {
         
         do {
             try await UNUserNotificationCenter.current().add(request)
-            print("✅ Scheduled notification for \(type.rawValue) in \(Int(seconds)) seconds")
+            print("✅ Scheduled TIME SENSITIVE notification for \(type.rawValue) in \(Int(seconds)) seconds")
         } catch {
             print("❌ Error scheduling notification: \(error)")
         }

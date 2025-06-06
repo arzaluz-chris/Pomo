@@ -4,6 +4,7 @@ import Foundation
 import SwiftUI
 import Combine
 import UIKit
+import ActivityKit
 
 @MainActor
 class TimerViewModel: ObservableObject {
@@ -23,6 +24,9 @@ class TimerViewModel: ObservableObject {
     @AppStorage("savedTimerIsActive") private var savedIsActive: Bool = false
     @AppStorage("savedTimerType") private var savedTimerType: String = TimerType.work.rawValue
     @AppStorage("savedCompletedSessions") private var savedCompletedSessions: Int = 0
+    
+    // Live Activity
+    private var currentActivity: Activity<PomoActivityAttributes>?
     
     private var timer: Timer?
     private var sessionStartTime: Date?
@@ -56,6 +60,7 @@ class TimerViewModel: ObservableObject {
         setupHaptics()
         restoreState()
         setupNotificationObservers()
+        setupLiveActivityObservers()
         
         // Limpiar notificaciones al iniciar
         notificationService.cancelAllNotifications()
@@ -65,6 +70,39 @@ class TimerViewModel: ObservableObject {
         impactFeedback.prepare()
         notificationFeedback.prepare()
         selectionFeedback.prepare()
+    }
+    
+    private func setupLiveActivityObservers() {
+        // Observar cambios desde Live Activity
+        NotificationCenter.default.publisher(for: Notification.Name("LiveActivityTogglePause"))
+            .sink { [weak self] notification in
+                guard let self = self,
+                      let userInfo = notification.userInfo,
+                      let sessionType = userInfo["sessionType"] as? String,
+                      sessionType == self.currentType.rawValue else { return }
+                
+                Task { @MainActor in
+                    if self.isActive {
+                        self.pauseTimer()
+                    } else {
+                        self.startTimer()
+                    }
+                }
+            }
+            .store(in: &cancellables)
+        
+        NotificationCenter.default.publisher(for: Notification.Name("LiveActivityReset"))
+            .sink { [weak self] notification in
+                guard let self = self,
+                      let userInfo = notification.userInfo,
+                      let sessionType = userInfo["sessionType"] as? String,
+                      sessionType == self.currentType.rawValue else { return }
+                
+                Task { @MainActor in
+                    self.resetTimer()
+                }
+            }
+            .store(in: &cancellables)
     }
     
     private func restoreState() {
@@ -84,6 +122,7 @@ class TimerViewModel: ObservableObject {
                 timeRemaining = remaining
                 isActive = true
                 startTimerCounting()
+                restoreLiveActivity()
             } else {
                 // El timer expiró mientras la app estaba cerrada
                 handleTimerExpired()
@@ -91,6 +130,19 @@ class TimerViewModel: ObservableObject {
         } else {
             // No hay timer activo
             resetToInitialState()
+        }
+    }
+    
+    private func restoreLiveActivity() {
+        // Buscar actividad existente
+        if let activity = Activity<PomoActivityAttributes>.activities.first(where: {
+            $0.attributes.sessionType == currentType.rawValue
+        }) {
+            currentActivity = activity
+            // Actualizar con el estado actual
+            Task {
+                await updateLiveActivity()
+            }
         }
     }
     
@@ -172,6 +224,69 @@ class TimerViewModel: ObservableObject {
         sessionCompleted(wasSkipped: false)
     }
     
+    // MARK: - Live Activity Management
+    
+    private func startLiveActivity() async {
+        // Verificar permisos
+        guard ActivityAuthorizationInfo().areActivitiesEnabled else {
+            print("Live Activities no están habilitadas")
+            return
+        }
+        
+        // Finalizar actividad anterior si existe
+        if let currentActivity = currentActivity {
+            await currentActivity.end(dismissalPolicy: .immediate)
+        }
+        
+        let attributes = PomoActivityAttributes(
+            sessionType: currentType.rawValue,
+            totalDuration: getDurationForType(currentType),
+            sessionNumber: currentType == .work ? completedSessions + 1 : 0
+        )
+        
+        let contentState = PomoActivityAttributes.ContentState(
+            timeRemaining: timeRemaining,
+            isPaused: false,
+            endTime: Date().addingTimeInterval(TimeInterval(timeRemaining))
+        )
+        
+        do {
+            currentActivity = try Activity<PomoActivityAttributes>.request(
+                attributes: attributes,
+                content: .init(state: contentState, staleDate: nil),
+                pushType: nil
+            )
+            print("Live Activity iniciada para \(currentType.displayName)")
+        } catch {
+            print("Error al iniciar Live Activity: \(error)")
+        }
+    }
+    
+    private func updateLiveActivity() async {
+        guard let activity = currentActivity else { return }
+        
+        let contentState = PomoActivityAttributes.ContentState(
+            timeRemaining: timeRemaining,
+            isPaused: !isActive,
+            endTime: isActive ? Date().addingTimeInterval(TimeInterval(timeRemaining)) : Date()
+        )
+        
+        await activity.update(using: contentState)
+    }
+    
+    private func endLiveActivity() async {
+        guard let activity = currentActivity else { return }
+        
+        let finalState = PomoActivityAttributes.ContentState(
+            timeRemaining: 0,
+            isPaused: true,
+            endTime: Date()
+        )
+        
+        await activity.end(using: finalState, dismissalPolicy: .default)
+        currentActivity = nil
+    }
+    
     // MARK: - Acciones públicas
     
     func toggleTimer() {
@@ -189,6 +304,11 @@ class TimerViewModel: ObservableObject {
         
         pauseTimer()
         resetToInitialState()
+        
+        // Actualizar Live Activity
+        Task {
+            await updateLiveActivity()
+        }
     }
     
     func skipSession() {
@@ -219,6 +339,15 @@ class TimerViewModel: ObservableObject {
         savedEndTime = Date().timeIntervalSince1970 + Double(timeRemaining)
         
         startTimerCounting()
+        
+        // Iniciar Live Activity
+        Task {
+            if currentActivity == nil {
+                await startLiveActivity()
+            } else {
+                await updateLiveActivity()
+            }
+        }
     }
     
     private func startTimerCounting() {
@@ -234,6 +363,13 @@ class TimerViewModel: ObservableObject {
     private func updateTimer() {
         if timeRemaining > 0 {
             timeRemaining -= 1
+            
+            // Actualizar Live Activity cada 5 segundos para ahorrar batería
+            if timeRemaining % 5 == 0 {
+                Task {
+                    await updateLiveActivity()
+                }
+            }
         } else {
             sessionCompleted(wasSkipped: false)
         }
@@ -247,6 +383,11 @@ class TimerViewModel: ObservableObject {
         timer = nil
         
         notificationService.cancelAllNotifications()
+        
+        // Actualizar Live Activity
+        Task {
+            await updateLiveActivity()
+        }
     }
     
     private func resetToInitialState() {
@@ -309,6 +450,11 @@ class TimerViewModel: ObservableObject {
         
         // Resetear timer
         resetToInitialState()
+        
+        // Finalizar Live Activity
+        Task {
+            await endLiveActivity()
+        }
     }
     
     private func moveToNextSessionType() {
