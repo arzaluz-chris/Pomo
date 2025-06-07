@@ -1,6 +1,8 @@
 // NotificationService.swift
+// Ubicación: Core/Services/NotificationService.swift
 
 import UserNotifications
+import Foundation
 
 class NotificationService {
     
@@ -14,28 +16,31 @@ class NotificationService {
         do {
             // Solicitar permisos incluyendo Time Sensitive
             let granted = try await UNUserNotificationCenter.current().requestAuthorization(
-                options: [.alert, .sound, .badge, .timeSensitive]
+                options: [.alert, .sound, .badge]
             )
-            print("Notification permission granted: \(granted)")
+            print("✅ Notification permission granted: \(granted)")
         } catch {
-            print("Error requesting notification permission: \(error)")
+            print("❌ Error requesting notification permission: \(error)")
         }
     }
     
     // ÚNICO método para programar notificaciones
     func scheduleTimerCompletionNotification(for type: TimerType, in seconds: TimeInterval) async {
-        // Verificar si las notificaciones están habilitadas
-        guard UserDefaults.standard.bool(forKey: Constants.UserDefaults.isNotificationEnabled) else {
-            print("❌ Notifications disabled by user preference")
+        // Primero verificar permisos del sistema
+        let settings = await UNUserNotificationCenter.current().notificationSettings()
+        guard settings.authorizationStatus == .authorized else {
+            print("❌ No notification permissions from system")
             return
         }
         
-        // Verificar permisos del sistema
-        let settings = await UNUserNotificationCenter.current().notificationSettings()
-        guard settings.authorizationStatus == .authorized else {
-            print("❌ No notification permissions")
+        // Luego verificar si el usuario tiene las notificaciones habilitadas en la app
+        let isEnabled = UserDefaults.standard.bool(forKey: Constants.UserDefaults.isNotificationEnabled)
+        guard isEnabled else {
+            print("❌ Notifications disabled by user preference in app settings")
             return
         }
+        
+        print("✅ Notifications enabled, scheduling notification...")
         
         // IMPORTANTE: Cancelar TODAS las notificaciones pendientes para evitar duplicados
         UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
@@ -63,10 +68,13 @@ class NotificationService {
         content.interruptionLevel = .timeSensitive
         content.relevanceScore = 1.0
         
+        // Agregar identificador único para evitar duplicados
+        let identifier = "pomodoro-timer-completion-\(type.rawValue)-\(Date().timeIntervalSince1970)"
+        
         // Programar la notificación
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: seconds, repeats: false)
         let request = UNNotificationRequest(
-            identifier: "pomodoro-timer-completion",
+            identifier: identifier,
             content: content,
             trigger: trigger
         )
@@ -84,5 +92,11 @@ class NotificationService {
         UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
         UNUserNotificationCenter.current().removeAllDeliveredNotifications()
         UNUserNotificationCenter.current().setBadgeCount(0)
+    }
+    
+    // Verificar el estado de los permisos
+    func checkNotificationPermissions() async -> Bool {
+        let settings = await UNUserNotificationCenter.current().notificationSettings()
+        return settings.authorizationStatus == .authorized
     }
 }

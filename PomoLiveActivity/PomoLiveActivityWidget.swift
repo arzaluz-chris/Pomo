@@ -15,7 +15,7 @@ struct PomoLiveActivityWidget: Widget {
             
         } dynamicIsland: { context in
             DynamicIsland {
-                // Vista expandida
+                // Vista expandida con mejor espaciado
                 DynamicIslandExpandedRegion(.leading) {
                     HStack {
                         Image(systemName: context.attributes.sessionType == "work" ? "brain.fill" : "cup.and.saucer.fill")
@@ -45,28 +45,34 @@ struct PomoLiveActivityWidget: Widget {
                 }
                 
                 DynamicIslandExpandedRegion(.bottom) {
-                    HStack(spacing: 32) {
-                        // Botón Pausar/Reanudar
+                    // Mejor espaciado entre botones
+                    HStack {
+                        // Botón Pausar/Reanudar alineado a la izquierda
                         Button(intent: TogglePauseIntent(
                             sessionType: context.attributes.sessionType,
                             isPaused: context.state.isPaused
                         )) {
                             Image(systemName: context.state.isPaused ? "play.fill" : "pause.fill")
-                                .font(.title3)
+                                .font(.title2)
                                 .foregroundColor(.white)
+                                .frame(width: 44, height: 44)
                         }
                         .buttonStyle(.plain)
                         
-                        // Botón Reiniciar
+                        Spacer()
+                        
+                        // Botón Reiniciar alineado a la derecha
                         Button(intent: ResetTimerIntent(
                             sessionType: context.attributes.sessionType
                         )) {
                             Image(systemName: "arrow.clockwise")
                                 .font(.title3)
                                 .foregroundColor(.white)
+                                .frame(width: 44, height: 44)
                         }
                         .buttonStyle(.plain)
                     }
+                    .padding(.horizontal, 20)
                 }
             } compactLeading: {
                 Image(systemName: context.attributes.sessionType == "work" ? "brain.fill" : "cup.and.saucer.fill")
@@ -94,17 +100,6 @@ struct PomoLiveActivityWidget: Widget {
     }
     
     // Funciones helper
-    private func getIconForSessionType(_ sessionType: String) -> String {
-        switch sessionType {
-        case "work":
-            return "brain.fill"
-        case "shortBreak", "longBreak":
-            return "cup.and.saucer.fill"
-        default:
-            return "timer"
-        }
-    }
-    
     private func getDisplayNameForSessionType(_ sessionType: String) -> String {
         switch sessionType {
         case "work":
@@ -153,9 +148,11 @@ struct LockScreenLiveActivityView: View {
                         .font(.headline)
                         .foregroundColor(Color("PomoPrimary"))
                     
-                    Text("• \(String(localized: "Sesión")) #\(context.attributes.sessionNumber)")
-                        .font(.caption)
-                        .foregroundColor(Color("PomoSecondary"))
+                    if context.attributes.sessionNumber > 0 {
+                        Text("• \(String(localized: "Sesión")) #\(context.attributes.sessionNumber)")
+                            .font(.caption)
+                            .foregroundColor(Color("PomoSecondary"))
+                    }
                 }
                 
                 // Temporizador
@@ -176,23 +173,14 @@ struct LockScreenLiveActivityView: View {
                     }
                 }
                 
-                // Barra de progreso
-                GeometryReader { geometry in
-                    ZStack(alignment: .leading) {
-                        // Fondo
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(Color("PomoSecondary").opacity(0.2))
-                            .frame(height: 8)
-                        
-                        // Progreso
-                        RoundedRectangle(cornerRadius: 4)
-                            .fill(Color("PomoPrimary"))
-                            .frame(
-                                width: geometry.size.width * progress,
-                                height: 8
-                            )
-                    }
-                }
+                // Barra de progreso con actualización en tiempo real
+                ProgressBarView(
+                    totalDuration: context.attributes.totalDuration,
+                    timeRemaining: context.state.timeRemaining,
+                    isPaused: context.state.isPaused,
+                    endTime: context.state.endTime,
+                    startTime: context.state.startTime
+                )
                 .frame(height: 8)
             }
             
@@ -250,14 +238,72 @@ struct LockScreenLiveActivityView: View {
         }
     }
     
-    private var progress: Double {
-        let elapsed = Double(context.attributes.totalDuration - context.state.timeRemaining)
-        return elapsed / Double(context.attributes.totalDuration)
-    }
-    
     private func formatTime(_ seconds: Int) -> String {
         let minutes = seconds / 60
         let remainingSeconds = seconds % 60
         return String(format: "%02d:%02d", minutes, remainingSeconds)
+    }
+}
+
+// Vista separada para la barra de progreso que se actualiza en tiempo real
+struct ProgressBarView: View {
+    let totalDuration: Int
+    let timeRemaining: Int
+    let isPaused: Bool
+    let endTime: Date
+    let startTime: Date
+    
+    @State private var currentProgress: Double = 0
+    
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack(alignment: .leading) {
+                // Fondo
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color("PomoSecondary").opacity(0.2))
+                
+                // Progreso
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color("PomoPrimary"))
+                    .frame(width: geometry.size.width * currentProgress)
+                    .animation(.linear(duration: 0.3), value: currentProgress)
+            }
+        }
+        .onAppear {
+            updateProgress()
+            if !isPaused {
+                startProgressTimer()
+            }
+        }
+        .onChange(of: isPaused) { _, newValue in
+            if !newValue {
+                startProgressTimer()
+            }
+        }
+    }
+    
+    private func updateProgress() {
+        if isPaused {
+            // Si está pausado, calcular progreso basado en tiempo restante
+            let elapsed = Double(totalDuration - timeRemaining)
+            currentProgress = max(0, min(1, elapsed / Double(totalDuration)))
+        } else {
+            // Si está activo, calcular progreso basado en tiempo real
+            let now = Date()
+            let totalInterval = endTime.timeIntervalSince(startTime)
+            let elapsedInterval = now.timeIntervalSince(startTime)
+            currentProgress = max(0, min(1, elapsedInterval / totalInterval))
+        }
+    }
+    
+    private func startProgressTimer() {
+        // Actualizar cada segundo si no está pausado
+        Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { timer in
+            if isPaused {
+                timer.invalidate()
+            } else {
+                updateProgress()
+            }
+        }
     }
 }

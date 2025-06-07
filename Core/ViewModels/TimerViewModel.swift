@@ -1,4 +1,5 @@
 // TimerViewModel.swift
+// Ubicación: Core/ViewModels/TimerViewModel.swift
 
 import Foundation
 import SwiftUI
@@ -18,6 +19,10 @@ class TimerViewModel: ObservableObject {
     @AppStorage(Constants.UserDefaults.shortBreakDuration) private var shortBreakDurationMinutes: Int = Constants.Defaults.shortBreakDuration / 60
     @AppStorage(Constants.UserDefaults.longBreakDuration) private var longBreakDurationMinutes: Int = Constants.Defaults.longBreakDuration / 60
     @AppStorage(Constants.UserDefaults.sessionsUntilLongBreak) private var sessionsUntilLongBreak: Int = Constants.Defaults.sessionsUntilLongBreak
+    
+    // IMPORTANTE: Inicializar correctamente los valores de notificaciones y sonido
+    @AppStorage(Constants.UserDefaults.isNotificationEnabled) private var isNotificationEnabled: Bool = true
+    @AppStorage(Constants.UserDefaults.isSoundEnabled) private var isSoundEnabled: Bool = true
     
     // Estado persistente del timer
     @AppStorage("savedTimerEndTime") private var savedEndTime: Double = 0
@@ -57,6 +62,8 @@ class TimerViewModel: ObservableObject {
     }
     
     init() {
+        // Inicializar valores por defecto si es la primera vez
+        initializeDefaultValues()
         setupHaptics()
         restoreState()
         setupNotificationObservers()
@@ -64,6 +71,30 @@ class TimerViewModel: ObservableObject {
         
         // Limpiar notificaciones al iniciar
         notificationService.cancelAllNotifications()
+        
+        // Limpiar Live Activities huérfanas
+        Task {
+            await cleanupOrphanedLiveActivities()
+        }
+    }
+    
+    private func initializeDefaultValues() {
+        // Si es la primera vez que se ejecuta la app, establecer valores por defecto
+        if UserDefaults.standard.object(forKey: Constants.UserDefaults.isNotificationEnabled) == nil {
+            UserDefaults.standard.set(true, forKey: Constants.UserDefaults.isNotificationEnabled)
+        }
+        if UserDefaults.standard.object(forKey: Constants.UserDefaults.isSoundEnabled) == nil {
+            UserDefaults.standard.set(true, forKey: Constants.UserDefaults.isSoundEnabled)
+        }
+    }
+    
+    private func cleanupOrphanedLiveActivities() async {
+        // Finalizar todas las actividades que no sean del tipo actual
+        for activity in Activity<PomoActivityAttributes>.activities {
+            if activity.attributes.sessionType != currentType.rawValue {
+                await activity.end(nil, dismissalPolicy: .immediate)
+            }
+        }
     }
     
     private func setupHaptics() {
@@ -73,36 +104,107 @@ class TimerViewModel: ObservableObject {
     }
     
     private func setupLiveActivityObservers() {
-        // Observar cambios desde Live Activity
+        // Observar cambios desde Live Activity - Toggle Pause
         NotificationCenter.default.publisher(for: Notification.Name("LiveActivityTogglePause"))
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] notification in
                 guard let self = self,
                       let userInfo = notification.userInfo,
                       let sessionType = userInfo["sessionType"] as? String,
-                      sessionType == self.currentType.rawValue else { return }
+                      sessionType == self.currentType.rawValue,
+                      let isPaused = userInfo["isPaused"] as? Bool else { return }
                 
-                Task { @MainActor in
-                    if self.isActive {
-                        self.pauseTimer()
-                    } else {
-                        self.startTimer()
-                    }
+                // Actualizar el estado local basado en el estado de Live Activity
+                if isPaused && self.isActive {
+                    self.pauseTimerFromLiveActivity()
+                } else if !isPaused && !self.isActive {
+                    self.startTimerFromLiveActivity()
                 }
             }
             .store(in: &cancellables)
         
+        // Observar cambios desde Live Activity - Reset
         NotificationCenter.default.publisher(for: Notification.Name("LiveActivityReset"))
+            .receive(on: DispatchQueue.main)
             .sink { [weak self] notification in
                 guard let self = self,
                       let userInfo = notification.userInfo,
                       let sessionType = userInfo["sessionType"] as? String,
                       sessionType == self.currentType.rawValue else { return }
                 
-                Task { @MainActor in
-                    self.resetTimer()
-                }
+                self.resetTimer()
             }
             .store(in: &cancellables)
+        
+        // Observar cambios desde App Group UserDefaults
+        if let _ = UserDefaults(suiteName: "group.com.christian-arzaluz.pomo") {
+            Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [unowned self] _ in
+                guard let userDefaults = UserDefaults(suiteName: "group.com.christian-arzaluz.pomo") else { return }
+                Task { @MainActor in
+                    self.checkAppGroupUpdates(userDefaults)
+                }
+            }
+        }
+    }
+    
+    private func checkAppGroupUpdates(_ userDefaults: UserDefaults) {
+        let sessionType = currentType.rawValue
+        
+        // Verificar si hubo un reset
+        if userDefaults.bool(forKey: "LiveActivity_Reset_\(sessionType)") {
+            userDefaults.removeObject(forKey: "LiveActivity_Reset_\(sessionType)")
+            resetTimer()
+            return
+        }
+        
+        // Verificar cambios en pausa/reanudar
+        if let lastUpdate = userDefaults.object(forKey: "LiveActivity_LastUpdate_\(sessionType)") as? TimeInterval {
+            let timeSinceUpdate = Date().timeIntervalSince1970 - lastUpdate
+            
+            // Solo procesar si la actualización es reciente (menos de 2 segundos)
+            if timeSinceUpdate < 2.0 {
+                let isPausedInLiveActivity = userDefaults.bool(forKey: "LiveActivity_IsPaused_\(sessionType)")
+                
+                if isPausedInLiveActivity != !isActive {
+                    if isPausedInLiveActivity && isActive {
+                        pauseTimerFromLiveActivity()
+                    } else if !isPausedInLiveActivity && !isActive {
+                        if let timeRemaining = userDefaults.object(forKey: "LiveActivity_TimeRemaining_\(sessionType)") as? Int {
+                            self.timeRemaining = timeRemaining
+                        }
+                        startTimerFromLiveActivity()
+                    }
+                }
+                
+                // Limpiar después de procesar
+                userDefaults.removeObject(forKey: "LiveActivity_LastUpdate_\(sessionType)")
+            }
+        }
+    }
+    
+    private func startTimerFromLiveActivity() {
+        // Evitar recursión infinita
+        guard !isActive else { return }
+        
+        isActive = true
+        savedIsActive = true
+        sessionStartTime = Date()
+        savedEndTime = Date().timeIntervalSince1970 + Double(timeRemaining)
+        
+        startTimerCounting()
+    }
+    
+    private func pauseTimerFromLiveActivity() {
+        // Evitar recursión infinita
+        guard isActive else { return }
+        
+        isActive = false
+        savedIsActive = false
+        savedEndTime = 0
+        timer?.invalidate()
+        timer = nil
+        
+        notificationService.cancelAllNotifications()
     }
     
     private func restoreState() {
@@ -182,12 +284,14 @@ class TimerViewModel: ObservableObject {
         savedTimerType = currentType.rawValue
         savedCompletedSessions = completedSessions
         
-        // Programar UNA SOLA notificación
-        Task {
-            await notificationService.scheduleTimerCompletionNotification(
-                for: currentType,
-                in: TimeInterval(timeRemaining)
-            )
+        // Programar notificación solo si está habilitada
+        if isNotificationEnabled {
+            Task {
+                await notificationService.scheduleTimerCompletionNotification(
+                    for: currentType,
+                    in: TimeInterval(timeRemaining)
+                )
+            }
         }
     }
     
@@ -233,9 +337,9 @@ class TimerViewModel: ObservableObject {
             return
         }
         
-        // Finalizar actividad anterior si existe
-        if let currentActivity = currentActivity {
-            await currentActivity.end(dismissalPolicy: .immediate)
+        // Finalizar TODAS las actividades anteriores para evitar duplicados
+        for activity in Activity<PomoActivityAttributes>.activities {
+            await activity.end(nil, dismissalPolicy: .immediate)
         }
         
         let attributes = PomoActivityAttributes(
@@ -244,10 +348,14 @@ class TimerViewModel: ObservableObject {
             sessionNumber: currentType == .work ? completedSessions + 1 : 0
         )
         
+        let startTime = Date()
+        let endTime = startTime.addingTimeInterval(TimeInterval(timeRemaining))
+        
         let contentState = PomoActivityAttributes.ContentState(
             timeRemaining: timeRemaining,
             isPaused: false,
-            endTime: Date().addingTimeInterval(TimeInterval(timeRemaining))
+            endTime: endTime,
+            startTime: startTime
         )
         
         do {
@@ -265,13 +373,31 @@ class TimerViewModel: ObservableObject {
     private func updateLiveActivity() async {
         guard let activity = currentActivity else { return }
         
-        let contentState = PomoActivityAttributes.ContentState(
-            timeRemaining: timeRemaining,
-            isPaused: !isActive,
-            endTime: isActive ? Date().addingTimeInterval(TimeInterval(timeRemaining)) : Date()
-        )
+        let contentState: PomoActivityAttributes.ContentState
         
-        await activity.update(using: contentState)
+        if isActive {
+            // Timer activo
+            let endTime = Date().addingTimeInterval(TimeInterval(timeRemaining))
+            let totalDuration = getDurationForType(currentType)
+            let startTime = endTime.addingTimeInterval(-TimeInterval(totalDuration))
+            
+            contentState = PomoActivityAttributes.ContentState(
+                timeRemaining: timeRemaining,
+                isPaused: false,
+                endTime: endTime,
+                startTime: startTime
+            )
+        } else {
+            // Timer pausado
+            contentState = PomoActivityAttributes.ContentState(
+                timeRemaining: timeRemaining,
+                isPaused: true,
+                endTime: Date(),
+                startTime: activity.content.state.startTime
+            )
+        }
+        
+        await activity.update(ActivityContent(state: contentState, staleDate: nil))
     }
     
     private func endLiveActivity() async {
@@ -280,10 +406,11 @@ class TimerViewModel: ObservableObject {
         let finalState = PomoActivityAttributes.ContentState(
             timeRemaining: 0,
             isPaused: true,
-            endTime: Date()
+            endTime: Date(),
+            startTime: activity.content.state.startTime
         )
         
-        await activity.end(using: finalState, dismissalPolicy: .default)
+        await activity.end(.init(state: finalState, staleDate: nil), dismissalPolicy: .immediate)
         currentActivity = nil
     }
     
@@ -340,7 +467,7 @@ class TimerViewModel: ObservableObject {
         
         startTimerCounting()
         
-        // Iniciar Live Activity
+        // Iniciar o actualizar Live Activity
         Task {
             if currentActivity == nil {
                 await startLiveActivity()
@@ -432,11 +559,9 @@ class TimerViewModel: ObservableObject {
             }
         }
         
-        // Reproducir sonido solo si la app está activa y la sesión se completó
-        if !wasSkipped && UIApplication.shared.applicationState == .active {
-            if UserDefaults.standard.bool(forKey: Constants.UserDefaults.isSoundEnabled) {
-                soundService.playSound(for: currentType)
-            }
+        // Reproducir sonido solo si está habilitado y la app está activa
+        if !wasSkipped && UIApplication.shared.applicationState == .active && isSoundEnabled {
+            soundService.playSound(for: currentType)
         }
         
         // Incrementar contador si fue una sesión de trabajo completada

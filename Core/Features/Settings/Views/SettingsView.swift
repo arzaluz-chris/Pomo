@@ -1,4 +1,5 @@
 // SettingsView.swift
+// Ubicación: Core/Features/Settings/Views/SettingsView.swift
 
 import SwiftUI
 
@@ -35,6 +36,13 @@ struct SettingsView: View {
                     )
                     
                     Toggle("Notificaciones", isOn: $viewModel.isNotificationEnabled)
+                        .onChange(of: viewModel.isNotificationEnabled) { _, newValue in
+                            if newValue {
+                                Task {
+                                    await viewModel.toggleNotifications()
+                                }
+                            }
+                        }
                     
                     Toggle("Sonido", isOn: $viewModel.isSoundEnabled)
                 }

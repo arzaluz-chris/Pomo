@@ -3,6 +3,7 @@
 
 import AppIntents
 import ActivityKit
+import Foundation
 
 struct TogglePauseIntent: LiveActivityIntent {
     static var title: LocalizedStringResource = "Toggle Pause"
@@ -21,49 +22,77 @@ struct TogglePauseIntent: LiveActivityIntent {
     }
     
     func perform() async throws -> some IntentResult {
-        // Buscar la actividad actual
-        var foundActivity: Activity<PomoActivityAttributes>?
-        for activity in Activity<PomoActivityAttributes>.activities {
-            if activity.attributes.sessionType == sessionType {
-                foundActivity = activity
-                break
-            }
-        }
+        print("TogglePauseIntent - Iniciando para sessionType: \(sessionType), isPaused: \(isPaused)")
         
-        guard let activity = foundActivity else {
-            print("No se encontró actividad para el tipo: \(sessionType)")
+        // Buscar TODAS las actividades y filtrar la correcta
+        let activities = Activity<PomoActivityAttributes>.activities
+        print("TogglePauseIntent - Actividades encontradas: \(activities.count)")
+        
+        guard let activity = activities.first(where: { $0.attributes.sessionType == sessionType }) else {
+            print("TogglePauseIntent - No se encontró actividad para el tipo: \(sessionType)")
             return .result()
         }
         
-        // Actualizar el estado
+        print("TogglePauseIntent - Actividad encontrada, estado actual isPaused: \(activity.content.state.isPaused)")
+        
+        // Determinar el nuevo estado (invertir el estado actual)
+        let newIsPaused = !activity.content.state.isPaused
+        let currentState = activity.content.state
+        
         let newState: PomoActivityAttributes.ContentState
         
-        if isPaused {
-            // Reanudar
-            let remainingTime = activity.contentState.timeRemaining
+        if newIsPaused {
+            // Pausar - mantener el tiempo actual
+            let currentRemaining = max(0, Int(currentState.endTime.timeIntervalSinceNow))
+            newState = PomoActivityAttributes.ContentState(
+                timeRemaining: currentRemaining,
+                isPaused: true,
+                endTime: currentState.endTime,
+                startTime: currentState.startTime
+            )
+            print("TogglePauseIntent - Pausando con tiempo restante: \(currentRemaining)")
+        } else {
+            // Reanudar - calcular nuevo endTime
+            let remainingTime = currentState.timeRemaining
+            let newEndTime = Date().addingTimeInterval(TimeInterval(remainingTime))
+            let totalDuration = activity.attributes.totalDuration
+            let newStartTime = newEndTime.addingTimeInterval(-TimeInterval(totalDuration))
+            
             newState = PomoActivityAttributes.ContentState(
                 timeRemaining: remainingTime,
                 isPaused: false,
-                endTime: Date().addingTimeInterval(TimeInterval(remainingTime))
+                endTime: newEndTime,
+                startTime: newStartTime
             )
-        } else {
-            // Pausar
-            let currentRemaining = Int(activity.contentState.endTime.timeIntervalSinceNow)
-            newState = PomoActivityAttributes.ContentState(
-                timeRemaining: max(0, currentRemaining),
-                isPaused: true,
-                endTime: activity.contentState.endTime
-            )
+            print("TogglePauseIntent - Reanudando con tiempo restante: \(remainingTime)")
         }
         
-        await activity.update(using: newState)
+        // Actualizar la Live Activity
+        await activity.update(ActivityContent(state: newState, staleDate: nil))
+        print("TogglePauseIntent - Live Activity actualizada")
         
-        // Notificar a la app principal a través de NotificationCenter
-        NotificationCenter.default.post(
-            name: Notification.Name("LiveActivityTogglePause"),
-            object: nil,
-            userInfo: ["sessionType": sessionType, "isPaused": !isPaused]
-        )
+        // Usar UserDefaults con App Group para comunicación
+        if let userDefaults = UserDefaults(suiteName: "group.com.christian-arzaluz.pomo") {
+            userDefaults.set(newIsPaused, forKey: "LiveActivity_IsPaused_\(sessionType)")
+            userDefaults.set(Date().timeIntervalSince1970, forKey: "LiveActivity_LastUpdate_\(sessionType)")
+            userDefaults.set(newState.timeRemaining, forKey: "LiveActivity_TimeRemaining_\(sessionType)")
+            userDefaults.synchronize()
+            print("TogglePauseIntent - UserDefaults actualizado en App Group")
+        }
+        
+        // También enviar notificación
+        await MainActor.run {
+            NotificationCenter.default.post(
+                name: Notification.Name("LiveActivityTogglePause"),
+                object: nil,
+                userInfo: [
+                    "sessionType": sessionType,
+                    "isPaused": newIsPaused,
+                    "timeRemaining": newState.timeRemaining
+                ]
+            )
+            print("TogglePauseIntent - Notificación enviada")
+        }
         
         return .result()
     }
