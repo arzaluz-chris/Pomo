@@ -4,6 +4,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @StateObject private var viewModel = SettingsViewModel()
+    @State private var showingTimeSensitiveInfo = false
     
     var body: some View {
         NavigationView {
@@ -34,7 +35,29 @@ struct SettingsView: View {
                         in: 2...6
                     )
                     
-                    Toggle("Notificaciones", isOn: $viewModel.isNotificationEnabled)
+                    // Toggle de notificaciones con información adicional
+                    VStack(alignment: .leading, spacing: 8) {
+                        Toggle("Notificaciones", isOn: $viewModel.isNotificationEnabled)
+                        
+                        if viewModel.isNotificationEnabled {
+                            HStack(spacing: 4) {
+                                Image(systemName: "bell.badge.fill")
+                                    .font(.caption)
+                                    .foregroundColor(.orange)
+                                Text("Time Sensitive habilitado")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                                Button {
+                                    showingTimeSensitiveInfo = true
+                                } label: {
+                                    Image(systemName: "info.circle")
+                                        .font(.caption)
+                                        .foregroundColor(.accentColor)
+                                }
+                            }
+                            .padding(.leading, 2)
+                        }
+                    }
                     
                     Toggle("Sonido", isOn: $viewModel.isSoundEnabled)
                 }
@@ -45,9 +68,25 @@ struct SettingsView: View {
                     }
                     .foregroundColor(.red)
                 }
+                
+                // Sección informativa
+                Section(footer: Text("Versión 1.1.0")) {
+                    HStack {
+                        Label("Novedades", systemImage: "sparkles")
+                        Spacer()
+                        Text("Time Sensitive")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                }
             }
             .navigationTitle("Ajustes")
             .navigationBarTitleDisplayMode(.large)
+            .alert("Notificaciones Time Sensitive", isPresented: $showingTimeSensitiveInfo) {
+                Button("Entendido", role: .cancel) { }
+            } message: {
+                Text("Las notificaciones Time Sensitive te alertarán cuando tus sesiones terminen, incluso si tu iPhone está en modo No Molestar o Enfoque. Esto asegura que no pierdas el ritmo de productividad.")
+            }
         }
     }
 }

@@ -17,9 +17,9 @@
     <key>CFBundlePackageType</key>
     <string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
     <key>CFBundleShortVersionString</key>
-    <string>1.0</string>
+    <string>1.1</string>
     <key>CFBundleVersion</key>
-    <string>2</string>
+    <string>3</string>
     <key>LSRequiresIPhoneOS</key>
     <true/>
     <key>UIApplicationSceneManifest</key>
@@ -40,7 +40,7 @@
         <string>UIInterfaceOrientationPortrait</string>
     </array>
     <key>NSUserNotificationUsageDescription</key>
-    <string>Pomo needs notification permissions to alert you when your work or break sessions complete, helping you maintain your productivity rhythm.</string>
+    <string>Pomo usa notificaciones time-sensitive para alertarte cuando tus sesiones de trabajo o descanso terminan, incluso cuando tu dispositivo está en modo No Molestar o Enfoque. Esto te ayuda a mantener tu ritmo de productividad sin perder ninguna sesión.</string>
     <key>UIUserInterfaceStyle</key>
     <string>Automatic</string>
     <key>ITSAppUsesNonExemptEncryption</key>

@@ -337,6 +337,22 @@
         }
       }
     },
+    "Entendido" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Got it"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Entendido"
+          }
+        }
+      }
+    },
     "Esta semana" : {
       "localizations" : {
         "en" : {
@@ -417,6 +433,22 @@
         }
       }
     },
+    "Las notificaciones Time Sensitive te alertarán cuando tus sesiones terminen, incluso si tu iPhone está en modo No Molestar o Enfoque. Esto asegura que no pierdas el ritmo de productividad." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time Sensitive notifications will alert you when your sessions end, even if your iPhone is in Do Not Disturb or Focus mode. This ensures you stay on track with your productivity."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las notificaciones Time Sensitive te alertarán cuando tus sesiones terminen, incluso si tu iPhone está en modo No Molestar o Enfoque. Esto asegura que no pierdas el ritmo de productividad."
+          }
+        }
+      }
+    },
     "No hay datos esta semana" : {
       "localizations" : {
         "en" : {
@@ -445,6 +477,38 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Notificaciones"
+          }
+        }
+      }
+    },
+    "Notificaciones Time Sensitive" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time Sensitive Notifications"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notificaciones Time Sensitive"
+          }
+        }
+      }
+    },
+    "Novedades" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "What’s New"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Novedades"
           }
         }
       }
@@ -593,6 +657,38 @@
         }
       }
     },
+    "Time Sensitive" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time Sensitive"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time Sensitive"
+          }
+        }
+      }
+    },
+    "Time Sensitive habilitado" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time Sensitive Notifications enabled"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time Sensitive habilitado"
+          }
+        }
+      }
+    },
     "Timer" : {
       "localizations" : {
         "en" : {
@@ -637,6 +733,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Trabajo"
+          }
+        }
+      }
+    },
+    "Versión 1.1.0" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Version 1.1.0"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Versión 1.1.0"
           }
         }
       }

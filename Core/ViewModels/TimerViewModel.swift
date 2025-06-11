@@ -52,6 +52,8 @@ class TimerViewModel: ObservableObject {
         isActive ? String(localized: "PAUSAR") : String(localized: "INICIAR")
     }
     
+    // Agregar al final de init() en TimerViewModel:
+
     init() {
         setupHaptics()
         restoreState()
@@ -59,7 +61,76 @@ class TimerViewModel: ObservableObject {
         
         // Limpiar notificaciones al iniciar
         notificationService.cancelAllNotifications()
+        
+        // Agregar observadores para acciones de notificación
+        setupNotificationActionObservers()
     }
+
+    // Nuevo método para observar acciones de notificación
+    private func setupNotificationActionObservers() {
+        // Observar acción de iniciar trabajo
+        NotificationCenter.default.publisher(for: .startWorkSession)
+            .sink { [weak self] _ in
+                Task { @MainActor in
+                    self?.handleStartWorkFromNotification()
+                }
+            }
+            .store(in: &cancellables)
+        
+        // Observar acción de iniciar descanso
+        NotificationCenter.default.publisher(for: .startBreakSession)
+            .sink { [weak self] _ in
+                Task { @MainActor in
+                    self?.handleStartBreakFromNotification()
+                }
+            }
+            .store(in: &cancellables)
+    }
+
+    // Manejar inicio de trabajo desde notificación
+    private func handleStartWorkFromNotification() {
+        guard !isActive else { return }
+        
+        // Cambiar a modo trabajo si no estamos ya en él
+        if currentType != .work {
+            currentType = .work
+            savedTimerType = currentType.rawValue
+            timeRemaining = getDurationForType(.work)
+        }
+        
+        // Iniciar el timer
+        startTimer()
+        
+        // Feedback háptico
+        impactFeedback.impactOccurred()
+    }
+
+    // Manejar inicio de descanso desde notificación
+    private func handleStartBreakFromNotification() {
+        guard !isActive else { return }
+        
+        // Determinar qué tipo de descanso corresponde
+        let breakType: TimerType
+        if completedSessions > 0 && completedSessions % sessionsUntilLongBreak == 0 {
+            breakType = .longBreak
+        } else {
+            breakType = .shortBreak
+        }
+        
+        // Cambiar al tipo de descanso apropiado
+        if currentType != breakType {
+            currentType = breakType
+            savedTimerType = currentType.rawValue
+            timeRemaining = getDurationForType(breakType)
+        }
+        
+        // Iniciar el timer
+        startTimer()
+        
+        // Feedback háptico
+        impactFeedback.impactOccurred()
+    }
+    
     
     private func setupHaptics() {
         impactFeedback.prepare()
@@ -338,6 +409,27 @@ class TimerViewModel: ObservableObject {
             return shortBreakDurationMinutes * 60
         case .longBreak:
             return longBreakDurationMinutes * 60
+        }
+    }
+    @MainActor
+    func testTimeSensitiveNotification() {
+        Task {
+            // Verificar configuración actual
+            let settings = await UNUserNotificationCenter.current().notificationSettings()
+            print("🔔 Authorization Status: \(settings.authorizationStatus.rawValue)")
+            
+            if #available(iOS 15.0, *) {
+                print("🔔 Time Sensitive Setting: \(settings.timeSensitiveSetting.rawValue)")
+                // 0 = No disponible, 1 = No habilitado, 2 = Habilitado
+            }
+            
+            // Programar notificación de prueba en 5 segundos
+            await notificationService.scheduleTimerCompletionNotification(
+                for: .work,
+                in: 5
+            )
+            
+            print("✅ Test notification scheduled for 5 seconds")
         }
     }
 }
