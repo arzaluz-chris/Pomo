@@ -5,6 +5,7 @@ import SwiftUI
 struct TimerView: View {
     @StateObject private var viewModel = TimerViewModel()
     @Environment(\.modelContext) private var modelContext
+    @Environment(\.colorScheme) var colorScheme
     
     var body: some View {
         ZStack {
@@ -13,12 +14,20 @@ struct TimerView: View {
                 .ignoresSafeArea()
             
             VStack(spacing: 40) {
-                // Header
-                Text("🍅 Pomo")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                    .foregroundColor(.pomoPrimary)
-                    .padding(.top, 40)
+                // Header with App Icon
+                HStack(spacing: 12) {
+                    Image(colorScheme == .dark ? "PomoLogoDark" : "PomoLogo")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 40, height: 40)
+                        .cornerRadius(8)
+                    
+                    Text("Pomo")
+                        .font(.largeTitle)
+                        .fontWeight(.bold)
+                        .foregroundColor(.pomoPrimary)
+                }
+                .padding(.top, 40)
                 
                 Spacer()
                 
@@ -90,11 +99,13 @@ struct TimerView: View {
                                 viewModel.resetTimer()
                             }
                         }) {
-                            HStack {
+                            HStack(spacing: 4) {
                                 Image(systemName: "arrow.clockwise")
                                     .font(.body)
                                 Text("Reiniciar")
                                     .font(.subheadline)
+                                    .minimumScaleFactor(0.8)
+                                    .lineLimit(1)
                             }
                             .frame(maxWidth: .infinity)
                             .frame(height: 44)
@@ -110,11 +121,13 @@ struct TimerView: View {
                                     viewModel.skipSession()
                                 }
                             }) {
-                                HStack {
+                                HStack(spacing: 4) {
                                     Image(systemName: "forward.fill")
                                         .font(.body)
                                     Text("Saltar")
                                         .font(.subheadline)
+                                        .minimumScaleFactor(0.8)
+                                        .lineLimit(1)
                                 }
                                 .frame(maxWidth: .infinity)
                                 .frame(height: 44)

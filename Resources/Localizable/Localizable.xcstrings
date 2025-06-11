@@ -98,6 +98,7 @@
       }
     },
     "🍅 Pomo" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -528,6 +529,9 @@
           }
         }
       }
+    },
+    "Pomo" : {
+
     },
     "Pomodoros" : {
       "localizations" : {
