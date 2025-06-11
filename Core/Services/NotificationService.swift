@@ -15,18 +15,18 @@ class NotificationService {
             // Solicitar permisos básicos (NO incluir .timeSensitive que está deprecated)
             let options: UNAuthorizationOptions = [.alert, .sound, .badge]
             let granted = try await UNUserNotificationCenter.current().requestAuthorization(options: options)
-            print(NSLocalizedString("✅ Notification permission granted: \(granted)", comment: "Notification permission granted"))
+            print("✅ Notification permission granted: \(granted)")
             
             if granted {
                 // Verificar configuración de notificaciones
                 let settings = await UNUserNotificationCenter.current().notificationSettings()
-                print(NSLocalizedString("🔔 Authorization status: \(settings.authorizationStatus.rawValue)", comment: "Authorization status"))
+                print("🔔 Authorization status: \(settings.authorizationStatus.rawValue)")
                 if #available(iOS 15.0, *) {
-                    print(NSLocalizedString("🔔 Time Sensitive setting: \(settings.timeSensitiveSetting.rawValue)", comment: "Time Sensitive setting"))
+                    print("🔔 Time Sensitive setting: \(settings.timeSensitiveSetting.rawValue)")
                 }
             }
         } catch {
-            print(NSLocalizedString("❌ Error requesting notification permission: \(error)", comment: "Error requesting permission"))
+            print("❌ Error requesting notification permission: \(error)")
         }
     }
     
@@ -34,14 +34,14 @@ class NotificationService {
     func scheduleTimerCompletionNotification(for type: TimerType, in seconds: TimeInterval) async {
         // Verificar si las notificaciones están habilitadas
         guard UserDefaults.standard.bool(forKey: Constants.UserDefaults.isNotificationEnabled) else {
-            print(NSLocalizedString("❌ Notifications disabled by user preference", comment: "Notifications disabled by user preference"))
+            print("❌ Notifications disabled by user preference")
             return
         }
         
         // Verificar permisos del sistema
         let settings = await UNUserNotificationCenter.current().notificationSettings()
         guard settings.authorizationStatus == .authorized else {
-            print(NSLocalizedString("❌ No notification permissions", comment: "No notification permissions"))
+            print("❌ No notification permissions")
             return
         }
         
@@ -50,25 +50,25 @@ class NotificationService {
         UNUserNotificationCenter.current().removeAllDeliveredNotifications()
         
         let content = UNMutableNotificationContent()
-        content.title = NSLocalizedString("Time's up!", comment: "Timer completed title")
+        content.title = String(localized: "Time's up!")
         
         // Configurar el mensaje según el tipo de sesión
         switch type {
         case .work:
-            content.body = NSLocalizedString("You've completed a work session. Take a break!", comment: "Work session completed message")
-            content.subtitle = NSLocalizedString("🍅 Work session completed", comment: "Work session subtitle")
+            content.subtitle = String(localized: "🍅 Work session completed")
+            content.body = String(localized: "You've completed a work session. Take a break!")
         case .shortBreak:
-            content.body = NSLocalizedString("Break is over. Time to work!", comment: "Short break ended message")
-            content.subtitle = NSLocalizedString("☕ Break finished", comment: "Short break subtitle")
+            content.subtitle = String(localized: "☕ Break finished")
+            content.body = String(localized: "The break is over. Time to work!")
         case .longBreak:
-            content.body = NSLocalizedString("Long break is over. Let's start another round!", comment: "Long break ended message")
-            content.subtitle = NSLocalizedString("🌟 Long break completed", comment: "Long break subtitle")
+            content.subtitle = String(localized: "🌟 Long break completed")
+            content.body = String(localized: "Your long break is over. Let's start another round!")
         }
         
         // IMPORTANTE: Marcar la notificación como Time Sensitive
         if #available(iOS 15.0, *) {
             content.interruptionLevel = .timeSensitive
-            print(NSLocalizedString("✅ Setting interruption level to timeSensitive", comment: "Interruption level set"))
+            print("✅ Setting interruption level to timeSensitive")
         }
         
         // Agregar relevance score para mayor prioridad
@@ -98,9 +98,9 @@ class NotificationService {
         
         do {
             try await UNUserNotificationCenter.current().add(request)
-            print(NSLocalizedString("✅ Scheduled time-sensitive notification for \(type.rawValue) in \(Int(seconds)) seconds", comment: "Notification scheduled confirmation"))
+            print("✅ Scheduled time-sensitive notification for \(type.rawValue) in \(Int(seconds)) seconds")
         } catch {
-            print(NSLocalizedString("❌ Error scheduling notification: \(error)", comment: "Error scheduling notification"))
+            print("❌ Error scheduling notification: \(error)")
         }
     }
     
@@ -108,19 +108,19 @@ class NotificationService {
     func setupNotificationCategories() {
         let startWorkAction = UNNotificationAction(
             identifier: "START_WORK",
-            title: NSLocalizedString("Start Work", comment: "Start work action"),
+            title: "Iniciar Trabajo",
             options: [.foreground]
         )
         
         let startBreakAction = UNNotificationAction(
             identifier: "START_BREAK",
-            title: NSLocalizedString("Start Break", comment: "Start break action"),
+            title: "Iniciar Descanso",
             options: [.foreground]
         )
         
         let dismissAction = UNNotificationAction(
             identifier: "DISMISS",
-            title: NSLocalizedString("Dismiss", comment: "Dismiss action"),
+            title: "Descartar",
             options: [.destructive]
         )
         

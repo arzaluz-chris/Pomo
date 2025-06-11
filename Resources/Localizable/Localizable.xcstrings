@@ -82,7 +82,6 @@
       }
     },
     "☕ Break finished" : {
-      "comment" : "Short break subtitle",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -98,59 +97,7 @@
         }
       }
     },
-    "✅ Setting interruption level to timeSensitive" : {
-      "comment" : "Interruption level set",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "✅ Setting interruption level to timeSensitive"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "✅ Nivel de interrupción establecido a timeSensitive"
-          }
-        }
-      }
-    },
-    "❌ No notification permissions" : {
-      "comment" : "No notification permissions",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "❌ No notification permissions"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "❌ No hay permisos de notificación"
-          }
-        }
-      }
-    },
-    "❌ Notifications disabled by user preference" : {
-      "comment" : "Notifications disabled by user preference",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "❌ Notifications disabled by user preference"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "❌ Notificaciones desactivadas por preferencia del usuario"
-          }
-        }
-      }
-    },
     "🌟 Long break completed" : {
-      "comment" : "Long break subtitle",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -167,7 +114,6 @@
       }
     },
     "🍅 Work session completed" : {
-      "comment" : "Work session subtitle",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -227,23 +173,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Ajustes"
-          }
-        }
-      }
-    },
-    "Break is over. Time to work!" : {
-      "comment" : "Short break ended message",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Break is over. Time to work!"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "El descanso ha terminado. ¡Es hora de trabajar!"
           }
         }
       }
@@ -376,17 +305,6 @@
         }
       }
     },
-    "Dismiss" : {
-      "comment" : "Dismiss action",
-      "localizations" : {
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Descartar"
-          }
-        }
-      }
-    },
     "Duración de las sesiones" : {
       "localizations" : {
         "en" : {
@@ -499,23 +417,6 @@
         }
       }
     },
-    "Long break is over. Let's start another round!" : {
-      "comment" : "Long break ended message",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Long break is over. Let's start another round!"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "El descanso largo ha terminado. ¡Vamos a por otra ronda!"
-          }
-        }
-      }
-    },
     "No hay datos esta semana" : {
       "localizations" : {
         "en" : {
@@ -564,22 +465,6 @@
         }
       }
     },
-    "Novedades" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "What’s New"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Novedades"
-          }
-        }
-      }
-    },
     "PAUSAR" : {
       "localizations" : {
         "en" : {
@@ -598,6 +483,12 @@
     },
     "Pomo" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pomo"
+          }
+        },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
@@ -718,36 +609,18 @@
         }
       }
     },
-    "Start Break" : {
-      "comment" : "Start break action",
+    "The break is over. Time to work!" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Start Break"
+            "value" : "The break is over. Time to work!"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Iniciar Descanso"
-          }
-        }
-      }
-    },
-    "Start Work" : {
-      "comment" : "Start work action",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Start Work"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Iniciar Trabajo"
+            "value" : "El descanso ha terminado. Es tiempo de volver a trabajar."
           }
         }
       }
@@ -764,22 +637,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tiempo total"
-          }
-        }
-      }
-    },
-    "Time Sensitive" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Time Sensitive"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Time Sensitive"
           }
         }
       }
@@ -801,7 +658,6 @@
       }
     },
     "Time's up!" : {
-      "comment" : "Timer completed title",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -812,7 +668,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "¡Tiempo completado!"
+            "value" : "¡Tiempo terminado!"
           }
         }
       }
@@ -865,29 +721,50 @@
         }
       }
     },
-    "Versión 1.1.0" : {
+    "Version 1.2.0" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Version 1.1.0"
+            "value" : "Version 1.2.0"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Versión 1.1.0"
+            "value" : "Versión 1.2.0"
           }
         }
       }
     },
     "You've completed a work session. Take a break!" : {
-      "comment" : "Work session completed message",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "You've completed a work session. Take a break!"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Has completado una sesión de trabajo. Toma un descanso."
+          }
+        }
+      }
+    },
+    "Your long break is over. Let's start another round!" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your long break is over. Let's start another round!"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Has completado un descanso largo. Tiempo de iniciar otra ronda."
           }
         }
       }

@@ -67,17 +67,10 @@ struct SettingsView: View {
                         viewModel.resetToDefaults()
                     }
                     .foregroundColor(.red)
-                }
-                
-                // Sección informativa
-                Section(footer: Text("Versión 1.1.0")) {
-                    HStack {
-                        Label("Novedades", systemImage: "sparkles")
-                        Spacer()
-                        Text("Time Sensitive")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
+                } footer: {
+                    Text("Version 1.2.0")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
                 }
             }
             .navigationTitle("Ajustes")

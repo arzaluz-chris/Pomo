@@ -23,6 +23,7 @@ class TimerViewModel: ObservableObject {
     @AppStorage("savedTimerIsActive") private var savedIsActive: Bool = false
     @AppStorage("savedTimerType") private var savedTimerType: String = TimerType.work.rawValue
     @AppStorage("savedCompletedSessions") private var savedCompletedSessions: Int = 0
+    @AppStorage("savedTimeRemaining") private var savedTimeRemaining: Int = 0
     
     private var timer: Timer?
     private var sessionStartTime: Date?
@@ -52,8 +53,6 @@ class TimerViewModel: ObservableObject {
         isActive ? String(localized: "PAUSAR") : String(localized: "INICIAR")
     }
     
-    // Agregar al final de init() en TimerViewModel:
-
     init() {
         setupHaptics()
         restoreState()
@@ -159,8 +158,11 @@ class TimerViewModel: ObservableObject {
                 // El timer expiró mientras la app estaba cerrada
                 handleTimerExpired()
             }
+        } else if savedTimeRemaining > 0 {
+            // Había un timer pausado, restaurar el tiempo guardado
+            timeRemaining = savedTimeRemaining
         } else {
-            // No hay timer activo
+            // No hay timer activo ni pausado
             resetToInitialState()
         }
     }
@@ -193,20 +195,28 @@ class TimerViewModel: ObservableObject {
     }
     
     private func handleAppGoingToBackground() {
-        guard isActive else { return }
-        
-        // Guardar estado
-        savedEndTime = Date().timeIntervalSince1970 + Double(timeRemaining)
-        savedIsActive = true
+        // Guardar estado actual
         savedTimerType = currentType.rawValue
         savedCompletedSessions = completedSessions
         
-        // Programar UNA SOLA notificación
-        Task {
-            await notificationService.scheduleTimerCompletionNotification(
-                for: currentType,
-                in: TimeInterval(timeRemaining)
-            )
+        if isActive {
+            // Timer activo, guardar tiempo de finalización
+            savedEndTime = Date().timeIntervalSince1970 + Double(timeRemaining)
+            savedIsActive = true
+            savedTimeRemaining = 0 // No necesitamos esto si está activo
+            
+            // Programar UNA SOLA notificación
+            Task {
+                await notificationService.scheduleTimerCompletionNotification(
+                    for: currentType,
+                    in: TimeInterval(timeRemaining)
+                )
+            }
+        } else {
+            // Timer pausado, guardar tiempo restante
+            savedIsActive = false
+            savedEndTime = 0
+            savedTimeRemaining = timeRemaining
         }
     }
     
@@ -232,9 +242,11 @@ class TimerViewModel: ObservableObject {
     }
     
     private func handleSettingsChange() {
+        // Solo reaccionar a cambios de duración cuando el temporizador
+        // NO está activo **y** nunca ha iniciado (es decir, no está pausado).
         guard !isActive else { return }
-        
-        // Actualizar duración si cambió la configuración
+        guard sessionStartTime == nil else { return }
+
         timeRemaining = getDurationForType(currentType)
     }
     
@@ -260,6 +272,7 @@ class TimerViewModel: ObservableObject {
         
         pauseTimer()
         resetToInitialState()
+        savedTimeRemaining = 0 // Limpiar tiempo guardado al resetear
     }
     
     func skipSession() {
@@ -279,6 +292,7 @@ class TimerViewModel: ObservableObject {
         currentType = type
         savedTimerType = type.rawValue
         timeRemaining = getDurationForType(type)
+        savedTimeRemaining = 0 // Limpiar tiempo guardado al cambiar tipo
     }
     
     // MARK: - Timer Control
@@ -286,8 +300,14 @@ class TimerViewModel: ObservableObject {
     private func startTimer() {
         isActive = true
         savedIsActive = true
-        sessionStartTime = Date()
+        
+        // Solo establecer sessionStartTime si es una nueva sesión
+        if sessionStartTime == nil {
+            sessionStartTime = Date()
+        }
+        
         savedEndTime = Date().timeIntervalSince1970 + Double(timeRemaining)
+        savedTimeRemaining = 0 // Limpiar tiempo guardado al iniciar
         
         startTimerCounting()
     }
@@ -313,10 +333,11 @@ class TimerViewModel: ObservableObject {
     private func pauseTimer() {
         isActive = false
         savedIsActive = false
-        savedEndTime = 0
+        savedTimeRemaining = timeRemaining
+        savedEndTime = 0                // fuerza recálculo al reanudar
         timer?.invalidate()
         timer = nil
-        
+
         notificationService.cancelAllNotifications()
     }
     
@@ -325,6 +346,7 @@ class TimerViewModel: ObservableObject {
         sessionStartTime = nil
         savedEndTime = 0
         savedIsActive = false
+        savedTimeRemaining = 0
     }
     
     // MARK: - Session Completion
@@ -411,6 +433,7 @@ class TimerViewModel: ObservableObject {
             return longBreakDurationMinutes * 60
         }
     }
+    
     @MainActor
     func testTimeSensitiveNotification() {
         Task {
