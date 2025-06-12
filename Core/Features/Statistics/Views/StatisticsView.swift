@@ -1,5 +1,3 @@
-// StatisticsView.swift
-
 import SwiftUI
 import SwiftData
 
@@ -8,10 +6,9 @@ struct StatisticsView: View {
     @Environment(\.modelContext) private var modelContext
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
-                    // Racha actual (mostrar primero si existe)
                     if viewModel.currentStreak > 0 {
                         HStack {
                             Text("🔥")
@@ -21,29 +18,26 @@ struct StatisticsView: View {
                                     .font(.subheadline)
                                     .foregroundColor(.secondary)
                                 Text("\(viewModel.currentStreak) \(viewModel.currentStreak == 1 ? String(localized: "día") : String(localized: "días"))")
-                                    .font(.title2)
-                                    .fontWeight(.bold)
+                                    .font(.title2).fontWeight(.bold)
                                     .foregroundColor(.pomoPrimary)
                             }
                             Spacer()
                         }
                         .padding()
-                        .background(Color.pomoPrimary.opacity(0.1))
-                        .cornerRadius(16)
+                        .background(Color.pomoPrimary.opacity(0.15))
+                        .glassEffect(in: RoundedRectangle(cornerRadius: 16))
+                        .shadow(color: .black.opacity(0.1), radius: 5)
                     }
                     
-                    // Estadísticas de hoy
                     VStack(alignment: .leading, spacing: 16) {
                         HStack {
                             Text("Hoy")
-                                .font(.title2)
-                                .fontWeight(.bold)
+                                .font(.title2).fontWeight(.bold)
                             Spacer()
                             Text(Date(), style: .date)
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
-                        
                         HStack(spacing: 20) {
                             StatCard(
                                 emoji: "🍅",
@@ -63,15 +57,13 @@ struct StatisticsView: View {
                         }
                     }
                     .padding()
-                    .background(Color(.systemGray6))
-                    .cornerRadius(16)
+                    .background(Color.white.opacity(0.15))
+                    .glassEffect(in: RoundedRectangle(cornerRadius: 16))
+                    .shadow(color: .black.opacity(0.1), radius: 5)
                     
-                    // Gráfico semanal
                     VStack(alignment: .leading, spacing: 16) {
                         Text("Esta semana")
-                            .font(.title2)
-                            .fontWeight(.bold)
-                        
+                            .font(.title2).fontWeight(.bold)
                         if !viewModel.weeklyData.isEmpty {
                             WeeklyChart(data: viewModel.weeklyData)
                                 .frame(height: 200)
@@ -82,8 +74,6 @@ struct StatisticsView: View {
                                 .frame(height: 200)
                                 .frame(maxWidth: .infinity)
                         }
-                        
-                        // Resumen semanal
                         let weeklyTotal = viewModel.weeklyData.reduce(0) { $0 + $1.pomodoros }
                         HStack {
                             Text("Total semanal:")
@@ -96,11 +86,13 @@ struct StatisticsView: View {
                         }
                     }
                     .padding()
-                    .background(Color(.systemGray6))
-                    .cornerRadius(16)
+                    .background(Color.white.opacity(0.15))
+                    .glassEffect(in: RoundedRectangle(cornerRadius: 16))
+                    .shadow(color: .black.opacity(0.1), radius: 5)
                 }
                 .padding()
             }
+            .background(.ultraThinMaterial)
             .navigationTitle("Estadísticas")
             .navigationBarTitleDisplayMode(.large)
             .refreshable {
@@ -111,10 +103,7 @@ struct StatisticsView: View {
                 await viewModel.loadData()
             }
             .onAppear {
-                // Recargar datos cada vez que aparezca la vista
-                Task {
-                    await viewModel.loadData()
-                }
+                Task { await viewModel.loadData() }
             }
         }
     }
@@ -131,8 +120,7 @@ struct StatCard: View {
             Text(emoji)
                 .font(.system(size: 40))
             Text(value)
-                .font(.title2)
-                .fontWeight(.bold)
+                .font(.title2).fontWeight(.bold)
                 .foregroundColor(color)
             Text(label)
                 .font(.caption)
@@ -140,12 +128,7 @@ struct StatCard: View {
         }
         .padding()
         .frame(maxWidth: .infinity)
-        .background(color.opacity(0.1))
-        .cornerRadius(12)
+        .background(color.opacity(0.25))
+        .glassEffect(in: RoundedRectangle(cornerRadius: 12))
     }
-}
-
-#Preview {
-    StatisticsView()
-        .modelContainer(for: TimerSession.self, inMemory: true)
 }

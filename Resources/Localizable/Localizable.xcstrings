@@ -322,6 +322,7 @@
       }
     },
     "Entendido" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -402,6 +403,7 @@
       }
     },
     "Las notificaciones Time Sensitive te alertarán cuando tus sesiones terminen, incluso si tu iPhone está en modo No Molestar o Enfoque. Esto asegura que no pierdas el ritmo de productividad." : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -450,6 +452,7 @@
       }
     },
     "Notificaciones Time Sensitive" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -642,6 +645,7 @@
       }
     },
     "Time Sensitive habilitado" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -722,6 +726,7 @@
       }
     },
     "Version 1.2.0" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

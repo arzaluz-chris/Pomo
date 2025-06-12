@@ -1,20 +1,22 @@
-// TimerView.swift
-
 import SwiftUI
 
 struct TimerView: View {
     @StateObject private var viewModel = TimerViewModel()
     @Environment(\.modelContext) private var modelContext
-    @Environment(\.colorScheme) var colorScheme
-    
+    @Environment(\.colorScheme) private var colorScheme  // <-- Aquí agregamos el colorScheme
+
     var body: some View {
         ZStack {
-            // Background
-            Color.pomoBackground
-                .ignoresSafeArea()
+            // Fondo Liquid Glass (puedes conservar tu color pomoBackground si deseas)
+            LinearGradient(
+                colors: [Color.pomoPrimary.opacity(0.5), Color.pomoPrimary],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .ignoresSafeArea()
             
             VStack(spacing: 40) {
-                // Header with App Icon
+                // Header con App Icon dinámico
                 HStack(spacing: 12) {
                     Image(colorScheme == .dark ? "PomoLogoDark" : "PomoLogo")
                         .resizable()
@@ -31,7 +33,6 @@ struct TimerView: View {
                 
                 Spacer()
                 
-                // Session Type Selector
                 HStack(spacing: 20) {
                     ForEach([TimerType.work, .shortBreak], id: \.self) { type in
                         Button(action: {
@@ -40,39 +41,31 @@ struct TimerView: View {
                             Text(type.displayName)
                                 .font(.subheadline)
                                 .fontWeight(viewModel.currentType == type ? .bold : .regular)
-                                .foregroundColor(viewModel.currentType == type ? .pomoPrimary : .secondary)
+                                .foregroundColor(viewModel.currentType == type ? .white : .secondary)
                                 .padding(.horizontal, 16)
                                 .padding(.vertical, 8)
-                                .background(
-                                    Capsule()
-                                        .fill(viewModel.currentType == type ? Color.pomoPrimary.opacity(0.2) : Color.clear)
-                                )
                         }
-                        .disabled(viewModel.isActive) // Deshabilitar cambio durante timer activo
+                        .disabled(viewModel.isActive)
+                        .glassEffect(in: Capsule(), isEnabled: viewModel.currentType == type)
                     }
                 }
                 .opacity(viewModel.isActive ? 0.6 : 1.0)
                 
-                // Timer Circle
                 ZStack {
                     CircularProgressView(progress: viewModel.progress)
-                    
                     VStack(spacing: 8) {
                         Text(viewModel.timeString)
                             .font(.system(size: 48, weight: .medium, design: .rounded))
                             .monospacedDigit()
-                            .foregroundColor(.pomoPrimary)
-                        
+                            .foregroundColor(.white)
                         Text(viewModel.currentType.displayName)
                             .font(.headline)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(Color.white.opacity(0.8))
                     }
                 }
                 .frame(width: Constants.UI.timerCircleSize, height: Constants.UI.timerCircleSize)
                 
-                // Control Buttons
                 VStack(spacing: 16) {
-                    // Main button (Play/Pause)
                     Button(action: {
                         withAnimation(.easeInOut(duration: 0.2)) {
                             viewModel.toggleTimer()
@@ -84,57 +77,48 @@ struct TimerView: View {
                             Text(viewModel.buttonTitle)
                                 .font(.headline)
                         }
-                        .frame(maxWidth: .infinity)
-                        .frame(height: Constants.UI.buttonHeight)
-                        .background(Color.pomoPrimary)
-                        .foregroundColor(.white)
-                        .cornerRadius(Constants.UI.cornerRadius)
                     }
+                    .frame(maxWidth: .infinity)
+                    .frame(height: Constants.UI.buttonHeight)
+                    .buttonStyle(.glass)
+                    .tint(.pomoPrimary)
+                    .shadow(color: .black.opacity(0.2), radius: 5, x: 0, y: 3)
                     
-                    // Secondary buttons
                     HStack(spacing: 16) {
-                        // Reset button
                         Button(action: {
                             withAnimation(.easeInOut(duration: 0.2)) {
                                 viewModel.resetTimer()
                             }
                         }) {
-                            HStack(spacing: 4) {
-                                Image(systemName: "arrow.clockwise")
-                                    .font(.body)
-                                Text("Reiniciar")
-                                    .font(.subheadline)
-                                    .minimumScaleFactor(0.8)
-                                    .lineLimit(1)
+                            HStack {
+                                Image(systemName: "arrow.clockwise").font(.body)
+                                Text("Reiniciar").font(.subheadline)
                             }
-                            .frame(maxWidth: .infinity)
-                            .frame(height: 44)
-                            .background(Color.secondary.opacity(0.2))
-                            .foregroundColor(.primary)
-                            .cornerRadius(22)
                         }
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 44)
+                        .buttonStyle(.glass)
+                        .tint(.gray)
+                        .foregroundColor(.primary)
+                        .shadow(color: .black.opacity(0.1), radius: 3, x: 0, y: 1)
                         
-                        // Skip button (only when active)
                         if viewModel.isActive {
                             Button(action: {
                                 withAnimation(.easeInOut(duration: 0.2)) {
                                     viewModel.skipSession()
                                 }
                             }) {
-                                HStack(spacing: 4) {
-                                    Image(systemName: "forward.fill")
-                                        .font(.body)
-                                    Text("Saltar")
-                                        .font(.subheadline)
-                                        .minimumScaleFactor(0.8)
-                                        .lineLimit(1)
+                                HStack {
+                                    Image(systemName: "forward.fill").font(.body)
+                                    Text("Saltar").font(.subheadline)
                                 }
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 44)
-                                .background(Color.secondary.opacity(0.2))
-                                .foregroundColor(.primary)
-                                .cornerRadius(22)
                             }
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 44)
+                            .buttonStyle(.glass)
+                            .tint(.gray)
+                            .foregroundColor(.primary)
+                            .shadow(color: .black.opacity(0.1), radius: 3, x: 0, y: 1)
                             .transition(.opacity.combined(with: .scale))
                         }
                     }
@@ -150,9 +134,4 @@ struct TimerView: View {
             viewModel.dataService.setModelContext(modelContext)
         }
     }
-}
-
-#Preview {
-    TimerView()
-        .modelContainer(for: TimerSession.self, inMemory: true)
 }

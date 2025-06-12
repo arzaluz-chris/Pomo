@@ -1,5 +1,3 @@
-// WeeklyChart.swift
-
 import SwiftUI
 import Charts
 
@@ -14,14 +12,14 @@ struct WeeklyChart: View {
             )
             .foregroundStyle(Color.accentColor)
             .cornerRadius(8)
+            .shadow(color: Color.accentColor.opacity(0.3), radius: 5)
         }
         .chartYAxis {
             AxisMarks(position: .leading) { value in
                 AxisGridLine()
                 AxisValueLabel {
                     if let intValue = value.as(Int.self) {
-                        Text("\(intValue)")
-                            .font(.caption)
+                        Text("\(intValue)").font(.caption)
                     }
                 }
             }
@@ -30,12 +28,12 @@ struct WeeklyChart: View {
             AxisMarks { value in
                 AxisValueLabel {
                     if let day = value.as(String.self) {
-                        Text(day)
-                            .font(.caption)
+                        Text(day).font(.caption)
                     }
                 }
             }
         }
+        .background(Color.clear)
     }
 }
 
@@ -50,14 +48,4 @@ struct DailyStats: Identifiable {
         formatter.dateFormat = "EEE"
         return formatter.string(from: date).capitalized
     }
-}
-
-#Preview {
-    WeeklyChart(data: [
-        DailyStats(date: Date(), pomodoros: 5),
-        DailyStats(date: Date().addingTimeInterval(-86400), pomodoros: 8),
-        DailyStats(date: Date().addingTimeInterval(-172800), pomodoros: 3)
-    ])
-    .frame(height: 200)
-    .padding()
 }

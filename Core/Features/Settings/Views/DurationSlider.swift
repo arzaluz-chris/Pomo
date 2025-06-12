@@ -1,5 +1,3 @@
-// DurationSlider.swift
-
 import SwiftUI
 
 struct DurationSlider: View {
@@ -17,22 +15,18 @@ struct DurationSlider: View {
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
-            
-            Slider(value: Binding(
-                get: { Double(value) },
-                set: { value = Int($0) }
-            ), in: Double(range.lowerBound)...Double(range.upperBound), step: 1)
+            Slider(
+                value: Binding(
+                    get: { Double(value) },
+                    set: { newVal in value = Int(newVal) }
+                ),
+                in: Double(range.lowerBound)...Double(range.upperBound),
+                step: 1
+            )
             .tint(.pomoPrimary)
         }
         .padding(.vertical, 4)
+        .padding(.horizontal, 8)
+        .glassEffect(in: RoundedRectangle(cornerRadius: 10))
     }
-}
-
-#Preview {
-    DurationSlider(
-        title: "Trabajo",
-        value: .constant(25),
-        range: 10...60
-    )
-    .padding()
 }
