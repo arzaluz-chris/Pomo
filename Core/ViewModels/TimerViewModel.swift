@@ -23,6 +23,7 @@ class TimerViewModel: ObservableObject {
     @AppStorage("savedTimerIsActive") private var savedIsActive: Bool = false
     @AppStorage("savedTimerType") private var savedTimerType: String = TimerType.work.rawValue
     @AppStorage("savedCompletedSessions") private var savedCompletedSessions: Int = 0
+    @AppStorage("lastSessionDate") private var lastSessionDate: Double = 0
     
     private var timer: Timer?
     private var sessionStartTime: Date?
@@ -70,6 +71,7 @@ class TimerViewModel: ObservableObject {
     private func restoreState() {
         // Restaurar sesiones completadas
         completedSessions = savedCompletedSessions
+        resetSessionsIfNeeded()
         
         // Restaurar tipo de timer
         if let type = TimerType(rawValue: savedTimerType) {
@@ -142,7 +144,9 @@ class TimerViewModel: ObservableObject {
     private func handleAppComingToForeground() {
         // Cancelar notificaciones pendientes
         notificationService.cancelAllNotifications()
-        
+
+        resetSessionsIfNeeded()
+
         guard savedIsActive else { return }
         
         let now = Date().timeIntervalSince1970
@@ -176,10 +180,11 @@ class TimerViewModel: ObservableObject {
     
     func toggleTimer() {
         impactFeedback.impactOccurred()
-        
+
         if isActive {
             pauseTimer()
         } else {
+            resetSessionsIfNeeded()
             startTimer()
         }
     }
@@ -300,6 +305,7 @@ class TimerViewModel: ObservableObject {
         
         // Incrementar contador si fue una sesión de trabajo completada
         if currentType == .work && !wasSkipped {
+            resetSessionsIfNeeded()
             completedSessions += 1
             savedCompletedSessions = completedSessions
         }
@@ -324,12 +330,25 @@ class TimerViewModel: ObservableObject {
             // Después de cualquier descanso, volver al trabajo
             currentType = .work
         }
-        
+
         savedTimerType = currentType.rawValue
     }
-    
+
     // MARK: - Helpers
-    
+
+    private func resetSessionsIfNeeded() {
+        let now = Date()
+        let calendar = Calendar.current
+        let lastDate = Date(timeIntervalSince1970: lastSessionDate)
+
+        if lastSessionDate == 0 || !calendar.isDate(now, inSameDayAs: lastDate) {
+            completedSessions = 0
+            savedCompletedSessions = 0
+        }
+
+        lastSessionDate = calendar.startOfDay(for: now).timeIntervalSince1970
+    }
+
     private func getDurationForType(_ type: TimerType) -> Int {
         switch type {
         case .work:
