@@ -30,6 +30,7 @@ A clean, modern iOS Pomodoro timer app built with Swift and SwiftUI. Boost your 
 - **🔔 Push Notifications**: Get notified when sessions complete (even when app is closed)
 - **🔊 Sound Alerts**: Optional audio notifications for session completion
 - **💾 Persistent State**: App remembers your progress if closed unexpectedly
+- **🗓️ Daily Reset**: Completed session counter resets every midnight to keep long breaks aligned with each day
 
 ### Analytics & Tracking
 - **📊 Daily Statistics**: Track today's completed Pomodoros and total focus time
