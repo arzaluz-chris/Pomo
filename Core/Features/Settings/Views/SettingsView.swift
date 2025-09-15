@@ -1,4 +1,4 @@
-// SettingsView.swift
+// Core/Features/Settings/Views/SettingsView.swift
 
 import SwiftUI
 
@@ -7,47 +7,91 @@ struct SettingsView: View {
     
     var body: some View {
         NavigationView {
-            Form {
-                Section("Duración de las sesiones") {
-                    DurationSlider(
-                        title: String(localized: "Trabajo"),
-                        value: $viewModel.workDuration,
-                        range: 10...60
-                    )
-                    
-                    DurationSlider(
-                        title: String(localized: "Descanso corto"),
-                        value: $viewModel.shortBreakDuration,
-                        range: 3...15
-                    )
-                    
-                    DurationSlider(
-                        title: String(localized: "Descanso largo"),
-                        value: $viewModel.longBreakDuration,
-                        range: 10...30
-                    )
-                }
-                
-                Section("Configuración") {
-                    Stepper(String(localized: "Sesiones hasta descanso largo: \(viewModel.sessionsUntilLongBreak)"),
-                        value: $viewModel.sessionsUntilLongBreak,
-                        in: 2...6
-                    )
-                    
-                    Toggle("Notificaciones", isOn: $viewModel.isNotificationEnabled)
-                    
-                    Toggle("Sonido", isOn: $viewModel.isSoundEnabled)
-                }
-                
-                Section {
-                    Button("Restablecer valores predeterminados") {
-                        viewModel.resetToDefaults()
+            if #available(iOS 26, *) {
+                Form {
+                    Section("Duración de las sesiones") {
+                        DurationSlider(
+                            title: String(localized: "Trabajo"),
+                            value: $viewModel.workDuration,
+                            range: 10...60
+                        )
+                        
+                        DurationSlider(
+                            title: String(localized: "Descanso corto"),
+                            value: $viewModel.shortBreakDuration,
+                            range: 3...15
+                        )
+                        
+                        DurationSlider(
+                            title: String(localized: "Descanso largo"),
+                            value: $viewModel.longBreakDuration,
+                            range: 10...30
+                        )
                     }
-                    .foregroundColor(.red)
+                    
+                    Section("Configuración") {
+                        Stepper(String(localized: "Sesiones hasta descanso largo: \(viewModel.sessionsUntilLongBreak)"),
+                            value: $viewModel.sessionsUntilLongBreak,
+                            in: 2...6
+                        )
+                        
+                        Toggle("Notificaciones", isOn: $viewModel.isNotificationEnabled)
+                        
+                        Toggle("Sonido", isOn: $viewModel.isSoundEnabled)
+                    }
+                    
+                    Section {
+                        Button("Restablecer valores predeterminados", role: .destructive) {
+                            viewModel.resetToDefaults()
+                        }
+                    }
                 }
+                .formStyle(.grouped) // Estilo moderno.
+                .navigationTitle("Ajustes")
+            } else {
+                // CÓDIGO ORIGINAL (sin cambios)
+                Form {
+                    Section("Duración de las sesiones") {
+                        DurationSlider(
+                            title: String(localized: "Trabajo"),
+                            value: $viewModel.workDuration,
+                            range: 10...60
+                        )
+                        
+                        DurationSlider(
+                            title: String(localized: "Descanso corto"),
+                            value: $viewModel.shortBreakDuration,
+                            range: 3...15
+                        )
+                        
+                        DurationSlider(
+                            title: String(localized: "Descanso largo"),
+                            value: $viewModel.longBreakDuration,
+                            range: 10...30
+                        )
+                    }
+                    
+                    Section("Configuración") {
+                        Stepper(String(localized: "Sesiones hasta descanso largo: \(viewModel.sessionsUntilLongBreak)"),
+                            value: $viewModel.sessionsUntilLongBreak,
+                            in: 2...6
+                        )
+                        
+                        Toggle("Notificaciones", isOn: $viewModel.isNotificationEnabled)
+                        
+                        Toggle("Sonido", isOn: $viewModel.isSoundEnabled)
+                    }
+                    
+                    Section {
+                        Button("Restablecer valores predeterminados") {
+                            viewModel.resetToDefaults()
+                        }
+                        .foregroundColor(.red)
+                    }
+                }
+                .navigationTitle("Ajustes")
+                .navigationBarTitleDisplayMode(.large)
             }
-            .navigationTitle("Ajustes")
-            .navigationBarTitleDisplayMode(.large)
         }
     }
 }
