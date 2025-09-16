@@ -97,38 +97,6 @@
         }
       }
     },
-    "🍅 Pomo" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "🍅 Pomo"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "🍅 Pomo"
-          }
-        }
-      }
-    },
-    "🔥" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "🔥"
-          }
-        },
-        "es" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "🔥"
-          }
-        }
-      }
-    },
     "0 min" : {
       "localizations" : {
         "en" : {
@@ -465,6 +433,22 @@
         }
       }
     },
+    "Pomo" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pomo"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pomo"
+          }
+        }
+      }
+    },
     "Pomodoros" : {
       "localizations" : {
         "en" : {
@@ -545,18 +529,18 @@
         }
       }
     },
-    "Sesiones hasta descanso largo: %lld" : {
+    "Sesiones para descanso largo" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sessions until long break: %lld"
+            "value" : "Sessions until long break"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Sesiones hasta descanso largo: %lld"
+            "value" : "Sesiones para descanso largo"
           }
         }
       }

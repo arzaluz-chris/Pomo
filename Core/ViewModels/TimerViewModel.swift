@@ -166,9 +166,13 @@ class TimerViewModel: ObservableObject {
     
     private func handleSettingsChange() {
         guard !isActive else { return }
-        
-        // Actualizar duración si cambió la configuración
-        timeRemaining = getDurationForType(currentType)
+
+        // Si el tiempo restante es igual a la duración anterior, significa que el timer no ha empezado.
+        // Solo en este caso es seguro actualizar la duración.
+        let fullDuration = getDurationForType(currentType)
+        if timeRemaining == fullDuration {
+            timeRemaining = getDurationForType(currentType)
+        }
     }
     
     private func handleTimerExpired() {

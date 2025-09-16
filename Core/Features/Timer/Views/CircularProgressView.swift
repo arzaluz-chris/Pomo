@@ -58,9 +58,3 @@ struct CircularProgressView: View {
         }
     }
 }
-
-#Preview {
-    CircularProgressView(progress: 0.75)
-        .frame(width: 200, height: 200)
-        .preferredColorScheme(.dark)
-}
