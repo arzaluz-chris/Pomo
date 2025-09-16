@@ -465,6 +465,22 @@
         }
       }
     },
+    "Pomo" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pomo"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pomo"
+          }
+        }
+      }
+    },
     "Pomodoros" : {
       "localizations" : {
         "en" : {
@@ -557,6 +573,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sesiones hasta descanso largo: %lld"
+          }
+        }
+      }
+    },
+    "Sesiones para descanso largo" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sessions until long break"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Sesiones para descanso largo"
           }
         }
       }
