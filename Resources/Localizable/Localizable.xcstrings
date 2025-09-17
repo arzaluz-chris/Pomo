@@ -17,6 +17,9 @@
         }
       }
     },
+    "¿Restablecer ajustes?" : {
+
+    },
     "%lld" : {
       "localizations" : {
         "en" : {
@@ -160,6 +163,12 @@
           }
         }
       }
+    },
+    "Alertas al completar sesiones" : {
+
+    },
+    "Cancelar" : {
+
     },
     "Configuración" : {
       "localizations" : {
@@ -305,6 +314,9 @@
         }
       }
     },
+    "Efectos de sonido" : {
+
+    },
     "El descanso ha terminado. ¡Es hora de trabajar!" : {
       "localizations" : {
         "en" : {
@@ -368,6 +380,9 @@
           }
         }
       }
+    },
+    "Esto restablecerá todos los ajustes a sus valores predeterminados." : {
+
     },
     "Has completado una sesión de trabajo. ¡Toma un descanso!" : {
       "localizations" : {
@@ -528,6 +543,9 @@
           }
         }
       }
+    },
+    "Restablecer" : {
+
     },
     "Restablecer valores predeterminados" : {
       "localizations" : {

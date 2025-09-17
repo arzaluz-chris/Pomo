@@ -6,12 +6,21 @@ import SwiftData
 struct StatisticsView: View {
     @StateObject private var viewModel = StatisticsViewModel()
     @Environment(\.modelContext) private var modelContext
+    @State private var backgroundGradient = Gradient(colors: [Color.pomoPrimary.opacity(0.3), Color.pomoSecondary.opacity(0.4), .blue.opacity(0.3)])
     
     var body: some View {
         NavigationView {
             if #available(iOS 26, *) {
                 ZStack {
-                    Color(.systemGroupedBackground).ignoresSafeArea()
+                    // FONDO LÍQUIDO ANIMADO (mismo que TimerView)
+                    LinearGradient(
+                        gradient: backgroundGradient,
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                    .ignoresSafeArea()
+                    .blur(radius: 60)
+                    .animation(.easeInOut(duration: 3), value: backgroundGradient)
                     
                     ScrollView {
                         VStack(spacing: 24) {
@@ -20,7 +29,13 @@ struct StatisticsView: View {
                                 HStack {
                                     Image(systemName: "flame.fill")
                                         .font(.system(size: 50))
-                                        .foregroundColor(.orange)
+                                        .foregroundStyle(
+                                            LinearGradient(
+                                                colors: [.orange, .red],
+                                                startPoint: .top,
+                                                endPoint: .bottom
+                                            )
+                                        )
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text("Racha actual")
                                             .font(.subheadline)
@@ -28,12 +43,23 @@ struct StatisticsView: View {
                                         Text("\(viewModel.currentStreak) \(viewModel.currentStreak == 1 ? String(localized: "día") : String(localized: "días"))")
                                             .font(.title2)
                                             .fontWeight(.bold)
-                                            .foregroundColor(.pomoPrimary)
+                                            .foregroundStyle(
+                                                LinearGradient(
+                                                    colors: [.pomoPrimary, .pomoSecondary],
+                                                    startPoint: .leading,
+                                                    endPoint: .trailing
+                                                )
+                                            )
                                     }
                                     Spacer()
                                 }
                                 .padding()
-                                .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 20))
+                                .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 20)
+                                        .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                                )
+                                .shadow(color: .black.opacity(0.1), radius: 10, y: 5)
                             }
                             
                             // SECCIÓN "HOY"
@@ -42,6 +68,7 @@ struct StatisticsView: View {
                                     Text("Hoy")
                                         .font(.title2)
                                         .fontWeight(.bold)
+                                        .foregroundColor(.primary)
                                     Spacer()
                                     Text(Date(), style: .date)
                                         .font(.caption)
@@ -67,13 +94,19 @@ struct StatisticsView: View {
                                 }
                             }
                             .padding()
-                            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 20))
+                            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 20)
+                                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                            )
+                            .shadow(color: .black.opacity(0.1), radius: 10, y: 5)
                             
                             // GRÁFICA DE ESTADÍSTICAS
                             VStack(alignment: .leading, spacing: 16) {
                                 Text("Esta semana")
                                     .font(.title2)
                                     .fontWeight(.bold)
+                                    .foregroundColor(.primary)
                                 
                                 if !viewModel.weeklyData.isEmpty && viewModel.weeklyData.reduce(0, { $0 + $1.pomodoros }) > 0 {
                                     WeeklyChart(data: viewModel.weeklyData)
@@ -94,19 +127,43 @@ struct StatisticsView: View {
                                     Spacer()
                                     Text("\(weeklyTotal) pomodoros")
                                         .font(.subheadline)
-                                        .fontWeight(.medium)
+                                        .fontWeight(.semibold)
+                                        .foregroundStyle(
+                                            LinearGradient(
+                                                colors: [.pomoPrimary, .pomoSecondary],
+                                                startPoint: .leading,
+                                                endPoint: .trailing
+                                            )
+                                        )
                                 }
                             }
                             .padding()
-                            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 20))
+                            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 20)
+                                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                            )
+                            .shadow(color: .black.opacity(0.1), radius: 10, y: 5)
                         }
                         .padding()
+                        .padding(.bottom, 20)
                     }
                 }
                 .navigationTitle("Estadísticas")
+                .navigationBarTitleDisplayMode(.large)
                 .task {
                     viewModel.dataService.setModelContext(modelContext)
                     await viewModel.loadData()
+                }
+                .onAppear {
+                    // Animación suave del gradiente
+                    withAnimation(.easeInOut(duration: 3).repeatForever(autoreverses: true)) {
+                        backgroundGradient = Gradient(colors: [
+                            Color.pomoSecondary.opacity(0.4),
+                            Color.pomoPrimary.opacity(0.3),
+                            .purple.opacity(0.2)
+                        ])
+                    }
                 }
             } else {
                 // CÓDIGO ORIGINAL PARA iOS 18 Y ANTERIORES
@@ -232,14 +289,25 @@ struct StatCard: View {
                 Text(value)
                     .font(.title2)
                     .fontWeight(.bold)
-                    .foregroundColor(color)
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [color, color.opacity(0.7)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
                 Text(label)
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
             .padding()
             .frame(maxWidth: .infinity)
-            .background(.thinMaterial, in: RoundedRectangle(cornerRadius: 16))
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 16))
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color.white.opacity(0.15), lineWidth: 1)
+            )
+            .shadow(color: .black.opacity(0.05), radius: 5, y: 2)
         } else {
             // CÓDIGO ORIGINAL
             VStack(spacing: 8) {
