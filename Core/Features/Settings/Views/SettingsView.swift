@@ -86,65 +86,14 @@ struct SettingsView: View {
                                     Spacer()
                                 }
                                 
-                                // Sesiones para descanso largo con visualización mejorada
-                                VStack(alignment: .leading, spacing: 12) {
-                                    Text("Sesiones para descanso largo")
-                                        .font(.subheadline)
-                                        .foregroundColor(.primary)
-                                    
-                                    HStack {
-                                        ForEach(1...viewModel.sessionsUntilLongBreak, id: \.self) { index in
-                                            Image(systemName: "leaf.fill")
-                                                .font(.title2)
-                                                .foregroundStyle(
-                                                    LinearGradient(
-                                                        colors: [.pomoSecondary, .green],
-                                                        startPoint: .top,
-                                                        endPoint: .bottom
-                                                    )
-                                                )
-                                                .scaleEffect(index == viewModel.sessionsUntilLongBreak ? 1.2 : 1.0)
-                                                .animation(.spring(response: 0.3, dampingFraction: 0.6), value: viewModel.sessionsUntilLongBreak)
-                                        }
-                                        
-                                        Spacer()
-                                        
-                                        HStack(spacing: 12) {
-                                            Button(action: {
-                                                if viewModel.sessionsUntilLongBreak > 2 {
-                                                    withAnimation(.spring()) {
-                                                        viewModel.sessionsUntilLongBreak -= 1
-                                                    }
-                                                }
-                                            }) {
-                                                Image(systemName: "minus.circle.fill")
-                                                    .font(.title2)
-                                                    .foregroundStyle(viewModel.sessionsUntilLongBreak > 2 ? Color.pomoPrimary : Color.gray)
-                                            }
-                                            .disabled(viewModel.sessionsUntilLongBreak <= 2)
-                                            
-                                            Text("\(viewModel.sessionsUntilLongBreak)")
-                                                .font(.title3)
-                                                .fontWeight(.semibold)
-                                                .frame(width: 30)
-                                                .foregroundColor(.primary)
-                                            
-                                            Button(action: {
-                                                if viewModel.sessionsUntilLongBreak < 6 {
-                                                    withAnimation(.spring()) {
-                                                        viewModel.sessionsUntilLongBreak += 1
-                                                    }
-                                                }
-                                            }) {
-                                                Image(systemName: "plus.circle.fill")
-                                                    .font(.title2)
-                                                    .foregroundStyle(viewModel.sessionsUntilLongBreak < 6 ? Color.pomoPrimary : Color.gray)
-                                            }
-                                            .disabled(viewModel.sessionsUntilLongBreak >= 6)
-                                        }
-                                    }
-                                }
-                                .padding(.vertical, 8)
+                                // NUEVO: Slider para sesiones hasta descanso largo
+                                DurationSliderGlass(
+                                    title: String(localized: "Sesiones para descanso largo"),
+                                    value: $viewModel.sessionsUntilLongBreak,
+                                    range: 2...6,
+                                    icon: "arrow.uturn.right.circle",
+                                    isMinutes: false // Indicamos que no son minutos
+                                )
                                 
                                 Divider()
                                     .background(Color.white.opacity(0.1))
@@ -205,35 +154,21 @@ struct SettingsView: View {
                             )
                             .shadow(color: .black.opacity(0.1), radius: 10, y: 5)
                             
-                            // BOTÓN DE RESET
-                            Button(action: {
+                            // BOTÓN DE RESET MODIFICADO
+                            Button(role: .destructive) {
                                 showResetAlert = true
-                            }) {
-                                HStack(spacing: 12) {
-                                    Image(systemName: "arrow.counterclockwise.circle.fill")
-                                        .font(.title3)
-                                    Text("Restablecer valores predeterminados")
-                                        .font(.subheadline)
-                                        .fontWeight(.medium)
+                            } label: {
+                                HStack(spacing: 8) {
+                                    Image(systemName: "arrow.counterclockwise")
+                                    Text("Restablecer")
                                 }
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 16)
-                                .background(
-                                    LinearGradient(
-                                        colors: [.red.opacity(0.8), .red],
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
-                                )
-                                .clipShape(RoundedRectangle(cornerRadius: 16))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 16)
-                                        .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                                )
-                                .shadow(color: .red.opacity(0.3), radius: 10, y: 5)
+                                .font(.subheadline)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 10)
+                                .background(.red.opacity(0.1))
+                                .clipShape(Capsule())
                             }
-                            .padding(.top, 8)
+                            .padding(.top, 10)
                         }
                         .padding()
                         .padding(.bottom, 20)
@@ -309,12 +244,13 @@ struct SettingsView: View {
     }
 }
 
-// Nuevo componente para sliders con efecto glass
+// Nuevo componente para sliders con efecto glass (MODIFICADO para aceptar unidades)
 struct DurationSliderGlass: View {
     let title: String
     @Binding var value: Int
     let range: ClosedRange<Int>
     let icon: String
+    var isMinutes: Bool = true // Parámetro para diferenciar unidades
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -333,7 +269,7 @@ struct DurationSliderGlass: View {
                     .fontWeight(.medium)
                     .foregroundColor(.primary)
                 Spacer()
-                Text("\(value) min")
+                Text(isMinutes ? "\(value) min" : "\(value)")
                     .font(.subheadline)
                     .fontWeight(.semibold)
                     .foregroundStyle(
