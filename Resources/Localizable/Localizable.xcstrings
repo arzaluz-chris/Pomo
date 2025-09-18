@@ -18,7 +18,20 @@
       }
     },
     "¿Restablecer ajustes?" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset settings?"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "¿Restablecer ajustes?"
+          }
+        }
+      }
     },
     "%lld" : {
       "localizations" : {
@@ -165,10 +178,85 @@
       }
     },
     "Alertas al completar sesiones" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alerts when sessions complete"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alertas al completar sesiones"
+          }
+        }
+      }
+    },
+    "Ayúdanos con una reseña" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Help us with a review"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ayúdanos con una reseña"
+          }
+        }
+      }
+    },
+    "Begin a focus session" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Begin a focus session"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inicia una sesión de enfoque"
+          }
+        }
+      }
+    },
+    "Calificar en App Store" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rate on App Store"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Calificar en App Store"
+          }
+        }
+      }
     },
     "Cancelar" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancel"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cancelar"
+          }
+        }
+      }
     },
     "Configuración" : {
       "localizations" : {
@@ -315,7 +403,20 @@
       }
     },
     "Efectos de sonido" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sound effects"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Efectos de sonido"
+          }
+        }
+      }
     },
     "El descanso ha terminado. ¡Es hora de trabajar!" : {
       "localizations" : {
@@ -348,6 +449,9 @@
           }
         }
       }
+    },
+    "Escribir reseña" : {
+
     },
     "Esta semana" : {
       "localizations" : {
@@ -382,7 +486,20 @@
       }
     },
     "Esto restablecerá todos los ajustes a sus valores predeterminados." : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This will reset all settings to their default values."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Esto restablecerá todos los ajustes a sus valores predeterminados."
+          }
+        }
+      }
     },
     "Has completado una sesión de trabajo. ¡Toma un descanso!" : {
       "localizations" : {
@@ -528,6 +645,23 @@
         }
       }
     },
+    "Rate Pomo" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rate Pomo"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Calificar Pomo"
+          }
+        }
+      }
+    },
     "Reiniciar" : {
       "localizations" : {
         "en" : {
@@ -545,7 +679,20 @@
       }
     },
     "Restablecer" : {
-
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restablecer"
+          }
+        }
+      }
     },
     "Restablecer valores predeterminados" : {
       "localizations" : {
@@ -611,6 +758,23 @@
         }
       }
     },
+    "Share your feedback" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share your feedback"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comparte tu opinión"
+          }
+        }
+      }
+    },
     "Sonido" : {
       "localizations" : {
         "en" : {
@@ -627,6 +791,57 @@
         }
       }
     },
+    "Start Work" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start Work"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iniciar Trabajo"
+          }
+        }
+      }
+    },
+    "Statistics" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Statistics"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estadísticas"
+          }
+        }
+      }
+    },
+    "Take a Break" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Take a Break"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tomar Descanso"
+          }
+        }
+      }
+    },
     "Tiempo total" : {
       "localizations" : {
         "en" : {
@@ -639,6 +854,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Tiempo total"
+          }
+        }
+      }
+    },
+    "Time to rest" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time to rest"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tiempo de descansar"
           }
         }
       }
@@ -687,6 +919,23 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Trabajo"
+          }
+        }
+      }
+    },
+    "View your progress" : {
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View your progress"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ver tu progreso"
           }
         }
       }

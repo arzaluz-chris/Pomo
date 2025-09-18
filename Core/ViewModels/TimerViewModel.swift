@@ -24,12 +24,17 @@ class TimerViewModel: ObservableObject {
     @AppStorage("savedTimerType") private var savedTimerType: String = TimerType.work.rawValue
     @AppStorage("savedCompletedSessions") private var savedCompletedSessions: Int = 0
     @AppStorage("lastSessionDate") private var lastSessionDate: Double = 0
-    @AppStorage("savedTimeRemaining") private var savedTimeRemaining: Int = 0 // Nuevo: para mantener el progreso al pausar
+    @AppStorage("savedTimeRemaining") private var savedTimeRemaining: Int = 0
+    
+    // Quick Actions
+    @AppStorage("shouldStartTimer") private var shouldStartTimer: Bool = false
+    @AppStorage("quickActionTimerType") private var quickActionTimerType: String = ""
     
     private var timer: Timer?
     private var sessionStartTime: Date?
     private let soundService = SoundService()
     private let notificationService = NotificationService()
+    private let reviewService = ReviewService.shared
     let dataService = DataService()
     
     private var cancellables = Set<AnyCancellable>()
@@ -59,12 +64,34 @@ class TimerViewModel: ObservableObject {
         restoreState()
         setupNotificationObservers()
         notificationService.cancelAllNotifications()
+        checkForQuickAction()
     }
     
     private func setupHaptics() {
         impactFeedback.prepare()
         notificationFeedback.prepare()
         selectionFeedback.prepare()
+    }
+    
+    private func checkForQuickAction() {
+        // Verificar si hay una Quick Action pendiente
+        if shouldStartTimer {
+            shouldStartTimer = false
+            
+            // Cambiar al tipo de timer especificado
+            if let type = TimerType(rawValue: quickActionTimerType) {
+                currentType = type
+                savedTimerType = type.rawValue
+                timeRemaining = getDurationForType(type)
+                
+                // Iniciar el timer después de un pequeño delay para que la UI se actualice
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
+                    self?.startTimer()
+                }
+            }
+            
+            quickActionTimerType = ""
+        }
     }
     
     private func restoreState() {
@@ -106,6 +133,14 @@ class TimerViewModel: ObservableObject {
         // Observador para cambios en UserDefaults (Configuración)
         NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)
             .sink { [weak self] _ in Task { @MainActor in self?.handleSettingsChange() } }
+            .store(in: &cancellables)
+        
+        // Observador para Quick Actions
+        Timer.publish(every: 0.5, on: .main, in: .common)
+            .autoconnect()
+            .sink { [weak self] _ in
+                self?.checkForQuickAction()
+            }
             .store(in: &cancellables)
     }
     
@@ -153,7 +188,6 @@ class TimerViewModel: ObservableObject {
         }
     }
     
-    // CORRECCIÓN BUG #1: Actualizar inmediatamente cuando cambian los ajustes
     private func handleSettingsChange() {
         // Solo actualiza si el temporizador NO está activo y NO tiene tiempo pausado
         guard !isActive && savedTimeRemaining == 0 else { return }
@@ -201,7 +235,7 @@ class TimerViewModel: ObservableObject {
         timeRemaining = getDurationForType(type)
     }
     
-    private func startTimer() {
+    func startTimer() {
         // Si hay tiempo pausado, continuar desde ahí
         if savedTimeRemaining > 0 {
             timeRemaining = savedTimeRemaining
@@ -235,7 +269,6 @@ class TimerViewModel: ObservableObject {
         }
     }
     
-    // CORRECCIÓN BUG #2: Mantener el progreso al pausar
     private func pauseTimer() {
         isActive = false
         savedIsActive = false
@@ -249,8 +282,6 @@ class TimerViewModel: ObservableObject {
         timer?.invalidate()
         timer = nil
         notificationService.cancelAllNotifications()
-        
-        // NO modificamos timeRemaining para mantener el progreso visible
     }
     
     private func resetToInitialState() {
@@ -293,10 +324,14 @@ class TimerViewModel: ObservableObject {
             }
         }
         
+        // Registrar pomodoro completado para el sistema de reseñas
         if currentType == .work && !wasSkipped {
             resetSessionsIfNeeded()
             completedSessions += 1
             savedCompletedSessions = completedSessions
+            
+            // Notificar al servicio de reseñas
+            reviewService.recordCompletedPomodoro()
         }
         
         moveToNextSessionType()
@@ -317,7 +352,6 @@ class TimerViewModel: ObservableObject {
         savedTimerType = currentType.rawValue
     }
     
-    // BUG #3: Esta lógica ya está correcta - resetea a medianoche
     private func resetSessionsIfNeeded() {
         let now = Date()
         let calendar = Calendar.current

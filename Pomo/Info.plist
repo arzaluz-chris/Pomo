@@ -2,14 +2,57 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>NSUserNotificationUsageDescription</key>
-	<string>Pomo needs notification permissions to alert you when your work or break sessions complete, helping you maintain your productivity rhythm.</string>
-	<key>UIApplicationSceneManifest</key>
-	<dict>
-		<key>UIApplicationSupportsMultipleScenes</key>
-		<true/>
-	</dict>
-	<key>UILaunchScreen</key>
-	<dict/>
+    <key>NSUserNotificationUsageDescription</key>
+    <string>Pomo needs notification permissions to alert you when your work or break sessions complete, helping you maintain your productivity rhythm.</string>
+    <key>UIApplicationSceneManifest</key>
+    <dict>
+        <key>UIApplicationSupportsMultipleScenes</key>
+        <true/>
+    </dict>
+    <key>UILaunchScreen</key>
+    <dict/>
+    <key>UIApplicationShortcutItems</key>
+    <array>
+        <dict>
+            <key>UIApplicationShortcutItemType</key>
+            <string>StartWorkAction</string>
+            <key>UIApplicationShortcutItemIconSymbolName</key>
+            <string>laptopcomputer</string>
+            <key>UIApplicationShortcutItemTitle</key>
+            <string>Start Work</string>
+            <key>UIApplicationShortcutItemSubtitle</key>
+            <string>Begin a focus session</string>
+        </dict>
+        <dict>
+            <key>UIApplicationShortcutItemType</key>
+            <string>StartBreakAction</string>
+            <key>UIApplicationShortcutItemIconSymbolName</key>
+            <string>cup.and.saucer.fill</string>
+            <key>UIApplicationShortcutItemTitle</key>
+            <string>Take a Break</string>
+            <key>UIApplicationShortcutItemSubtitle</key>
+            <string>Time to rest</string>
+        </dict>
+        <dict>
+            <key>UIApplicationShortcutItemType</key>
+            <string>ViewStatsAction</string>
+            <key>UIApplicationShortcutItemIconSymbolName</key>
+            <string>chart.bar.fill</string>
+            <key>UIApplicationShortcutItemTitle</key>
+            <string>Statistics</string>
+            <key>UIApplicationShortcutItemSubtitle</key>
+            <string>View your progress</string>
+        </dict>
+        <dict>
+            <key>UIApplicationShortcutItemType</key>
+            <string>RateAppAction</string>
+            <key>UIApplicationShortcutItemIconSymbolName</key>
+            <string>star.fill</string>
+            <key>UIApplicationShortcutItemTitle</key>
+            <string>Rate Pomo</string>
+            <key>UIApplicationShortcutItemSubtitle</key>
+            <string>Share your feedback</string>
+        </dict>
+    </array>
 </dict>
 </plist>

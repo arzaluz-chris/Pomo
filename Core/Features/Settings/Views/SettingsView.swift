@@ -1,11 +1,13 @@
 // Core/Features/Settings/Views/SettingsView.swift
 
 import SwiftUI
+import StoreKit
 
 struct SettingsView: View {
     @StateObject private var viewModel = SettingsViewModel()
     @State private var backgroundGradient = Gradient(colors: [Color.pomoPrimary.opacity(0.3), Color.pomoSecondary.opacity(0.4), .blue.opacity(0.3)])
     @State private var showResetAlert = false
+    private let reviewService = ReviewService.shared
     
     var body: some View {
         NavigationView {
@@ -86,13 +88,13 @@ struct SettingsView: View {
                                     Spacer()
                                 }
                                 
-                                // NUEVO: Slider para sesiones hasta descanso largo
+                                // Slider para sesiones hasta descanso largo
                                 DurationSliderGlass(
                                     title: String(localized: "Sesiones para descanso largo"),
                                     value: $viewModel.sessionsUntilLongBreak,
                                     range: 2...6,
                                     icon: "arrow.uturn.right.circle",
-                                    isMinutes: false // Indicamos que no son minutos
+                                    isMinutes: false
                                 )
                                 
                                 Divider()
@@ -154,7 +156,58 @@ struct SettingsView: View {
                             )
                             .shadow(color: .black.opacity(0.1), radius: 10, y: 5)
                             
-                            // BOTÓN DE RESET MODIFICADO
+                            // SECCIÓN DE RESEÑA
+                            VStack(spacing: 16) {
+                                HStack {
+                                    Image(systemName: "star.fill")
+                                        .foregroundStyle(
+                                            LinearGradient(
+                                                colors: [.yellow, .orange],
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            )
+                                        )
+                                    Text("Calificar en App Store")
+                                        .font(.headline)
+                                        .foregroundColor(.primary)
+                                    Spacer()
+                                }
+                                
+                                Text("Ayúdanos con una reseña")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                
+                                Button(action: {
+                                    reviewService.openAppStoreForReview()
+                                }) {
+                                    HStack {
+                                        Image(systemName: "star.bubble")
+                                        Text("Escribir reseña")
+                                    }
+                                    .font(.subheadline)
+                                    .fontWeight(.medium)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 12)
+                                    .background(
+                                        LinearGradient(
+                                            colors: [.yellow.opacity(0.3), .orange.opacity(0.3)],
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        )
+                                    )
+                                    .clipShape(Capsule())
+                                }
+                            }
+                            .padding(24)
+                            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 24)
+                                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                            )
+                            .shadow(color: .black.opacity(0.1), radius: 10, y: 5)
+                            
+                            // BOTÓN DE RESET
                             Button(role: .destructive) {
                                 showResetAlert = true
                             } label: {
@@ -231,6 +284,20 @@ struct SettingsView: View {
                     }
                     
                     Section {
+                        Button(action: {
+                            reviewService.openAppStoreForReview()
+                        }) {
+                            HStack {
+                                Image(systemName: "star.bubble")
+                                Text("Calificar en App Store")
+                                Spacer()
+                                Image(systemName: "arrow.up.forward.app")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .foregroundColor(.pomoPrimary)
+                        
                         Button("Restablecer valores predeterminados") {
                             viewModel.resetToDefaults()
                         }
@@ -244,13 +311,13 @@ struct SettingsView: View {
     }
 }
 
-// Nuevo componente para sliders con efecto glass (MODIFICADO para aceptar unidades)
+// Componente para sliders con efecto glass
 struct DurationSliderGlass: View {
     let title: String
     @Binding var value: Int
     let range: ClosedRange<Int>
     let icon: String
-    var isMinutes: Bool = true // Parámetro para diferenciar unidades
+    var isMinutes: Bool = true
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
