@@ -56,7 +56,7 @@ class TimerViewModel: ObservableObject {
     }
     
     var buttonTitle: String {
-        isActive ? String(localized: "PAUSAR") : String(localized: "INICIAR")
+        isActive ? NSLocalizedString("PAUSE", comment: "Pause button title") : NSLocalizedString("START", comment: "Start button title")
     }
     
     init() {
@@ -64,7 +64,6 @@ class TimerViewModel: ObservableObject {
         restoreState()
         setupNotificationObservers()
         notificationService.cancelAllNotifications()
-        checkForQuickAction()
     }
     
     private func setupHaptics() {
@@ -72,26 +71,24 @@ class TimerViewModel: ObservableObject {
         notificationFeedback.prepare()
         selectionFeedback.prepare()
     }
-    
+
     private func checkForQuickAction() {
-        // Verificar si hay una Quick Action pendiente
-        if shouldStartTimer {
-            shouldStartTimer = false
-            
-            // Cambiar al tipo de timer especificado
-            if let type = TimerType(rawValue: quickActionTimerType) {
-                currentType = type
-                savedTimerType = type.rawValue
-                timeRemaining = getDurationForType(type)
-                
-                // Iniciar el timer después de un pequeño delay para que la UI se actualice
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) { [weak self] in
-                    self?.startTimer()
-                }
-            }
-            
-            quickActionTimerType = ""
+        guard shouldStartTimer, let type = TimerType(rawValue: quickActionTimerType) else { return }
+
+        shouldStartTimer = false
+
+        if isActive {
+            pauseTimer()
         }
+        resetToInitialState()
+
+        currentType = type
+        timeRemaining = getDurationForType(type)
+        savedTimerType = type.rawValue
+        
+        startTimer()
+        
+        quickActionTimerType = ""
     }
     
     private func restoreState() {
@@ -102,11 +99,9 @@ class TimerViewModel: ObservableObject {
             currentType = type
         }
         
-        // Si hay un tiempo guardado (timer pausado), úsalo
         if savedTimeRemaining > 0 && !savedIsActive {
             timeRemaining = savedTimeRemaining
         } else if savedIsActive && savedEndTime > Date().timeIntervalSince1970 {
-            // Si el timer estaba activo, calcula el tiempo restante
             let remaining = Int(savedEndTime - Date().timeIntervalSince1970)
             if remaining > 0 {
                 timeRemaining = remaining
@@ -116,7 +111,6 @@ class TimerViewModel: ObservableObject {
                 handleTimerExpired()
             }
         } else {
-            // Estado inicial
             resetToInitialState()
         }
     }
@@ -127,26 +121,21 @@ class TimerViewModel: ObservableObject {
             .store(in: &cancellables)
         
         NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)
-            .sink { [weak self] _ in Task { @MainActor in self?.handleAppComingToForeground() } }
-            .store(in: &cancellables)
-        
-        // Observador para cambios en UserDefaults (Configuración)
-        NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)
-            .sink { [weak self] _ in Task { @MainActor in self?.handleSettingsChange() } }
-            .store(in: &cancellables)
-        
-        // Observador para Quick Actions
-        Timer.publish(every: 0.5, on: .main, in: .common)
-            .autoconnect()
             .sink { [weak self] _ in
+                self?.handleAppComingToForeground()
                 self?.checkForQuickAction()
+            }
+            .store(in: &cancellables)
+        
+        NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)
+            .sink { [weak self] _ in
+                self?.handleSettingsChange()
             }
             .store(in: &cancellables)
     }
     
     private func handleAppGoingToBackground() {
         guard isActive else {
-            // Si el timer está pausado, guarda el tiempo restante actual
             if timeRemaining > 0 {
                 savedTimeRemaining = timeRemaining
             }
@@ -157,7 +146,7 @@ class TimerViewModel: ObservableObject {
         savedIsActive = true
         savedTimerType = currentType.rawValue
         savedCompletedSessions = completedSessions
-        savedTimeRemaining = 0 // Limpiar porque el timer está activo
+        savedTimeRemaining = 0
         
         Task {
             await notificationService.scheduleTimerCompletionNotification(for: currentType, in: TimeInterval(timeRemaining))
@@ -168,7 +157,6 @@ class TimerViewModel: ObservableObject {
         notificationService.cancelAllNotifications()
         resetSessionsIfNeeded()
         
-        // Si el timer estaba pausado, restaurar el tiempo guardado
         if !savedIsActive && savedTimeRemaining > 0 {
             timeRemaining = savedTimeRemaining
             return
@@ -189,10 +177,7 @@ class TimerViewModel: ObservableObject {
     }
     
     private func handleSettingsChange() {
-        // Solo actualiza si el temporizador NO está activo y NO tiene tiempo pausado
         guard !isActive && savedTimeRemaining == 0 else { return }
-        
-        // Actualiza el tiempo restante para reflejar el nuevo valor de configuración
         timeRemaining = getDurationForType(currentType)
     }
     
@@ -215,7 +200,7 @@ class TimerViewModel: ObservableObject {
     func resetTimer() {
         selectionFeedback.selectionChanged()
         pauseTimer()
-        savedTimeRemaining = 0 // Limpiar el tiempo guardado
+        savedTimeRemaining = 0
         resetToInitialState()
     }
     
@@ -231,12 +216,11 @@ class TimerViewModel: ObservableObject {
         selectionFeedback.selectionChanged()
         currentType = type
         savedTimerType = type.rawValue
-        savedTimeRemaining = 0 // Limpiar tiempo guardado al cambiar tipo
+        savedTimeRemaining = 0
         timeRemaining = getDurationForType(type)
     }
     
     func startTimer() {
-        // Si hay tiempo pausado, continuar desde ahí
         if savedTimeRemaining > 0 {
             timeRemaining = savedTimeRemaining
             savedTimeRemaining = 0
@@ -245,7 +229,6 @@ class TimerViewModel: ObservableObject {
         isActive = true
         savedIsActive = true
         
-        // Solo establecer nueva hora de inicio si es una nueva sesión
         if sessionStartTime == nil {
             sessionStartTime = Date()
         }
@@ -274,7 +257,6 @@ class TimerViewModel: ObservableObject {
         savedIsActive = false
         savedEndTime = 0
         
-        // Guardar el tiempo restante actual para poder continuar después
         if timeRemaining > 0 {
             savedTimeRemaining = timeRemaining
         }
@@ -324,14 +306,15 @@ class TimerViewModel: ObservableObject {
             }
         }
         
-        // Registrar pomodoro completado para el sistema de reseñas
         if currentType == .work && !wasSkipped {
             resetSessionsIfNeeded()
             completedSessions += 1
             savedCompletedSessions = completedSessions
             
-            // Notificar al servicio de reseñas
-            reviewService.recordCompletedPomodoro()
+            // --- FIX: Ejecutar en una nueva Tarea para evitar la advertencia de SwiftUI ---
+            Task {
+                reviewService.recordCompletedPomodoro()
+            }
         }
         
         moveToNextSessionType()
@@ -357,14 +340,12 @@ class TimerViewModel: ObservableObject {
         let calendar = Calendar.current
         let lastDate = Date(timeIntervalSince1970: lastSessionDate)
         
-        // Si es la primera vez o si cambió el día
         if lastSessionDate == 0 || !calendar.isDate(now, inSameDayAs: lastDate) {
             completedSessions = 0
             savedCompletedSessions = 0
             print("🌅 Nueva jornada detectada. Reiniciando contador de sesiones.")
         }
         
-        // Actualizar a la fecha actual
         lastSessionDate = calendar.startOfDay(for: now).timeIntervalSince1970
     }
     

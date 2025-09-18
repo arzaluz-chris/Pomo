@@ -1,4 +1,4 @@
-// StatisticsViewModel.swift
+// Core/ViewModels/StatisticsViewModel.swift
 
 import Foundation
 import SwiftUI
@@ -35,12 +35,11 @@ class StatisticsViewModel: ObservableObject {
     private func loadTodayStats() async {
         let sessions = await dataService.fetchTodaySessions()
         
-        // Contar solo sesiones de trabajo completadas como Pomodoros
-        let workSessions = sessions.filter { session in
-            session.timerType == .work && session.wasCompleted
-        }
+        // Un pomodoro es una sesión de trabajo + una de descanso
+        let workSessions = sessions.filter { $0.timerType == .work && $0.wasCompleted }.count
+        let breakSessions = sessions.filter { ($0.timerType == .shortBreak || $0.timerType == .longBreak) && $0.wasCompleted }.count
         
-        todayPomodoros = workSessions.count
+        todayPomodoros = min(workSessions, breakSessions)
         
         // Calcular tiempo total de TODAS las sesiones (trabajo y descansos)
         var totalSeconds = 0
@@ -62,15 +61,15 @@ class StatisticsViewModel: ObservableObject {
             let startOfDay = calendar.startOfDay(for: date)
             let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
             
-            // Filtrar solo sesiones de trabajo completadas para ese día
-            let daySessions = sessions.filter { session in
-                session.startDate >= startOfDay &&
-                session.startDate < endOfDay &&
-                session.timerType == .work &&
-                session.wasCompleted
-            }
+            // Filtrar sesiones para ese día
+            let daySessions = sessions.filter { $0.startDate >= startOfDay && $0.startDate < endOfDay && $0.wasCompleted }
             
-            dailyStats.append(DailyStats(date: date, pomodoros: daySessions.count))
+            let workSessions = daySessions.filter { $0.timerType == .work }.count
+            let breakSessions = daySessions.filter { $0.timerType == .shortBreak || $0.timerType == .longBreak }.count
+            
+            let pomodoros = min(workSessions, breakSessions)
+            
+            dailyStats.append(DailyStats(date: date, pomodoros: pomodoros))
         }
         
         weeklyData = dailyStats.reversed()

@@ -10,10 +10,8 @@ class NotificationService {
         }
     }
     
-    // --- FUNCIÓN CORREGIDA ---
     func requestPermission() async {
         do {
-            // Ya no se incluye `.timeSensitive` aquí. El permiso se maneja con el entitlement.
             let granted = try await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge])
             print("Notification permission granted: \(granted)")
         } catch {
@@ -37,22 +35,21 @@ class NotificationService {
         UNUserNotificationCenter.current().removeAllDeliveredNotifications()
         
         let content = UNMutableNotificationContent()
-        content.title = String(localized: "¡Tiempo completado!")
+        content.title = NSLocalizedString("Time completed!", comment: "Title for the notification when a timer session ends")
         
         switch type {
         case .work:
-            content.body = String(localized: "Has completado una sesión de trabajo. ¡Toma un descanso!")
+            content.body = NSLocalizedString("You've completed a work session. Take a break!", comment: "Notification body when a work session is completed")
         case .shortBreak:
-            content.body = String(localized: "El descanso ha terminado. ¡Es hora de trabajar!")
+            content.body = NSLocalizedString("Break is over. Time to work!", comment: "Notification body when a short break is over")
         case .longBreak:
-            content.body = String(localized: "El descanso largo ha terminado. ¡Vamos a por otra ronda!")
+            content.body = NSLocalizedString("Long break is over. Let's go for another round!", comment: "Notification body when a long break is over")
         }
         
         if UserDefaults.standard.bool(forKey: Constants.UserDefaults.isSoundEnabled) {
             content.sound = .default
         }
         
-        // Esta línea sigue siendo correcta y necesaria.
         content.interruptionLevel = .timeSensitive
 
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: seconds, repeats: false)
