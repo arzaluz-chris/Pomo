@@ -25,6 +25,8 @@ class TimerViewModel: ObservableObject {
     @AppStorage("savedCompletedSessions") private var savedCompletedSessions: Int = 0
     @AppStorage("lastSessionDate") private var lastSessionDate: Double = 0
     @AppStorage("savedTimeRemaining") private var savedTimeRemaining: Int = 0
+    @AppStorage("isPaused") private var isPaused: Bool = false // Nuevo estado para pausado
+    @AppStorage("totalSessionDuration") private var totalSessionDuration: Int = 0 // Duración total de la sesión actual
     
     // Quick Actions
     @AppStorage("shouldStartTimer") private var shouldStartTimer: Bool = false
@@ -44,9 +46,25 @@ class TimerViewModel: ObservableObject {
     private let notificationFeedback = UINotificationFeedbackGenerator()
     private let selectionFeedback = UISelectionFeedbackGenerator()
     
+    // Timer para verificar el cambio de día
+    private var midnightTimer: Timer?
+    
+    // Variables para rastrear valores anteriores de configuración
+    private var previousWorkDuration: Int = 0
+    private var previousShortBreakDuration: Int = 0
+    private var previousLongBreakDuration: Int = 0
+    private var isUpdatingSettings = false
+    
     var progress: Double {
-        let total = Double(getDurationForType(currentType))
-        return total > 0 ? 1.0 - (Double(timeRemaining) / total) : 0
+        // Si no hay duración total guardada, usar la duración del tipo actual
+        let total = totalSessionDuration > 0 ? Double(totalSessionDuration) : Double(getDurationForType(currentType))
+        guard total > 0 else { return 0 }
+        
+        // Calcular el progreso: 1.0 - (tiempo restante / tiempo total)
+        let progressValue = 1.0 - (Double(timeRemaining) / total)
+        
+        // Asegurar que el progreso esté entre 0 y 1
+        return max(0, min(1, progressValue))
     }
     
     var timeString: String {
@@ -61,15 +79,52 @@ class TimerViewModel: ObservableObject {
     
     init() {
         setupHaptics()
+        
+        // Inicializar valores anteriores
+        previousWorkDuration = workDurationMinutes
+        previousShortBreakDuration = shortBreakDurationMinutes
+        previousLongBreakDuration = longBreakDurationMinutes
+        
         restoreState()
         setupNotificationObservers()
+        setupMidnightTimer()
         notificationService.cancelAllNotifications()
+    }
+    
+    deinit {
+        midnightTimer?.invalidate()
     }
     
     private func setupHaptics() {
         impactFeedback.prepare()
         notificationFeedback.prepare()
         selectionFeedback.prepare()
+    }
+    
+    private func setupMidnightTimer() {
+        // Cancelar timer anterior si existe
+        midnightTimer?.invalidate()
+        
+        // Calcular tiempo hasta medianoche
+        let calendar = Calendar.current
+        let tomorrow = calendar.date(byAdding: .day, value: 1, to: Date())!
+        let midnight = calendar.startOfDay(for: tomorrow)
+        let timeUntilMidnight = midnight.timeIntervalSince(Date())
+        
+        // Configurar timer para medianoche
+        midnightTimer = Timer.scheduledTimer(withTimeInterval: timeUntilMidnight, repeats: false) { [weak self] _ in
+            Task { @MainActor in
+                self?.resetSessionsAtMidnight()
+                self?.setupMidnightTimer() // Reconfigurar para el siguiente día
+            }
+        }
+    }
+    
+    private func resetSessionsAtMidnight() {
+        print("🌙 Medianoche detectada. Reiniciando contador de sesiones.")
+        completedSessions = 0
+        savedCompletedSessions = 0
+        lastSessionDate = Calendar.current.startOfDay(for: Date()).timeIntervalSince1970
     }
 
     private func checkForQuickAction() {
@@ -99,13 +154,28 @@ class TimerViewModel: ObservableObject {
             currentType = type
         }
         
-        if savedTimeRemaining > 0 && !savedIsActive {
+        // Restaurar estado pausado
+        if isPaused && savedTimeRemaining > 0 {
             timeRemaining = savedTimeRemaining
+            isActive = false
+            // Si estamos pausados y tenemos duración total guardada, usarla
+            if totalSessionDuration == 0 {
+                totalSessionDuration = getDurationForType(currentType)
+            }
+        } else if savedTimeRemaining > 0 && !savedIsActive {
+            timeRemaining = savedTimeRemaining
+            if totalSessionDuration == 0 {
+                totalSessionDuration = getDurationForType(currentType)
+            }
         } else if savedIsActive && savedEndTime > Date().timeIntervalSince1970 {
             let remaining = Int(savedEndTime - Date().timeIntervalSince1970)
             if remaining > 0 {
                 timeRemaining = remaining
                 isActive = true
+                // Restaurar la duración total si no está guardada
+                if totalSessionDuration == 0 {
+                    totalSessionDuration = getDurationForType(currentType)
+                }
                 startTimerCounting()
             } else {
                 handleTimerExpired()
@@ -127,11 +197,52 @@ class TimerViewModel: ObservableObject {
             }
             .store(in: &cancellables)
         
+        // Observar cambios en UserDefaults para detectar cambios en las configuraciones
+        // Usamos debounce para evitar múltiples llamadas consecutivas
         NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)
-            .sink { [weak self] _ in
-                self?.handleSettingsChange()
+            .debounce(for: .milliseconds(100), scheduler: RunLoop.main)
+            .sink { [weak self] notification in
+                guard let self = self else { return }
+                // Solo procesar si el cambio viene de UserDefaults.standard
+                if let userDefaults = notification.object as? UserDefaults,
+                   userDefaults == UserDefaults.standard {
+                    self.handleSettingsChange()
+                }
             }
             .store(in: &cancellables)
+    }
+    
+    private func handleSettingsChange() {
+        // Prevenir re-entrada
+        guard !isUpdatingSettings else { return }
+        
+        // Verificar si alguna duración ha cambiado
+        let workChanged = previousWorkDuration != workDurationMinutes
+        let shortBreakChanged = previousShortBreakDuration != shortBreakDurationMinutes
+        let longBreakChanged = previousLongBreakDuration != longBreakDurationMinutes
+        
+        // Si hay cambios y el timer no está activo ni pausado, actualizar
+        if (workChanged || shortBreakChanged || longBreakChanged) && !isActive && !isPaused {
+            isUpdatingSettings = true
+            
+            // Actualizar los valores anteriores PRIMERO para evitar ciclos
+            previousWorkDuration = workDurationMinutes
+            previousShortBreakDuration = shortBreakDurationMinutes
+            previousLongBreakDuration = longBreakDurationMinutes
+            
+            // Actualizar el tiempo restante con la nueva duración
+            timeRemaining = getDurationForType(currentType)
+            totalSessionDuration = 0  // Reiniciar la duración total cuando cambian los ajustes
+            
+            // Solo limpiar savedTimeRemaining si realmente es necesario
+            if savedTimeRemaining > 0 && !isPaused {
+                savedTimeRemaining = 0
+            }
+            
+            print("⚙️ Configuración actualizada. Nuevo tiempo: \(timeRemaining) segundos")
+            
+            isUpdatingSettings = false
+        }
     }
     
     private func handleAppGoingToBackground() {
@@ -176,14 +287,10 @@ class TimerViewModel: ObservableObject {
         }
     }
     
-    private func handleSettingsChange() {
-        guard !isActive && savedTimeRemaining == 0 else { return }
-        timeRemaining = getDurationForType(currentType)
-    }
-    
     private func handleTimerExpired() {
         timeRemaining = 0
         savedTimeRemaining = 0
+        isPaused = false
         sessionCompleted(wasSkipped: false)
     }
     
@@ -199,15 +306,33 @@ class TimerViewModel: ObservableObject {
     
     func resetTimer() {
         selectionFeedback.selectionChanged()
-        pauseTimer()
+        
+        // Detener el timer si está activo
+        if isActive {
+            timer?.invalidate()
+            timer = nil
+            isActive = false
+            savedIsActive = false
+        }
+        
+        // Limpiar todos los estados guardados
         savedTimeRemaining = 0
+        savedEndTime = 0
+        isPaused = false
+        sessionStartTime = nil
+        totalSessionDuration = 0  // Reiniciar la duración total
+        
+        // Reiniciar al valor inicial del tipo actual
         resetToInitialState()
+        
+        notificationService.cancelAllNotifications()
     }
     
     func skipSession() {
         guard isActive else { return }
         let lightImpact = UIImpactFeedbackGenerator(style: .light)
         lightImpact.impactOccurred()
+        isPaused = false
         sessionCompleted(wasSkipped: true)
     }
     
@@ -217,13 +342,26 @@ class TimerViewModel: ObservableObject {
         currentType = type
         savedTimerType = type.rawValue
         savedTimeRemaining = 0
+        isPaused = false
+        totalSessionDuration = 0  // Reiniciar cuando cambiamos de tipo
         timeRemaining = getDurationForType(type)
     }
     
     func startTimer() {
-        if savedTimeRemaining > 0 {
+        // Si estamos reanudando desde pausa, usar el tiempo guardado
+        if isPaused && savedTimeRemaining > 0 {
+            timeRemaining = savedTimeRemaining
+            isPaused = false
+            savedTimeRemaining = 0 // Limpiar el tiempo guardado después de usarlo
+        } else if savedTimeRemaining > 0 && !isPaused {
+            // Si hay tiempo guardado pero no estamos pausados, usarlo
             timeRemaining = savedTimeRemaining
             savedTimeRemaining = 0
+        }
+        
+        // Si es una nueva sesión (no pausada), guardar la duración total
+        if totalSessionDuration == 0 || (!isPaused && sessionStartTime == nil) {
+            totalSessionDuration = timeRemaining
         }
         
         isActive = true
@@ -256,7 +394,9 @@ class TimerViewModel: ObservableObject {
         isActive = false
         savedIsActive = false
         savedEndTime = 0
+        isPaused = true // Marcar como pausado
         
+        // Guardar el tiempo actual
         if timeRemaining > 0 {
             savedTimeRemaining = timeRemaining
         }
@@ -268,10 +408,12 @@ class TimerViewModel: ObservableObject {
     
     private func resetToInitialState() {
         timeRemaining = getDurationForType(currentType)
+        totalSessionDuration = 0  // Reiniciar la duración total
         sessionStartTime = nil
         savedEndTime = 0
         savedIsActive = false
         savedTimeRemaining = 0
+        isPaused = false
     }
     
     private func sessionCompleted(wasSkipped: Bool) {
@@ -280,6 +422,8 @@ class TimerViewModel: ObservableObject {
         isActive = false
         savedIsActive = false
         savedTimeRemaining = 0
+        isPaused = false
+        totalSessionDuration = 0  // Reiniciar la duración total
         
         if !wasSkipped {
             notificationFeedback.notificationOccurred(.success)
@@ -311,7 +455,6 @@ class TimerViewModel: ObservableObject {
             completedSessions += 1
             savedCompletedSessions = completedSessions
             
-            // --- FIX: Ejecutar en una nueva Tarea para evitar la advertencia de SwiftUI ---
             Task {
                 reviewService.recordCompletedPomodoro()
             }

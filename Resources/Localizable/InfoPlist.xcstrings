@@ -1,0 +1,196 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "Begin a focus session" : {
+      "comment" : "Quick action subtitle for starting work",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Begin a focus session"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comienza una sesión de enfoque"
+          }
+        }
+      }
+    },
+    "CFBundleDisplayName" : {
+      "comment" : "Bundle display name",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Pomo"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pomo"
+          }
+        }
+      }
+    },
+    "CFBundleName" : {
+      "comment" : "Bundle name",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Pomo"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pomo"
+          }
+        }
+      }
+    },
+    "NSHumanReadableCopyright" : {
+      "comment" : "Copyright (human-readable)",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "© 2025 Christian Arzaluz. All rights reserved."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "© 2025 Christian Arzaluz. Todos los derechos reservados."
+          }
+        }
+      }
+    },
+    "Rate Pomo" : {
+      "comment" : "Quick action title for rating the app",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rate Pomo"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Calificar Pomo"
+          }
+        }
+      }
+    },
+    "Share your feedback" : {
+      "comment" : "Quick action subtitle for rating",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share your feedback"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Comparte tu opinión"
+          }
+        }
+      }
+    },
+    "Start Work" : {
+      "comment" : "Quick action title for starting work session",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start Work"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iniciar trabajo"
+          }
+        }
+      }
+    },
+    "Statistics" : {
+      "comment" : "Quick action title for viewing statistics",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Statistics"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estadísticas"
+          }
+        }
+      }
+    },
+    "Take a Break" : {
+      "comment" : "Quick action title for taking a break",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Take a Break"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tomar un descanso"
+          }
+        }
+      }
+    },
+    "Time to rest" : {
+      "comment" : "Quick action subtitle for break",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Time to rest"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tiempo de descansar"
+          }
+        }
+      }
+    },
+    "View your progress" : {
+      "comment" : "Quick action subtitle for statistics",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "View your progress"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ver tu progreso"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}
