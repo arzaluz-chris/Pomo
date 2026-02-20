@@ -520,6 +520,23 @@
         }
       }
     },
+    "Pause" : {
+      "comment" : "Pause button in Dynamic Island",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pause"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pausar"
+          }
+        }
+      }
+    },
     "PAUSE" : {
       "comment" : "Pause button title",
       "localizations" : {
@@ -536,6 +553,26 @@
           }
         }
       }
+    },
+    "Pause Timer" : {
+      "comment" : "Intent title for pausing timer",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pause Timer"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pausar temporizador"
+          }
+        }
+      }
+    },
+    "Pauses the Pomo timer" : {
+
     },
     "Pomo" : {
       "localizations" : {
@@ -601,6 +638,26 @@
         }
       }
     },
+    "Reset Timer" : {
+      "comment" : "Intent title for resetting timer",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reset Timer"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reiniciar temporizador"
+          }
+        }
+      }
+    },
+    "Resets the Pomo timer" : {
+
+    },
     "Restablecer" : {
       "localizations" : {
         "en" : {
@@ -632,6 +689,43 @@
           }
         }
       }
+    },
+    "Resume" : {
+      "comment" : "Resume button in Dynamic Island",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resume"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reanudar"
+          }
+        }
+      }
+    },
+    "Resume Timer" : {
+      "comment" : "Intent title for resuming timer",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resume Timer"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reanudar temporizador"
+          }
+        }
+      }
+    },
+    "Resumes the Pomo timer" : {
+
     },
     "Saltar" : {
       "localizations" : {
@@ -680,6 +774,44 @@
           }
         }
       }
+    },
+    "Sessions" : {
+      "comment" : "Sessions label in Dynamic Island",
+      "extractionState" : "stale",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sessions"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sesiones"
+          }
+        }
+      }
+    },
+    "Skip Session" : {
+      "comment" : "Intent title for skipping session",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skip Session"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Saltar sesión"
+          }
+        }
+      }
+    },
+    "Skips the current Pomo session" : {
+
     },
     "Sonido" : {
       "localizations" : {

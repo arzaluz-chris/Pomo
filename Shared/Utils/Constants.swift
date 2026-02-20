@@ -29,4 +29,11 @@ struct Constants {
         static let buttonHeight: CGFloat = 56
         static let cornerRadius: CGFloat = 28
     }
+
+    // Live Activity
+    struct LiveActivity {
+        static let appGroupIdentifier = "group.com.christian-arzaluz.pomo"
+        static let pendingActionKey = "pendingTimerAction"
+        static let actionTimestampKey = "timerActionTimestamp"
+    }
 }

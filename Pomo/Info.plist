@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+    <key>NSSupportsLiveActivities</key>
+    <true/>
     <key>NSUserNotificationUsageDescription</key>
     <string>Pomo needs notification permissions to alert you when your work or break sessions complete, helping you maintain your productivity rhythm.</string>
     <key>UIApplicationSceneManifest</key>
