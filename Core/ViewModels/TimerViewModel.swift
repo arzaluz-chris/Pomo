@@ -4,6 +4,7 @@ import Foundation
 import SwiftUI
 import Combine
 import UIKit
+import ActivityKit
 
 @MainActor
 class TimerViewModel: ObservableObject {
@@ -46,6 +47,10 @@ class TimerViewModel: ObservableObject {
     private let notificationFeedback = UINotificationFeedbackGenerator()
     private let selectionFeedback = UISelectionFeedbackGenerator()
     
+    // Live Activity
+    private let liveActivityManager = LiveActivityManager.shared
+    private var actionPollingTimer: Timer?
+
     // Timer para verificar el cambio de día
     private var midnightTimer: Timer?
     
@@ -93,6 +98,7 @@ class TimerViewModel: ObservableObject {
     
     deinit {
         midnightTimer?.invalidate()
+        actionPollingTimer?.invalidate()
     }
     
     private func setupHaptics() {
@@ -267,6 +273,7 @@ class TimerViewModel: ObservableObject {
     private func handleAppComingToForeground() {
         notificationService.cancelAllNotifications()
         resetSessionsIfNeeded()
+        checkForLiveActivityAction()
         
         if !savedIsActive && savedTimeRemaining > 0 {
             timeRemaining = savedTimeRemaining
@@ -306,7 +313,7 @@ class TimerViewModel: ObservableObject {
     
     func resetTimer() {
         selectionFeedback.selectionChanged()
-        
+
         // Detener el timer si está activo
         if isActive {
             timer?.invalidate()
@@ -314,18 +321,21 @@ class TimerViewModel: ObservableObject {
             isActive = false
             savedIsActive = false
         }
-        
+
         // Limpiar todos los estados guardados
         savedTimeRemaining = 0
         savedEndTime = 0
         isPaused = false
         sessionStartTime = nil
         totalSessionDuration = 0  // Reiniciar la duración total
-        
+
         // Reiniciar al valor inicial del tipo actual
         resetToInitialState()
-        
+
         notificationService.cancelAllNotifications()
+
+        // Live Activity — keep DI showing paused/reset state
+        updateLiveActivityState()
     }
     
     func skipSession() {
@@ -373,6 +383,15 @@ class TimerViewModel: ObservableObject {
         
         savedEndTime = Date().timeIntervalSince1970 + Double(timeRemaining)
         startTimerCounting()
+
+        // Live Activity
+        let duration = totalSessionDuration > 0 ? totalSessionDuration : timeRemaining
+        liveActivityManager.startLiveActivity(
+            timerType: currentType,
+            timeRemaining: timeRemaining,
+            totalDuration: duration
+        )
+        startActionPolling()
     }
     
     private func startTimerCounting() {
@@ -385,6 +404,11 @@ class TimerViewModel: ObservableObject {
     private func updateTimer() {
         if timeRemaining > 0 {
             timeRemaining -= 1
+
+            // Update Live Activity every 30s so the minimal DI progress ring advances
+            if timeRemaining % 30 == 0 {
+                updateLiveActivityState()
+            }
         } else {
             sessionCompleted(wasSkipped: false)
         }
@@ -404,6 +428,9 @@ class TimerViewModel: ObservableObject {
         timer?.invalidate()
         timer = nil
         notificationService.cancelAllNotifications()
+
+        // Live Activity
+        updateLiveActivityState()
     }
     
     private func resetToInitialState() {
@@ -424,13 +451,13 @@ class TimerViewModel: ObservableObject {
         savedTimeRemaining = 0
         isPaused = false
         totalSessionDuration = 0  // Reiniciar la duración total
-        
+
         if !wasSkipped {
             notificationFeedback.notificationOccurred(.success)
         } else {
             notificationFeedback.notificationOccurred(.warning)
         }
-        
+
         if let startTime = sessionStartTime {
             let duration = getDurationForType(currentType) - timeRemaining
             Task {
@@ -443,25 +470,35 @@ class TimerViewModel: ObservableObject {
                 )
             }
         }
-        
+
         if !wasSkipped && UIApplication.shared.applicationState == .active {
             if UserDefaults.standard.bool(forKey: Constants.UserDefaults.isSoundEnabled) {
                 soundService.playSound(for: currentType)
             }
         }
-        
+
         if currentType == .work && !wasSkipped {
             resetSessionsIfNeeded()
             completedSessions += 1
             savedCompletedSessions = completedSessions
-            
+
             Task {
                 reviewService.recordCompletedPomodoro()
             }
         }
-        
-        moveToNextSessionType()
-        resetToInitialState()
+
+        if wasSkipped {
+            // Skip: move to next session, update DI to show new state, keep polling
+            moveToNextSessionType()
+            resetToInitialState()
+            updateLiveActivityState()
+        } else {
+            // Natural completion: dismiss DI
+            liveActivityManager.endLiveActivity()
+            stopActionPolling()
+            moveToNextSessionType()
+            resetToInitialState()
+        }
     }
     
     private func moveToNextSessionType() {
@@ -492,6 +529,57 @@ class TimerViewModel: ObservableObject {
         lastSessionDate = calendar.startOfDay(for: now).timeIntervalSince1970
     }
     
+    // MARK: - Live Activity
+
+    private func updateLiveActivityState() {
+        let duration = totalSessionDuration > 0 ? totalSessionDuration : getDurationForType(currentType)
+        liveActivityManager.updateLiveActivity(
+            timerType: currentType,
+            isRunning: isActive,
+            timeRemaining: timeRemaining,
+            totalDuration: duration
+        )
+    }
+
+    private func checkForLiveActivityAction() {
+        let defaults = UserDefaults(suiteName: Constants.LiveActivity.appGroupIdentifier)
+        guard let actionString = defaults?.string(forKey: Constants.LiveActivity.pendingActionKey),
+              let action = PomoTimerAction(rawValue: actionString) else { return }
+
+        // Clear the pending action
+        defaults?.removeObject(forKey: Constants.LiveActivity.pendingActionKey)
+        defaults?.removeObject(forKey: Constants.LiveActivity.actionTimestampKey)
+
+        switch action {
+        case .play:
+            if !isActive {
+                startTimer()
+            }
+        case .pause:
+            if isActive {
+                pauseTimer()
+            }
+        case .reset:
+            resetTimer()
+        case .skip:
+            if isActive {
+                skipSession()
+            }
+        }
+    }
+
+    private func startActionPolling() {
+        actionPollingTimer?.invalidate()
+        actionPollingTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { _ in
+            Task { @MainActor in self.checkForLiveActivityAction() }
+        }
+    }
+
+    private func stopActionPolling() {
+        actionPollingTimer?.invalidate()
+        actionPollingTimer = nil
+    }
+
     private func getDurationForType(_ type: TimerType) -> Int {
         switch type {
         case .work:
