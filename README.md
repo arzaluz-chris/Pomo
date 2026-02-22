@@ -1,150 +1,158 @@
-# 🍅 Pomo - Minimalist Pomodoro Timer
-
-A clean, modern iOS Pomodoro timer app built with Swift and SwiftUI. Boost your productivity with focused work sessions and strategic breaks.
-
-## 📱 Screenshots
-
 <p align="center">
-  <img src="screenshots/timer-interface.png" width="160" alt="Clean Timer Interface">
-  &nbsp;&nbsp;&nbsp;
-  <img src="screenshots/notification-feature.png" width="160" alt="Smart Notifications">
-  &nbsp;&nbsp;&nbsp;
-  <img src="screenshots/customization.png" width="160" alt="Customizable Settings">
-  &nbsp;&nbsp;&nbsp;
-  <img src="screenshots/statistics-tracking.png" width="160" alt="Progress Tracking">
-  &nbsp;&nbsp;&nbsp;
-  <img src="screenshots/dark-light-mode.png" width="160" alt="Light & Dark Mode">
+  <img src="screenshots/app-icon.png" width="120" alt="Pomo App Icon">
 </p>
 
-## ✨ Features
+<h1 align="center">Pomo — Pomodoro Timer</h1>
 
-### Core Functionality
-- **🕐 Customizable Timer**: Work sessions (10-60 min), short breaks (3-15 min), and long breaks (10-30 min)
-- **🔄 Automatic Session Flow**: Seamlessly transitions between work and break periods
-- **⏸️ Pause & Resume**: Full control over your sessions
-- **⏭️ Skip Sessions**: Skip breaks when you're in the zone
-- **🔄 Reset Timer**: Start fresh anytime
+<p align="center">
+  A clean, modern Pomodoro timer for iPhone and Apple Watch. Customizable sessions, Dynamic Island support, detailed statistics, and bidirectional Watch sync.
+</p>
 
-### Smart Features
-- **📱 Background Support**: Timer continues running when app is backgrounded
-- **🔔 Push Notifications**: Get notified when sessions complete (even when app is closed)
-- **🔊 Sound Alerts**: Optional audio notifications for session completion
-- **💾 Persistent State**: App remembers your progress if closed unexpectedly
-- **🗓️ Daily Reset**: Completed session counter resets every midnight to keep long breaks aligned with each day
+<p align="center">
+  <img src="https://img.shields.io/badge/iOS-18+-000000?style=flat&logo=apple&logoColor=white" alt="iOS 18+">
+  <img src="https://img.shields.io/badge/watchOS-10+-000000?style=flat&logo=apple&logoColor=white" alt="watchOS 10+">
+  <img src="https://img.shields.io/badge/Swift-5-FA7343?style=flat&logo=swift&logoColor=white" alt="Swift 5">
+  <img src="https://img.shields.io/badge/SwiftUI-blue?style=flat&logo=swift&logoColor=white" alt="SwiftUI">
+</p>
 
-### Analytics & Tracking
-- **📊 Daily Statistics**: Track today's completed Pomodoros and total focus time
-- **📈 Weekly Charts**: Visual representation of your productivity over the week
-- **🔥 Streak Counter**: Maintain your daily productivity streaks
-- **📝 Session History**: All sessions are automatically saved with SwiftData
+## Screenshots
+
+### iPhone
+
+<p align="center">
+  <img src="screenshots/timer.png" width="180" alt="Timer">
+  &nbsp;&nbsp;
+  <img src="screenshots/break-mode.png" width="180" alt="Break Mode">
+  &nbsp;&nbsp;
+  <img src="screenshots/statistics.png" width="180" alt="Statistics">
+  &nbsp;&nbsp;
+  <img src="screenshots/settings.png" width="180" alt="Settings">
+</p>
+
+### Apple Watch
+
+<p align="center">
+  <img src="screenshots/watch-timer.png" width="140" alt="Watch Timer">
+  &nbsp;&nbsp;
+  <img src="screenshots/watch-break.png" width="140" alt="Watch Break">
+  &nbsp;&nbsp;
+  <img src="screenshots/watch-settings.png" width="140" alt="Watch Settings">
+  &nbsp;&nbsp;
+  <img src="screenshots/watch-complication.png" width="140" alt="Watch Complication">
+</p>
+
+## Features
+
+### Core Timer
+- **Customizable Sessions** — Work (10–60 min), short break (3–15 min), long break (10–30 min)
+- **Circular Progress** — Beautiful animated progress ring with time remaining
+- **Automatic Flow** — Seamlessly transitions between work and break periods
+- **Pause, Resume, Skip, Reset** — Full control over your sessions
+- **Background Support** — Timer continues when the app is backgrounded
+- **Push Notifications** — Get notified when sessions complete
+- **Quick Actions** — Start work, take a break, or view stats from the home screen
+
+### Dynamic Island & Live Activities
+- **Lock Screen Widget** — See your timer on the lock screen without unlocking
+- **Dynamic Island** — Compact and expanded views on supported iPhones
+- **Real-Time Updates** — Timer countdown updates live
+
+### Apple Watch
+- **Independent Timer** — Start, pause, and track sessions directly on your wrist
+- **Bidirectional Sync** — Settings and timer state sync between iPhone and Watch via WatchConnectivity
+- **Complications** — Glanceable timer status on your watch face
+- **Haptic Feedback** — Subtle taps when sessions complete
+
+### Statistics & Tracking
+- **Daily Stats** — Completed Pomodoros and total focus time
+- **Weekly Charts** — Visual bar chart of your productivity over the week
+- **Streak Counter** — Maintain daily productivity streaks
+- **Session History** — All sessions saved automatically with SwiftData
 
 ### Customization
-- **⚙️ Flexible Settings**: Adjust all timer durations to fit your workflow
-- **🎯 Configurable Long Breaks**: Set how many work sessions trigger a long break (2-6 sessions)
-- **🔕 Notification Control**: Toggle notifications and sounds independently
-- **🌙 Adaptive Design**: Supports both light and dark mode
+- **Flexible Durations** — Adjust all timer durations with sliders
+- **Configurable Long Breaks** — Set sessions until long break (2–6)
+- **Notification & Sound Control** — Toggle independently
+- **Light & Dark Mode** — Adaptive design
 
-## 🏗️ Technical Architecture
+## Architecture
 
 ### Built With
-- **Swift 5.0** - Modern, safe programming language
-- **SwiftUI** - Declarative UI framework for iOS
-- **SwiftData** - Core Data successor for data persistence
-- **Combine** - Reactive programming framework
-- **UserNotifications** - Background notifications
-- **AVFoundation** - Audio playback
-- **Charts** - Native chart visualization
+- **Swift 5** & **SwiftUI** — Declarative UI
+- **SwiftData** — Session persistence
+- **Combine** — Reactive state management
+- **ActivityKit** — Dynamic Island & Live Activities
+- **WatchConnectivity** — iPhone ↔ Watch sync
+- **WidgetKit** — Watch complications
+- **Charts** — Native chart visualization
+- **AVFoundation** — Audio alerts
 
-### Architecture Pattern
-- **MVVM (Model-View-ViewModel)** - Clean separation of concerns
-- **Reactive Programming** - Uses Combine for state management
-- **Service Layer** - Dedicated services for data, notifications, and audio
-
-### Key Components
+### Project Structure
 ```
 Pomo/
 ├── Core/
-│   ├── Models/           # Data models (TimerSession, TimerType)
-│   ├── ViewModels/       # Business logic (TimerViewModel, etc.)
-│   ├── Services/         # App services (DataService, NotificationService)
-│   └── Features/         # Feature-specific views and components
+│   ├── Models/           # TimerSession, TimerType
+│   ├── ViewModels/       # TimerViewModel, StatsViewModel
+│   ├── Services/         # DataService, NotificationService
+│   └── Features/         # Feature-specific views
 ├── Shared/
-│   ├── Extensions/       # SwiftUI view extensions
-│   └── Utils/           # Constants and utilities
-└── Resources/           # Assets, localizations, and configurations
+│   ├── Extensions/       # SwiftUI extensions
+│   ├── Connectivity/     # WatchConnectivity managers
+│   └── Utils/            # Constants and utilities
+├── Resources/            # Assets, localizations
+├── PomoWatch/            # Apple Watch companion app
+├── PomoWatchWidgetExtension/  # Watch complications
+└── PomoWidgetExtension/  # Dynamic Island & Live Activities
 ```
 
-## 🚀 Getting Started
+### Pattern
+- **MVVM** — Clean separation of concerns
+- **Service Layer** — Dedicated services for data, notifications, audio, and connectivity
+- **App Groups** — Shared state between iPhone, Watch, and widget extensions
+
+## Getting Started
 
 ### Requirements
-- **iOS 17.0+**
+- **iOS 18.0+** / **watchOS 10.0+**
 - **Xcode 16.0+**
 - **Swift 5.0+**
 
 ### Installation
-1. Clone the repository
-   ```bash
-   git clone https://github.com/arzaluz-chris/pomo.git
-   ```
+```bash
+git clone https://github.com/arzaluz-chris/pomo.git
+cd pomo
+open Pomo.xcodeproj
+```
 
-2. Open the project in Xcode
-   ```bash
-   cd pomo
-   open Pomo.xcodeproj
-   ```
+Build and run with `Cmd + R`. For the Watch app, select the PomoWatch scheme.
 
-3. Build and run on your device or simulator
-   ```
-   ⌘ + R
-   ```
+### Default Configuration
+| Setting | Default |
+|---------|---------|
+| Work session | 25 min |
+| Short break | 5 min |
+| Long break | 15 min |
+| Sessions until long break | 4 |
 
-### Configuration
-The app works out of the box with sensible defaults:
-- **Work sessions**: 25 minutes
-- **Short breaks**: 5 minutes  
-- **Long breaks**: 15 minutes
-- **Sessions until long break**: 4
+All settings can be customized in the Settings tab and sync to Apple Watch.
 
-All settings can be customized in the Settings tab.
+## Localization
 
-## 🎯 Usage
-
-### Basic Workflow
-1. **Start a Session**: Tap the play button to begin a work session
-2. **Stay Focused**: The circular progress indicator shows remaining time
-3. **Take Breaks**: App automatically suggests breaks after work sessions
-4. **Track Progress**: View your daily stats and weekly trends
-5. **Customize**: Adjust timers and notifications to fit your needs
-
-### Pro Tips
-- **Enable notifications** to stay informed even when the app is backgrounded
-- **Use the skip feature** sparingly - breaks are important for sustained productivity
-- **Check your streak** regularly to maintain consistency
-- **Experiment with timer durations** to find what works best for you
-
-## 🌍 Localization
-
-Currently supports:
-- **Spanish** (Primary)
 - **English**
+- **Spanish**
 
-Easy to extend for additional languages using Xcode's String Catalogs.
+Uses Xcode String Catalogs for easy extension to additional languages.
 
-## 📝 License
+## Privacy
 
-This project is available under the MIT License. See the LICENSE file for more info.
+All data is stored locally on device. No accounts, no analytics, no third-party services. iPhone–Watch sync is local via App Groups and WatchConnectivity.
 
-## 🤝 Contributing
+## License
 
-This is a personal MVP project, but feedback and suggestions are welcome! Feel free to:
-- Report bugs via Issues
-- Suggest features 
-- Submit pull requests
+This project is available under the MIT License.
 
-## 📬 Contact
+## Contact
 
 Created by [Christian Arzaluz](mailto:christian.arzaluz@gmail.com)
 
----
-
-**Ready to boost your productivity? Download Pomo and start your first Pomodoro session today! 🍅**
+[Website](https://chrisarzaluz.dev/pomo/) · [Privacy Policy](https://chrisarzaluz.dev/pomo/privacy.html) · [Support](https://chrisarzaluz.dev/pomo/support.html)
