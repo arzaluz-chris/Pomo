@@ -36,4 +36,17 @@ struct Constants {
         static let pendingActionKey = "pendingTimerAction"
         static let actionTimestampKey = "timerActionTimestamp"
     }
+
+    // Watch UI
+    struct WatchUI {
+        static let timerCircleSize: CGFloat = 105
+        static let strokeWidth: CGFloat = 7
+    }
+
+    // Watch Connectivity
+    struct WatchConnectivity {
+        static let settingsKey = "settingsSync"
+        static let timerStateKey = "timerStateSync"
+        static let completedSessionKey = "completedSessionSync"
+    }
 }

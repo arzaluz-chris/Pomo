@@ -14,9 +14,16 @@ extension View {
     }
     
     func pomoCard() -> some View {
-        self
+        #if os(watchOS)
+        return self
+            .padding()
+            .background(Color.gray.opacity(0.15))
+            .cornerRadius(16)
+        #else
+        return self
             .padding()
             .background(Color(.systemGray6))
             .cornerRadius(16)
+        #endif
     }
 }

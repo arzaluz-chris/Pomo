@@ -1,6 +1,9 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "" : {
+
+    },
     "¿Restablecer ajustes?" : {
       "localizations" : {
         "en" : {
@@ -13,6 +16,29 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "¿Restablecer ajustes?"
+          }
+        }
+      }
+    },
+    "%@ %@ %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ %2$@ %3$@"
+          }
+        }
+      }
+    },
+    "%@ Pomo" : {
+
+    },
+    "%@ Pomo · %lld min" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ Pomo · %2$lld min"
           }
         }
       }
@@ -181,7 +207,7 @@
       }
     },
     "Break" : {
-      "comment" : "Short break session type",
+      "comment" : "Break session short name\nShort break duration label\nShort break session type",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -262,6 +288,9 @@
         }
       }
     },
+    "Corner timer" : {
+      "comment" : "Corner complication description"
+    },
     "Descanso corto" : {
       "localizations" : {
         "en" : {
@@ -293,6 +322,9 @@
           }
         }
       }
+    },
+    "Detailed timer status" : {
+      "comment" : "Rectangular complication description"
     },
     "día" : {
       "localizations" : {
@@ -357,6 +389,9 @@
           }
         }
       }
+    },
+    "Durations" : {
+      "comment" : "Settings section header"
     },
     "Efectos de sonido" : {
       "localizations" : {
@@ -454,8 +489,14 @@
         }
       }
     },
+    "Inline timer status" : {
+      "comment" : "Inline complication description"
+    },
+    "Long" : {
+      "comment" : "Long break short name"
+    },
     "Long Break" : {
-      "comment" : "Long break session type",
+      "comment" : "Long break duration label\nLong break section header\nLong break session type",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -487,6 +528,9 @@
           }
         }
       }
+    },
+    "min" : {
+      "comment" : "Minutes abbreviation for complication"
     },
     "No hay datos esta semana" : {
       "localizations" : {
@@ -590,6 +634,18 @@
         }
       }
     },
+    "Pomo Corner" : {
+
+    },
+    "Pomo Inline" : {
+
+    },
+    "Pomo Rectangular" : {
+
+    },
+    "Pomo Timer" : {
+
+    },
     "Pomodoros" : {
       "localizations" : {
         "en" : {
@@ -621,6 +677,9 @@
           }
         }
       }
+    },
+    "Ready to focus" : {
+      "comment" : "Idle complication state"
     },
     "Reiniciar" : {
       "localizations" : {
@@ -776,8 +835,7 @@
       }
     },
     "Sessions" : {
-      "comment" : "Sessions label in Dynamic Island",
-      "extractionState" : "stale",
+      "comment" : "Sessions until long break label",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -792,6 +850,9 @@
           }
         }
       }
+    },
+    "Settings" : {
+      "comment" : "Watch settings navigation title"
     },
     "Skip Session" : {
       "comment" : "Intent title for skipping session",
@@ -895,6 +956,9 @@
         }
       }
     },
+    "Timer remaining time" : {
+      "comment" : "Circular complication description"
+    },
     "Total semanal:" : {
       "localizations" : {
         "en" : {
@@ -928,7 +992,7 @@
       }
     },
     "Work" : {
-      "comment" : "Work session type",
+      "comment" : "Work duration label\nWork session short name\nWork session type",
       "localizations" : {
         "en" : {
           "stringUnit" : {

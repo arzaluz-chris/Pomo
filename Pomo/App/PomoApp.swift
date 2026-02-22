@@ -2,14 +2,15 @@
 
 import SwiftUI
 import SwiftData
+import WatchConnectivity
 
 @main
 struct PomoApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @AppStorage("selectedTab") private var selectedTab = 0
-    
+
     let modelContainer: ModelContainer
-    
+
     init() {
         do {
             let schema = Schema([TimerSession.self])
@@ -18,6 +19,9 @@ struct PomoApp: App {
         } catch {
             fatalError("Could not create ModelContainer: \(error)")
         }
+
+        // Activate WatchConnectivity for iPhone <-> Watch sync
+        WatchConnectivityManager.shared.activate()
     }
     
     var body: some Scene {
