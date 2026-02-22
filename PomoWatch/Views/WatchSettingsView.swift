@@ -24,7 +24,7 @@ struct WatchSettingsView: View {
             Section {
                 Stepper(value: $workDuration, in: 10...60) {
                     VStack(alignment: .leading) {
-                        Text("Trabajo")
+                        Text(String(localized: "Work", comment: "Work duration label"))
                             .font(.caption2)
                             .foregroundColor(.secondary)
                         Text("\(workDuration) min")
@@ -42,7 +42,7 @@ struct WatchSettingsView: View {
 
                 Stepper(value: $shortBreakDuration, in: 3...15) {
                     VStack(alignment: .leading) {
-                        Text("Descanso")
+                        Text(String(localized: "Break", comment: "Short break duration label"))
                             .font(.caption2)
                             .foregroundColor(.secondary)
                         Text("\(shortBreakDuration) min")
@@ -60,7 +60,7 @@ struct WatchSettingsView: View {
 
                 Stepper(value: $longBreakDuration, in: 10...30) {
                     VStack(alignment: .leading) {
-                        Text("Descanso largo")
+                        Text(String(localized: "Long Break", comment: "Long break duration label"))
                             .font(.caption2)
                             .foregroundColor(.secondary)
                         Text("\(longBreakDuration) min")
@@ -76,13 +76,13 @@ struct WatchSettingsView: View {
                 }
                 .onChange(of: longBreakDuration) { syncSettingsToPhone() }
             } header: {
-                Label("Duraciones", systemImage: "clock.fill")
+                Label(String(localized: "Durations", comment: "Settings section header"), systemImage: "clock.fill")
             }
 
             Section {
                 Stepper(value: $sessionsUntilLongBreak, in: 2...6) {
                     VStack(alignment: .leading) {
-                        Text("Sesiones")
+                        Text(String(localized: "Sessions", comment: "Sessions until long break label"))
                             .font(.caption2)
                             .foregroundColor(.secondary)
                         Text("\(sessionsUntilLongBreak)")
@@ -98,20 +98,20 @@ struct WatchSettingsView: View {
                 }
                 .onChange(of: sessionsUntilLongBreak) { syncSettingsToPhone() }
             } header: {
-                Label("Descanso largo", systemImage: "arrow.uturn.right.circle")
+                Label(String(localized: "Long Break", comment: "Long break section header"), systemImage: "arrow.uturn.right.circle")
             }
         }
-        .navigationTitle("Ajustes")
+        .navigationTitle(String(localized: "Settings", comment: "Watch settings navigation title"))
     }
 
     // MARK: - Pre-watchOS 26 Standard Design
 
     private var standardSettingsView: some View {
         List {
-            Section("Duraciones") {
+            Section(String(localized: "Durations", comment: "Settings section header")) {
                 Stepper(value: $workDuration, in: 10...60) {
                     HStack {
-                        Text("Trabajo")
+                        Text(String(localized: "Work", comment: "Work duration label"))
                         Spacer()
                         Text("\(workDuration) min")
                             .foregroundColor(.pomoPrimary)
@@ -121,7 +121,7 @@ struct WatchSettingsView: View {
 
                 Stepper(value: $shortBreakDuration, in: 3...15) {
                     HStack {
-                        Text("Descanso")
+                        Text(String(localized: "Break", comment: "Short break duration label"))
                         Spacer()
                         Text("\(shortBreakDuration) min")
                             .foregroundColor(.pomoPrimary)
@@ -131,7 +131,7 @@ struct WatchSettingsView: View {
 
                 Stepper(value: $longBreakDuration, in: 10...30) {
                     HStack {
-                        Text("Descanso largo")
+                        Text(String(localized: "Long Break", comment: "Long break duration label"))
                         Spacer()
                         Text("\(longBreakDuration) min")
                             .foregroundColor(.pomoPrimary)
@@ -140,10 +140,10 @@ struct WatchSettingsView: View {
                 .onChange(of: longBreakDuration) { syncSettingsToPhone() }
             }
 
-            Section("Descanso largo") {
+            Section(String(localized: "Long Break", comment: "Long break section header")) {
                 Stepper(value: $sessionsUntilLongBreak, in: 2...6) {
                     HStack {
-                        Text("Sesiones")
+                        Text(String(localized: "Sessions", comment: "Sessions until long break label"))
                         Spacer()
                         Text("\(sessionsUntilLongBreak)")
                             .foregroundColor(.pomoPrimary)
@@ -152,7 +152,7 @@ struct WatchSettingsView: View {
                 .onChange(of: sessionsUntilLongBreak) { syncSettingsToPhone() }
             }
         }
-        .navigationTitle("Ajustes")
+        .navigationTitle(String(localized: "Settings", comment: "Watch settings navigation title"))
     }
 
     // MARK: - Sync

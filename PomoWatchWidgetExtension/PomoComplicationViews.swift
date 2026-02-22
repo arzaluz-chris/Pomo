@@ -39,6 +39,15 @@ struct PomoComplicationEntry: TimelineEntry {
         }
     }
 
+    var tintColor: Color {
+        switch timerType {
+        case "shortBreak", "longBreak":
+            return .pomoSecondary
+        default:
+            return .pomoPrimary
+        }
+    }
+
     var progress: Double {
         guard totalDuration > 0 else { return 0 }
         return 1.0 - (Double(timeRemaining) / Double(totalDuration))
@@ -48,6 +57,10 @@ struct PomoComplicationEntry: TimelineEntry {
         let minutes = max(0, timeRemaining) / 60
         let seconds = max(0, timeRemaining) % 60
         return String(format: "%d:%02d", minutes, seconds)
+    }
+
+    var durationMinutes: Int {
+        totalDuration / 60
     }
 
     var currentTimeRemaining: Int {
@@ -151,19 +164,35 @@ struct PomoCircularComplication: Widget {
             ZStack {
                 AccessoryWidgetBackground()
 
-                Gauge(value: entry.isActive ? entry.progress : 0) {
-                    Image(systemName: "timer")
-                } currentValueLabel: {
-                    Text(entry.isActive ? entry.timeString : "")
-                        .font(.system(size: 12, design: .rounded))
-                        .monospacedDigit()
+                if entry.isActive {
+                    Gauge(value: entry.progress) {
+                        Image(systemName: "timer")
+                    } currentValueLabel: {
+                        Text(entry.timeString)
+                            .font(.system(size: 12, design: .rounded))
+                            .monospacedDigit()
+                    }
+                    .gaugeStyle(.accessoryCircular)
+                    .tint(entry.tintColor)
+                } else {
+                    Gauge(value: 0) {
+                        Image(systemName: "timer")
+                    } currentValueLabel: {
+                        Text("\(entry.durationMinutes)")
+                            .font(.system(size: 16, weight: .semibold, design: .rounded))
+                    } minimumValueLabel: {
+                        Text("")
+                    } maximumValueLabel: {
+                        Text(String(localized: "min", comment: "Minutes abbreviation for complication"))
+                            .font(.system(size: 6))
+                    }
+                    .gaugeStyle(.accessoryCircular)
+                    .tint(.pomoPrimary)
                 }
-                .gaugeStyle(.accessoryCircular)
-                .tint(.pomoPrimary)
             }
         }
         .configurationDisplayName("Pomo Timer")
-        .description("Tiempo restante del timer")
+        .description(String(localized: "Timer remaining time", comment: "Circular complication description"))
         .supportedFamilies([.accessoryCircular])
     }
 }
@@ -176,14 +205,14 @@ struct PomoInlineComplication: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: PomoComplicationProvider()) { entry in
             if entry.isActive {
-                Text("\(entry.shortDisplayName) \(entry.timeString)")
+                Text("\(Image(systemName: "timer")) \(entry.shortDisplayName) \(entry.timeString)")
                     .monospacedDigit()
             } else {
-                Text("Pomo")
+                Text("\(Image(systemName: "timer")) Pomo · \(entry.durationMinutes) min")
             }
         }
         .configurationDisplayName("Pomo Inline")
-        .description("Estado del timer en línea")
+        .description(String(localized: "Inline timer status", comment: "Inline complication description"))
         .supportedFamilies([.accessoryInline])
     }
 }
@@ -195,34 +224,44 @@ struct PomoRectangularComplication: Widget {
 
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: PomoComplicationProvider()) { entry in
-            VStack(alignment: .leading, spacing: 2) {
-                HStack {
-                    Image(systemName: "timer")
-                        .font(.caption2)
-                    Text(entry.displayName)
-                        .font(.caption2)
-                        .fontWeight(.semibold)
-                    Spacer()
-                    if entry.isActive {
+            if entry.isActive {
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack {
+                        Image(systemName: "timer")
+                            .font(.caption2)
+                            .foregroundStyle(entry.tintColor)
+                        Text(entry.displayName)
+                            .font(.caption2)
+                            .fontWeight(.semibold)
+                        Spacer()
                         Text(entry.timeString)
                             .font(.caption)
                             .fontWeight(.bold)
                             .monospacedDigit()
                     }
-                }
-
-                if entry.isActive {
                     ProgressView(value: entry.progress)
-                        .tint(.pomoPrimary)
-                } else {
-                    Text("Pomo")
+                        .tint(entry.tintColor)
+                }
+            } else {
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack {
+                        Image(systemName: "timer")
+                            .font(.caption2)
+                            .foregroundStyle(.pomoPrimary)
+                        Text("Pomo")
+                            .font(.caption2)
+                            .fontWeight(.semibold)
+                    }
+                    Text(String(localized: "Ready to focus", comment: "Idle complication state"))
                         .font(.caption2)
-                        .foregroundColor(.secondary)
+                        .foregroundStyle(.secondary)
+                    ProgressView(value: 0)
+                        .tint(.pomoPrimary)
                 }
             }
         }
         .configurationDisplayName("Pomo Rectangular")
-        .description("Estado detallado del timer")
+        .description(String(localized: "Detailed timer status", comment: "Rectangular complication description"))
         .supportedFamilies([.accessoryRectangular])
     }
 }
@@ -245,19 +284,19 @@ struct PomoCornerComplication: Widget {
                             Text(entry.shortDisplayName)
                         }
                         .gaugeStyle(.accessoryLinear)
-                        .tint(.pomoPrimary)
+                        .tint(entry.tintColor)
                     }
             } else {
-                Image(systemName: "timer")
-                    .font(.title3)
+                Text("\(entry.durationMinutes)")
+                    .font(.system(size: 16, weight: .semibold, design: .rounded))
                     .widgetCurvesContent()
                     .widgetLabel {
-                        Text("Pomo")
+                        Text("\(Image(systemName: "timer")) Pomo")
                     }
             }
         }
         .configurationDisplayName("Pomo Corner")
-        .description("Timer en la esquina")
+        .description(String(localized: "Corner timer", comment: "Corner complication description"))
         .supportedFamilies([.accessoryCorner])
     }
 }
