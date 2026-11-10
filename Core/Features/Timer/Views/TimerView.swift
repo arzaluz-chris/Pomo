@@ -337,7 +337,7 @@ private struct WideTimerLayout: View {
                             .foregroundStyle(PomoPalette.inkText)
                         Spacer()
                     }
-                    PomoTabBar(selection: $selectedTab, tint: viewModel.currentType.tint, showsAllTitles: true)
+                    PomoTabBar(selection: $selectedTab, tint: viewModel.currentType.tint)
                     TodaySummary(style: .column)
                 }
                 .padding(.horizontal, PomoSpace.l)

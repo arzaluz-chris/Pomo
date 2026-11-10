@@ -382,6 +382,50 @@ struct PomoFold: Equatable {
     }
 }
 
+extension EnvironmentValues {
+    /// iPhone Duo's hinge across the current screen, if any (set by the root view).
+    @Entry var pomoFold: PomoFold? = nil
+}
+
+/// Two scrolling panes split exactly at a vertical hinge, or one scrolling column otherwise.
+struct PomoFoldPanes<Leading: View, Trailing: View>: View {
+    @Environment(\.pomoFold) private var fold
+    @ViewBuilder var leading: () -> Leading
+    @ViewBuilder var trailing: () -> Trailing
+
+    var body: some View {
+        if let fold, fold.axis == .vertical {
+            HStack(spacing: 0) {
+                pane(leading).frame(width: fold.before)
+                Rectangle().fill(PomoPalette.hairline).frame(width: 2).frame(width: fold.gap)
+                    .accessibilityHidden(true)
+                pane(trailing).frame(maxWidth: .infinity)
+            }
+        } else {
+            ScrollView {
+                VStack(alignment: .leading, spacing: PomoSpace.l) {
+                    leading()
+                    trailing()
+                }
+                .padding(.horizontal, PomoSpace.m)
+                .padding(.bottom, PomoSpace.xl)
+                .frame(maxWidth: 640)
+                .frame(maxWidth: .infinity)
+            }
+        }
+    }
+
+    private func pane<Content: View>(_ content: () -> Content) -> some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: PomoSpace.l) {
+                content()
+            }
+            .padding(.horizontal, PomoSpace.l)
+            .padding(.vertical, PomoSpace.m)
+        }
+    }
+}
+
 extension View {
     /// Measures iPhone Duo's hinge on every geometry change (open, fold, rotate). Always nil
     /// on other devices. Measure on a full-size container, never on a stack whose size depends

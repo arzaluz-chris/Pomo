@@ -29,14 +29,15 @@ struct RootView: View {
                     // Rotated or half folded like a laptop: look at the top, touch the bottom
                     TimerView(layout: .folded(top: fold.before, gap: fold.gap), selectedTab: $selectedTab)
                 } else if let fold, fold.axis == .vertical {
-                    wideContent(split: fold)
+                    wideContent(split: fold, width: proxy.size.width)
                 } else if isWide {
-                    wideContent(split: nil)
+                    wideContent(split: nil, width: proxy.size.width)
                 } else {
                     compactContent
                 }
             }
             .animation(.smooth, value: fold)
+            .environment(\.pomoFold, fold)
         }
         .onPomoFoldChange { fold = $0 }
         .tint(timerViewModel.currentType.tint)
@@ -73,7 +74,7 @@ struct RootView: View {
     }
 
     @ViewBuilder
-    private func wideContent(split: PomoFold?) -> some View {
+    private func wideContent(split: PomoFold?, width: CGFloat) -> some View {
         if selectedTab == PomoTab.timer.rawValue {
             TimerView(layout: .wide(split: split), selectedTab: $selectedTab)
         } else {
@@ -81,8 +82,10 @@ struct RootView: View {
                 .safeAreaInset(edge: .top, spacing: 0) {
                     HStack {
                         Spacer()
-                        PomoTabBar(selection: $selectedTab, tint: tabTint, showsAllTitles: true)
-                            .fixedSize()
+                        PomoTabBar(selection: $selectedTab, tint: tabTint, showsAllTitles: split == nil)
+                            // With a hinge, keep the bar inside the pane after it
+                            .frame(maxWidth: split.map { max(0, width - $0.before - $0.gap - 2 * (PomoSpace.l + 6)) } ?? .infinity)
+                            .fixedSize(horizontal: split == nil, vertical: false)
                     }
                     .padding(.horizontal, PomoSpace.l + 6)
                     .padding(.vertical, PomoSpace.xs)

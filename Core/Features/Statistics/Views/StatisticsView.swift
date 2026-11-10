@@ -9,15 +9,10 @@ struct StatisticsView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: PomoSpace.l) {
-                    today
-                    week
-                }
-                .padding(.horizontal, PomoSpace.m)
-                .padding(.bottom, PomoSpace.xl)
-                .frame(maxWidth: 640)
-                .frame(maxWidth: .infinity)
+            PomoFoldPanes {
+                today
+            } trailing: {
+                week
             }
             .background { PomoPage() }
             .navigationTitle("Estadísticas")

@@ -11,17 +11,12 @@ struct SettingsView: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: PomoSpace.l) {
-                    durations
-                    cycle
-                    alerts
-                    about
-                }
-                .padding(.horizontal, PomoSpace.m)
-                .padding(.bottom, PomoSpace.xl)
-                .frame(maxWidth: 640)
-                .frame(maxWidth: .infinity)
+            PomoFoldPanes {
+                durations
+                cycle
+            } trailing: {
+                alerts
+                about
             }
             .background { PomoPage() }
             .navigationTitle("Ajustes")
