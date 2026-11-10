@@ -17,7 +17,9 @@ class SettingsViewModel: ObservableObject {
     @AppStorage(Constants.UserDefaults.sessionsUntilLongBreak) var sessionsUntilLongBreak: Int = Constants.Defaults.sessionsUntilLongBreak {
         didSet { syncSettingsToWatch() }
     }
-    @AppStorage(Constants.UserDefaults.isNotificationEnabled) var isNotificationEnabled: Bool = true
+    @AppStorage(Constants.UserDefaults.isNotificationEnabled) var isNotificationEnabled: Bool = true {
+        didSet { syncSettingsToWatch() }
+    }
     @AppStorage(Constants.UserDefaults.isSoundEnabled) var isSoundEnabled: Bool = true
 
     init() {
@@ -44,7 +46,8 @@ class SettingsViewModel: ObservableObject {
             workDuration: workDuration,
             shortBreakDuration: shortBreakDuration,
             longBreakDuration: longBreakDuration,
-            sessionsUntilLongBreak: sessionsUntilLongBreak
+            sessionsUntilLongBreak: sessionsUntilLongBreak,
+            notificationsEnabled: isNotificationEnabled
         )
         WatchConnectivityManager.shared.syncSettings(settings)
     }

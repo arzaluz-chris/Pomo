@@ -3,8 +3,7 @@
 import SwiftUI
 
 struct TimerView: View {
-    @StateObject private var viewModel = TimerViewModel()
-    @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var viewModel: TimerViewModel
     @Namespace private var selectionAnimation
     
     // Estado para controlar el color de fondo animado
@@ -159,9 +158,6 @@ struct TimerView: View {
                 }
                 .padding(.bottom, 40)
             }
-            .onAppear {
-                viewModel.dataService.setModelContext(modelContext)
-            }
             .onChange(of: viewModel.isActive) { isActive in
                 if isActive {
                     // Gradiente para el modo enfoque con los colores de la app
@@ -298,9 +294,6 @@ struct TimerView: View {
                     Spacer()
                 }
                 .padding()
-            }
-            .onAppear {
-                viewModel.dataService.setModelContext(modelContext)
             }
         }
     }

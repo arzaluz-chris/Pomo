@@ -81,8 +81,8 @@ class ReviewService: ObservableObject {
         Task {
             try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 segundos
             
-            if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
-                SKStoreReviewController.requestReview(in: scene)
+            if let scene = activeWindowScene {
+                AppStore.requestReview(in: scene)
                 print("📝 Review: Solicitando reseña al usuario")
             }
         }
@@ -90,15 +90,23 @@ class ReviewService: ObservableObject {
     
     /// Solicitud manual de reseña (desde Quick Actions o Settings)
     func requestManualReview() {
-        if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
-            SKStoreReviewController.requestReview(in: scene)
+        if let scene = activeWindowScene {
+            AppStore.requestReview(in: scene)
         }
+    }
+
+    /// The system ignores review requests without a foreground scene (e.g. when a session
+    /// completes while the app runs in the background).
+    private var activeWindowScene: UIWindowScene? {
+        UIApplication.shared.connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .first { $0.activationState == .foregroundActive }
     }
     
     /// Abre directamente la página de reseñas en App Store
     func openAppStoreForReview() {
-        // ID real de tu app Pomo en App Store
-        let appStoreURL = "https://apps.apple.com/app/id6739268564?action=write-review"
+        // Apple ID de Pomo en App Store Connect ("Pomo Simple Timer")
+        let appStoreURL = "https://apps.apple.com/app/id6746705227?action=write-review"
         
         if let url = URL(string: appStoreURL) {
             UIApplication.shared.open(url)

@@ -5,6 +5,7 @@ import SwiftUI
 import Combine
 import UIKit
 import ActivityKit
+import SwiftData
 import WatchConnectivity
 
 @MainActor
@@ -34,8 +35,17 @@ class TimerViewModel: ObservableObject {
     @AppStorage("shouldStartTimer") private var shouldStartTimer: Bool = false
     @AppStorage("quickActionTimerType") private var quickActionTimerType: String = ""
     
+    // Identity and start of the current session, shared with Apple Watch. Persisted so a
+    // session that ends while the app is terminated is still recorded. Either device may
+    // record it; the session ID lets the iPhone store drop the duplicate.
+    @AppStorage("savedSessionID") private var sessionID: String = ""
+    @AppStorage("savedSessionStartTime") private var savedSessionStartTime: Double = 0
+    private var sessionStartTime: Date? {
+        get { savedSessionStartTime > 0 ? Date(timeIntervalSince1970: savedSessionStartTime) : nil }
+        set { savedSessionStartTime = newValue?.timeIntervalSince1970 ?? 0 }
+    }
+
     private var timer: Timer?
-    private var sessionStartTime: Date?
     private let soundService = SoundService()
     private let notificationService = NotificationService()
     private let reviewService = ReviewService.shared
@@ -50,7 +60,6 @@ class TimerViewModel: ObservableObject {
     
     // Live Activity
     private let liveActivityManager = LiveActivityManager.shared
-    private var actionPollingTimer: Timer?
 
     // Timer para verificar el cambio de día
     private var midnightTimer: Timer?
@@ -86,7 +95,11 @@ class TimerViewModel: ObservableObject {
         isActive ? NSLocalizedString("PAUSE", comment: "Pause button title") : NSLocalizedString("START", comment: "Start button title")
     }
     
-    init() {
+    init(modelContainer: ModelContainer) {
+        // Attach storage before restoring state: a session that finished while the app was
+        // closed is saved during restoreState()
+        dataService.setModelContext(modelContainer.mainContext)
+
         setupHaptics()
         
         // Inicializar valores anteriores
@@ -97,13 +110,13 @@ class TimerViewModel: ObservableObject {
         restoreState()
         setupNotificationObservers()
         setupMidnightTimer()
-        notificationService.cancelAllNotifications()
         setupWatchConnectivityCallbacks()
+        // Apply an action a Live Activity button stored while the app could not handle it
+        checkForLiveActivityAction()
     }
     
     deinit {
         midnightTimer?.invalidate()
-        actionPollingTimer?.invalidate()
     }
     
     private func setupHaptics() {
@@ -188,9 +201,13 @@ class TimerViewModel: ObservableObject {
                     totalSessionDuration = getDurationForType(currentType)
                 }
                 startTimerCounting()
+                notificationService.scheduleCompletion(for: currentType, at: Date(timeIntervalSince1970: savedEndTime))
             } else {
                 handleTimerExpired()
             }
+        } else if savedIsActive {
+            // The session ended while the app was not running: record it instead of dropping it
+            handleTimerExpired()
         } else {
             resetToInitialState()
         }
@@ -263,20 +280,18 @@ class TimerViewModel: ObservableObject {
             }
             return
         }
-        
-        savedEndTime = Date().timeIntervalSince1970 + Double(timeRemaining)
+
+        // savedEndTime is the source of truth while running (set on start); don't recompute
+        // it from the tick counter, which can drift. The alert was scheduled on start.
         savedIsActive = true
         savedTimerType = currentType.rawValue
         savedCompletedSessions = completedSessions
         savedTimeRemaining = 0
-        
-        Task {
-            await notificationService.scheduleTimerCompletionNotification(for: currentType, in: TimeInterval(timeRemaining))
-        }
     }
     
     private func handleAppComingToForeground() {
-        notificationService.cancelAllNotifications()
+        // Only clear alerts already shown; the pending one must survive while the timer runs
+        notificationService.clearDelivered()
         resetSessionsIfNeeded()
         checkForLiveActivityAction()
         
@@ -300,10 +315,12 @@ class TimerViewModel: ObservableObject {
     }
     
     private func handleTimerExpired() {
+        // Record the session at its real end time, not when the app noticed it
+        let endDate = savedEndTime > 0 ? Date(timeIntervalSince1970: min(savedEndTime, Date().timeIntervalSince1970)) : Date()
         timeRemaining = 0
         savedTimeRemaining = 0
         isPaused = false
-        sessionCompleted(wasSkipped: false)
+        sessionCompleted(wasSkipped: false, endDate: endDate)
     }
     
     func toggleTimer() {
@@ -337,7 +354,7 @@ class TimerViewModel: ObservableObject {
         // Reiniciar al valor inicial del tipo actual
         resetToInitialState()
 
-        notificationService.cancelAllNotifications()
+        notificationService.cancelCompletion()
 
         // Live Activity — keep DI showing paused/reset state
         updateLiveActivityState()
@@ -347,7 +364,8 @@ class TimerViewModel: ObservableObject {
     }
     
     func skipSession() {
-        guard isActive else { return }
+        // Paused sessions can be skipped too (the Live Activity shows Skip while paused)
+        guard isActive || isPaused else { return }
         let lightImpact = UIImpactFeedbackGenerator(style: .light)
         lightImpact.impactOccurred()
         isPaused = false
@@ -377,8 +395,8 @@ class TimerViewModel: ObservableObject {
             savedTimeRemaining = 0
         }
         
-        // Si es una nueva sesión (no pausada), guardar la duración total
-        if totalSessionDuration == 0 || (!isPaused && sessionStartTime == nil) {
+        // Nueva sesión: guardar la duración total (al reanudar se conserva la original)
+        if totalSessionDuration == 0 {
             totalSessionDuration = timeRemaining
         }
         
@@ -388,9 +406,15 @@ class TimerViewModel: ObservableObject {
         if sessionStartTime == nil {
             sessionStartTime = Date()
         }
+        if sessionID.isEmpty {
+            sessionID = UUID().uuidString
+        }
         
         savedEndTime = Date().timeIntervalSince1970 + Double(timeRemaining)
         startTimerCounting()
+
+        // Alert at the end of the session, whatever state the app is in when it ends
+        notificationService.scheduleCompletion(for: currentType, at: Date(timeIntervalSince1970: savedEndTime))
 
         // Live Activity
         let duration = totalSessionDuration > 0 ? totalSessionDuration : timeRemaining
@@ -399,7 +423,6 @@ class TimerViewModel: ObservableObject {
             timeRemaining: timeRemaining,
             totalDuration: duration
         )
-        startActionPolling()
 
         // Sync to Watch
         syncStateToWatch()
@@ -438,7 +461,7 @@ class TimerViewModel: ObservableObject {
         
         timer?.invalidate()
         timer = nil
-        notificationService.cancelAllNotifications()
+        notificationService.cancelCompletion()
 
         // Live Activity
         updateLiveActivityState()
@@ -451,13 +474,17 @@ class TimerViewModel: ObservableObject {
         timeRemaining = getDurationForType(currentType)
         totalSessionDuration = 0  // Reiniciar la duración total
         sessionStartTime = nil
+        sessionID = ""
         savedEndTime = 0
         savedIsActive = false
         savedTimeRemaining = 0
         isPaused = false
     }
     
-    private func sessionCompleted(wasSkipped: Bool) {
+    private func sessionCompleted(wasSkipped: Bool, endDate: Date = Date()) {
+        // Capture the planned length before the state is cleared
+        let plannedDuration = totalSessionDuration > 0 ? totalSessionDuration : getDurationForType(currentType)
+
         timer?.invalidate()
         timer = nil
         isActive = false
@@ -465,6 +492,7 @@ class TimerViewModel: ObservableObject {
         savedTimeRemaining = 0
         isPaused = false
         totalSessionDuration = 0  // Reiniciar la duración total
+        notificationService.cancelCompletion()
 
         if !wasSkipped {
             notificationFeedback.notificationOccurred(.success)
@@ -473,17 +501,20 @@ class TimerViewModel: ObservableObject {
         }
 
         if let startTime = sessionStartTime {
-            let duration = getDurationForType(currentType) - timeRemaining
+            let duration = max(0, plannedDuration - timeRemaining)
+            let type = currentType
+            let id = sessionID.isEmpty ? UUID().uuidString : sessionID
             Task {
                 await dataService.saveSession(
                     startDate: startTime,
-                    endDate: Date(),
+                    endDate: endDate,
                     duration: duration,
-                    type: currentType,
-                    wasCompleted: !wasSkipped
+                    type: type,
+                    wasCompleted: !wasSkipped,
+                    sessionID: id
                 )
             }
-            sendCompletedSessionToWatch(startTime, duration: duration, wasSkipped: wasSkipped)
+            sendCompletedSessionToWatch(startTime, endDate: endDate, duration: duration, wasSkipped: wasSkipped, sessionID: id)
         }
 
         if !wasSkipped && UIApplication.shared.applicationState == .active {
@@ -503,14 +534,13 @@ class TimerViewModel: ObservableObject {
         }
 
         if wasSkipped {
-            // Skip: move to next session, update DI to show new state, keep polling
+            // Skip: move to next session, update DI to show new state
             moveToNextSessionType()
             resetToInitialState()
             updateLiveActivityState()
         } else {
             // Natural completion: dismiss DI
             liveActivityManager.endLiveActivity()
-            stopActionPolling()
             moveToNextSessionType()
             resetToInitialState()
         }
@@ -559,18 +589,19 @@ class TimerViewModel: ObservableObject {
         )
     }
 
-    private func checkForLiveActivityAction() {
-        let defaults = UserDefaults(suiteName: Constants.LiveActivity.appGroupIdentifier)
-        guard let actionString = defaults?.string(forKey: Constants.LiveActivity.pendingActionKey),
-              let action = PomoTimerAction(rawValue: actionString) else { return }
-
-        // Clear the pending action
-        defaults?.removeObject(forKey: Constants.LiveActivity.pendingActionKey)
-        defaults?.removeObject(forKey: Constants.LiveActivity.actionTimestampKey)
+    /// Runs a Live Activity / Dynamic Island button action. Called directly from the
+    /// intent's perform(), which the system runs in the app's process (relaunching it in the
+    /// background if needed), so the change applies even when the app isn't open. Waits for
+    /// the Live Activity update and the alert (re)scheduling before returning, because the
+    /// system may suspend the app right after perform() finishes.
+    func perform(_ action: PomoTimerAction) async {
+        // Bring state up to date first: the session may have ended while the app was suspended
+        reconcileWithClock()
 
         switch action {
         case .play:
             if !isActive {
+                resetSessionsIfNeeded()
                 startTimer()
             }
         case .pause:
@@ -580,22 +611,35 @@ class TimerViewModel: ObservableObject {
         case .reset:
             resetTimer()
         case .skip:
-            if isActive {
-                skipSession()
-            }
+            skipSession()
+        }
+
+        await liveActivityManager.waitForPendingUpdates()
+        await notificationService.waitForPendingWork()
+    }
+
+    /// Recomputes the remaining time from the saved end date (the 1 s tick counter stops
+    /// while the app is suspended) and completes the session if it already ended.
+    private func reconcileWithClock() {
+        guard isActive, savedEndTime > 0 else { return }
+        let remaining = Int(savedEndTime - Date().timeIntervalSince1970)
+        if remaining > 0 {
+            timeRemaining = remaining
+        } else {
+            handleTimerExpired()
         }
     }
 
-    private func startActionPolling() {
-        actionPollingTimer?.invalidate()
-        actionPollingTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { _ in
-            Task { @MainActor in self.checkForLiveActivityAction() }
-        }
-    }
+    /// Fallback for actions stored by an intent that ran outside the app's process.
+    private func checkForLiveActivityAction() {
+        let defaults = UserDefaults(suiteName: Constants.AppGroup.identifier)
+        guard let actionString = defaults?.string(forKey: Constants.LiveActivity.pendingActionKey),
+              let action = PomoTimerAction(rawValue: actionString) else { return }
 
-    private func stopActionPolling() {
-        actionPollingTimer?.invalidate()
-        actionPollingTimer = nil
+        defaults?.removeObject(forKey: Constants.LiveActivity.pendingActionKey)
+        defaults?.removeObject(forKey: Constants.LiveActivity.actionTimestampKey)
+
+        Task { await perform(action) }
     }
 
     private func getDurationForType(_ type: TimerType) -> Int {
@@ -619,16 +663,19 @@ class TimerViewModel: ObservableObject {
             isPaused: isPaused,
             completedSessions: completedSessions,
             totalSessionDuration: totalSessionDuration,
-            endTime: isActive ? Date().timeIntervalSince1970 + Double(timeRemaining) : nil
+            endTime: isActive ? savedEndTime : nil,
+            sessionID: (isActive || isPaused) && !sessionID.isEmpty ? sessionID : nil,
+            sessionStartDate: (isActive || isPaused) ? sessionStartTime?.timeIntervalSince1970 : nil
         )
         lastActionTimestamp = state.timestamp
         WatchConnectivityManager.shared.syncTimerState(state)
     }
 
-    private func sendCompletedSessionToWatch(_ startTime: Date, duration: Int, wasSkipped: Bool) {
+    private func sendCompletedSessionToWatch(_ startTime: Date, endDate: Date, duration: Int, wasSkipped: Bool, sessionID: String) {
         let session = SessionSync(
+            id: UUID(uuidString: sessionID) ?? UUID(),
             startDate: startTime,
-            endDate: Date(),
+            endDate: endDate,
             duration: duration,
             type: currentType,
             wasCompleted: !wasSkipped,
@@ -660,8 +707,20 @@ class TimerViewModel: ObservableObject {
     private func applyReceivedTimerState(_ state: TimerStateSync) {
         guard state.timestamp > lastActionTimestamp else { return }
 
+        // Remember the newest state applied so an older message arriving late is ignored
+        lastActionTimestamp = max(lastActionTimestamp, state.timestamp)
+
         timer?.invalidate()
         timer = nil
+
+        // Adopt the shared session identity so this device can record the session if it is
+        // the first to notice it ended (the iPhone store drops the duplicate by ID)
+        if let remoteID = state.sessionID {
+            sessionID = remoteID
+        }
+        if let remoteStart = state.sessionStartDate {
+            savedSessionStartTime = remoteStart
+        }
 
         currentType = state.timerType
         savedTimerType = state.currentType
@@ -677,22 +736,34 @@ class TimerViewModel: ObservableObject {
                 isActive = true
                 savedIsActive = true
                 savedEndTime = endTime
+                savedTimeRemaining = 0
                 startTimerCounting()
+                // Both devices alert, with the same identifier, so the system can coordinate them
+                notificationService.scheduleCompletion(for: currentType, at: Date(timeIntervalSince1970: endTime))
                 updateLiveActivityState()
             } else {
+                savedEndTime = endTime
+                savedIsActive = true
                 handleTimerExpired()
             }
         } else if state.isPaused {
             timeRemaining = state.timeRemaining
             isActive = false
             savedIsActive = false
+            savedEndTime = 0
             savedTimeRemaining = state.timeRemaining
+            notificationService.cancelCompletion()
             updateLiveActivityState()
         } else {
             isActive = false
             savedIsActive = false
+            savedEndTime = 0
+            savedTimeRemaining = 0
+            sessionStartTime = nil
+            sessionID = ""
             timeRemaining = getDurationForType(state.timerType)
             totalSessionDuration = 0
+            notificationService.cancelCompletion()
             liveActivityManager.endLiveActivity()
         }
     }
@@ -705,7 +776,8 @@ class TimerViewModel: ObservableObject {
                 endDate: session.endDate,
                 duration: session.duration,
                 type: session.timerType,
-                wasCompleted: session.wasCompleted
+                wasCompleted: session.wasCompleted,
+                sessionID: session.id.uuidString
             )
         }
     }

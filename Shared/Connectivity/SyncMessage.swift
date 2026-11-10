@@ -10,13 +10,17 @@ struct SettingsSync: Codable {
     let longBreakDuration: Int     // in minutes
     let sessionsUntilLongBreak: Int
     let timestamp: TimeInterval
+    // Optional so older app versions on the other device can still decode the message
+    let notificationsEnabled: Bool?
 
-    init(workDuration: Int, shortBreakDuration: Int, longBreakDuration: Int, sessionsUntilLongBreak: Int) {
+    init(workDuration: Int, shortBreakDuration: Int, longBreakDuration: Int, sessionsUntilLongBreak: Int,
+         notificationsEnabled: Bool? = nil) {
         self.workDuration = workDuration
         self.shortBreakDuration = shortBreakDuration
         self.longBreakDuration = longBreakDuration
         self.sessionsUntilLongBreak = sessionsUntilLongBreak
         self.timestamp = Date().timeIntervalSince1970
+        self.notificationsEnabled = notificationsEnabled
     }
 
     func toDictionary() -> [String: Any] {
@@ -42,9 +46,15 @@ struct TimerStateSync: Codable {
     let totalSessionDuration: Int  // seconds
     let endTime: TimeInterval?     // absolute end time for running timers
     let timestamp: TimeInterval    // for conflict resolution (last action wins)
+    // Identity of the running/paused session, shared by both devices so either one can
+    // record it when it ends and the iPhone can drop the duplicate. Optional for
+    // compatibility with older app versions.
+    let sessionID: String?
+    let sessionStartDate: TimeInterval?
 
     init(currentType: TimerType, timeRemaining: Int, isActive: Bool, isPaused: Bool,
-         completedSessions: Int, totalSessionDuration: Int, endTime: TimeInterval?) {
+         completedSessions: Int, totalSessionDuration: Int, endTime: TimeInterval?,
+         sessionID: String? = nil, sessionStartDate: TimeInterval? = nil) {
         self.currentType = currentType.rawValue
         self.timeRemaining = timeRemaining
         self.isActive = isActive
@@ -53,6 +63,8 @@ struct TimerStateSync: Codable {
         self.totalSessionDuration = totalSessionDuration
         self.endTime = endTime
         self.timestamp = Date().timeIntervalSince1970
+        self.sessionID = sessionID
+        self.sessionStartDate = sessionStartDate
     }
 
     var timerType: TimerType {

@@ -129,12 +129,14 @@ struct PomoComplicationProvider: TimelineProvider {
     }
 
     private func currentEntry() -> PomoComplicationEntry {
-        let defaults = UserDefaults.standard
-        let timerType = defaults.string(forKey: "watch_complication_timerType") ?? "work"
-        let timeRemaining = defaults.integer(forKey: "watch_complication_timeRemaining")
-        let isActive = defaults.bool(forKey: "watch_complication_isActive")
-        let totalDuration = defaults.integer(forKey: "watch_complication_totalDuration")
-        let endTime = defaults.double(forKey: "watch_complication_endTime")
+        // Must read from the App Group: the extension's UserDefaults.standard is a different
+        // container from the Watch app's, so it would never see the timer state.
+        let defaults = UserDefaults(suiteName: Constants.AppGroup.identifier) ?? .standard
+        let timerType = defaults.string(forKey: Constants.WatchComplication.timerType) ?? TimerType.work.rawValue
+        let timeRemaining = defaults.integer(forKey: Constants.WatchComplication.timeRemaining)
+        let isActive = defaults.bool(forKey: Constants.WatchComplication.isActive)
+        let totalDuration = defaults.integer(forKey: Constants.WatchComplication.totalDuration)
+        let endTime = defaults.double(forKey: Constants.WatchComplication.endTime)
 
         let actualRemaining: Int
         if isActive && endTime > 0 {

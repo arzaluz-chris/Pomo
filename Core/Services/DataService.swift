@@ -11,15 +11,27 @@ class DataService {
         self.modelContext = context
     }
     
-    func saveSession(startDate: Date, endDate: Date, duration: Int, type: TimerType, wasCompleted: Bool) async {
+    func saveSession(startDate: Date, endDate: Date, duration: Int, type: TimerType, wasCompleted: Bool, sessionID: String? = nil) async {
         guard let modelContext = modelContext else { return }
+
+        // iPhone and Watch can both finish the same session; keep only the first record
+        if let sessionID {
+            var descriptor = FetchDescriptor<TimerSession>(
+                predicate: #Predicate { $0.sessionID == sessionID }
+            )
+            descriptor.fetchLimit = 1
+            if let count = try? modelContext.fetchCount(descriptor), count > 0 {
+                return
+            }
+        }
         
         let session = TimerSession(
             startDate: startDate,
             endDate: endDate,
             duration: duration, // En segundos
             type: type,
-            wasCompleted: wasCompleted
+            wasCompleted: wasCompleted,
+            sessionID: sessionID
         )
         
         modelContext.insert(session)

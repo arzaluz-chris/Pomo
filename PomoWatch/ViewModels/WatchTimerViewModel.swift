@@ -32,10 +32,21 @@ class WatchTimerViewModel: ObservableObject {
     // Sync timestamp
     @AppStorage("watch_lastActionTimestamp") private var lastActionTimestamp: Double = 0
 
+    // Identity and start of the current session, shared with the iPhone. Persisted so a
+    // completed session is still recorded after watchOS terminates the app. Either device
+    // may record it; the iPhone store drops the duplicate by session ID.
+    @AppStorage("watch_savedSessionID") private var sessionID: String = ""
+    @AppStorage("watch_savedSessionStartTime") private var savedSessionStartTime: Double = 0
+    // Mirrors the iPhone "Notifications" setting (synced with the duration settings)
+    @AppStorage("watch_notificationsEnabled") private var notificationsEnabled: Bool = true
+    private var sessionStartTime: Date? {
+        get { savedSessionStartTime > 0 ? Date(timeIntervalSince1970: savedSessionStartTime) : nil }
+        set { savedSessionStartTime = newValue?.timeIntervalSince1970 ?? 0 }
+    }
+
     private var timer: Timer?
-    private var sessionStartTime: Date?
     private let hapticService = WatchHapticService()
-    private var extendedSession: WKExtendedRuntimeSession?
+    private let notificationService = WatchNotificationService()
     private var midnightTimer: Timer?
 
     // Settings change tracking
@@ -131,10 +142,13 @@ class WatchTimerViewModel: ObservableObject {
                     totalSessionDuration = getDurationForType(currentType)
                 }
                 startTimerCounting()
-                startExtendedSession()
+                scheduleCompletionAlert()
             } else {
                 handleTimerExpired()
             }
+        } else if savedIsActive {
+            // Session ended while the app was not running
+            handleTimerExpired()
         } else {
             resetToInitialState()
         }
@@ -143,11 +157,11 @@ class WatchTimerViewModel: ObservableObject {
     // MARK: - Notification Observers
 
     private func setupNotificationObservers() {
-        NotificationCenter.default.publisher(for: WKExtension.applicationWillResignActiveNotification)
+        NotificationCenter.default.publisher(for: WKApplication.willResignActiveNotification)
             .sink { [weak self] _ in self?.handleAppGoingToBackground() }
             .store(in: &cancellables)
 
-        NotificationCenter.default.publisher(for: WKExtension.applicationDidBecomeActiveNotification)
+        NotificationCenter.default.publisher(for: WKApplication.didBecomeActiveNotification)
             .sink { [weak self] _ in self?.handleAppComingToForeground() }
             .store(in: &cancellables)
 
@@ -207,6 +221,7 @@ class WatchTimerViewModel: ObservableObject {
 
     private func handleAppComingToForeground() {
         resetSessionsIfNeeded()
+        notificationService.clearDelivered()
 
         if !savedIsActive && savedTimeRemaining > 0 {
             timeRemaining = savedTimeRemaining
@@ -221,7 +236,6 @@ class WatchTimerViewModel: ObservableObject {
             if !isActive {
                 isActive = true
                 startTimerCounting()
-                startExtendedSession()
             }
         } else {
             handleTimerExpired()
@@ -229,10 +243,12 @@ class WatchTimerViewModel: ObservableObject {
     }
 
     private func handleTimerExpired() {
+        // Record the session at its real end time, not when the app noticed it
+        let endDate = savedEndTime > 0 ? Date(timeIntervalSince1970: min(savedEndTime, Date().timeIntervalSince1970)) : Date()
         timeRemaining = 0
         savedTimeRemaining = 0
         isPaused = false
-        sessionCompleted(wasSkipped: false)
+        sessionCompleted(wasSkipped: false, endDate: endDate)
     }
 
     // MARK: - Timer Controls
@@ -264,7 +280,7 @@ class WatchTimerViewModel: ObservableObject {
         totalSessionDuration = 0
 
         resetToInitialState()
-        stopExtendedSession()
+        notificationService.cancelCompletion()
         updateComplications()
         lastActionTimestamp = Date().timeIntervalSince1970
         syncStateToPhone()
@@ -298,7 +314,8 @@ class WatchTimerViewModel: ObservableObject {
             savedTimeRemaining = 0
         }
 
-        if totalSessionDuration == 0 || (!isPaused && sessionStartTime == nil) {
+        // New session: store its total length (resuming keeps the original one)
+        if totalSessionDuration == 0 {
             totalSessionDuration = timeRemaining
         }
 
@@ -308,10 +325,13 @@ class WatchTimerViewModel: ObservableObject {
         if sessionStartTime == nil {
             sessionStartTime = Date()
         }
+        if sessionID.isEmpty {
+            sessionID = UUID().uuidString
+        }
 
         savedEndTime = Date().timeIntervalSince1970 + Double(timeRemaining)
         startTimerCounting()
-        startExtendedSession()
+        scheduleCompletionAlert()
         updateComplications()
 
         hapticService.playStart()
@@ -351,7 +371,7 @@ class WatchTimerViewModel: ObservableObject {
 
         timer?.invalidate()
         timer = nil
-        stopExtendedSession()
+        notificationService.cancelCompletion()
         updateComplications()
 
         hapticService.playStop()
@@ -363,6 +383,7 @@ class WatchTimerViewModel: ObservableObject {
         timeRemaining = getDurationForType(currentType)
         totalSessionDuration = 0
         sessionStartTime = nil
+        sessionID = ""
         savedEndTime = 0
         savedIsActive = false
         savedTimeRemaining = 0
@@ -371,7 +392,10 @@ class WatchTimerViewModel: ObservableObject {
 
     // MARK: - Session Completion
 
-    private func sessionCompleted(wasSkipped: Bool) {
+    private func sessionCompleted(wasSkipped: Bool, endDate: Date = Date()) {
+        // Capture the planned length before the state is cleared
+        let plannedDuration = totalSessionDuration > 0 ? totalSessionDuration : getDurationForType(currentType)
+
         timer?.invalidate()
         timer = nil
         isActive = false
@@ -379,6 +403,7 @@ class WatchTimerViewModel: ObservableObject {
         savedTimeRemaining = 0
         isPaused = false
         totalSessionDuration = 0
+        notificationService.cancelCompletion()
 
         if !wasSkipped {
             hapticService.playSessionComplete()
@@ -388,10 +413,11 @@ class WatchTimerViewModel: ObservableObject {
 
         // Save completed session and sync to iPhone
         if let startTime = sessionStartTime {
-            let duration = getDurationForType(currentType) - timeRemaining
+            let duration = max(0, plannedDuration - timeRemaining)
             let session = SessionSync(
+                id: UUID(uuidString: sessionID) ?? UUID(),
                 startDate: startTime,
-                endDate: Date(),
+                endDate: endDate,
                 duration: duration,
                 type: currentType,
                 wasCompleted: !wasSkipped,
@@ -408,7 +434,6 @@ class WatchTimerViewModel: ObservableObject {
 
         moveToNextSessionType()
         resetToInitialState()
-        stopExtendedSession()
         updateComplications()
 
         lastActionTimestamp = Date().timeIntervalSince1970
@@ -442,32 +467,19 @@ class WatchTimerViewModel: ObservableObject {
         lastSessionDate = calendar.startOfDay(for: now).timeIntervalSince1970
     }
 
-    // MARK: - Extended Runtime Session
-
-    private func startExtendedSession() {
-        guard extendedSession == nil || extendedSession?.state == .invalid else { return }
-        extendedSession = WKExtendedRuntimeSession()
-        extendedSession?.delegate = WatchExtendedSessionDelegate.shared
-        extendedSession?.start()
-    }
-
-    private func stopExtendedSession() {
-        extendedSession?.invalidate()
-        extendedSession = nil
-    }
-
     // MARK: - Complications
 
     private func updateComplications() {
-        // Write state to UserDefaults for complications to read
-        let defaults = UserDefaults.standard
-        defaults.set(currentType.rawValue, forKey: "watch_complication_timerType")
-        defaults.set(timeRemaining, forKey: "watch_complication_timeRemaining")
-        defaults.set(isActive, forKey: "watch_complication_isActive")
+        // Write state to the App Group so the complication extension (a separate process
+        // with its own UserDefaults.standard) can read it
+        let defaults = UserDefaults(suiteName: Constants.AppGroup.identifier) ?? .standard
+        defaults.set(currentType.rawValue, forKey: Constants.WatchComplication.timerType)
+        defaults.set(timeRemaining, forKey: Constants.WatchComplication.timeRemaining)
+        defaults.set(isActive, forKey: Constants.WatchComplication.isActive)
         defaults.set(totalSessionDuration > 0 ? totalSessionDuration : getDurationForType(currentType),
-                     forKey: "watch_complication_totalDuration")
+                     forKey: Constants.WatchComplication.totalDuration)
         defaults.set(Date().timeIntervalSince1970 + Double(timeRemaining),
-                     forKey: "watch_complication_endTime")
+                     forKey: Constants.WatchComplication.endTime)
 
         WidgetCenter.shared.reloadAllTimelines()
     }
@@ -482,9 +494,22 @@ class WatchTimerViewModel: ObservableObject {
             isPaused: isPaused,
             completedSessions: completedSessions,
             totalSessionDuration: totalSessionDuration,
-            endTime: isActive ? Date().timeIntervalSince1970 + Double(timeRemaining) : nil
+            endTime: isActive ? savedEndTime : nil,
+            sessionID: (isActive || isPaused) && !sessionID.isEmpty ? sessionID : nil,
+            sessionStartDate: (isActive || isPaused) ? sessionStartTime?.timeIntervalSince1970 : nil
         )
+        lastActionTimestamp = max(lastActionTimestamp, state.timestamp)
         WatchConnectivityManager.shared.syncTimerState(state)
+    }
+
+    private func scheduleCompletionAlert() {
+        guard notificationsEnabled, savedEndTime > 0 else {
+            notificationService.cancelCompletion()
+            return
+        }
+        // The iPhone schedules the same alert with the same identifier so the system can
+        // coordinate them instead of showing two
+        notificationService.scheduleCompletion(for: currentType, at: Date(timeIntervalSince1970: savedEndTime))
     }
 
     // MARK: - Receive from iPhone
@@ -510,6 +535,10 @@ class WatchTimerViewModel: ObservableObject {
         shortBreakDurationMinutes = settings.shortBreakDuration
         longBreakDurationMinutes = settings.longBreakDuration
         sessionsUntilLongBreak = settings.sessionsUntilLongBreak
+        if let enabled = settings.notificationsEnabled {
+            notificationsEnabled = enabled
+            if !enabled { notificationService.cancelCompletion() }
+        }
 
         previousWorkDuration = settings.workDuration
         previousShortBreakDuration = settings.shortBreakDuration
@@ -528,9 +557,21 @@ class WatchTimerViewModel: ObservableObject {
         // Only apply if incoming timestamp is newer than our last action
         guard state.timestamp > lastActionTimestamp else { return }
 
+        // Remember the newest state applied so an older message arriving late is ignored
+        lastActionTimestamp = max(lastActionTimestamp, state.timestamp)
+
         // Stop current timer if running
         timer?.invalidate()
         timer = nil
+
+        // Adopt the shared session identity so this device can record the session if it is
+        // the first to notice it ended
+        if let remoteID = state.sessionID {
+            sessionID = remoteID
+        }
+        if let remoteStart = state.sessionStartDate {
+            savedSessionStartTime = remoteStart
+        }
 
         currentType = state.timerType
         savedTimerType = state.currentType
@@ -546,22 +587,31 @@ class WatchTimerViewModel: ObservableObject {
                 isActive = true
                 savedIsActive = true
                 savedEndTime = endTime
+                savedTimeRemaining = 0
                 startTimerCounting()
-                startExtendedSession()
+                scheduleCompletionAlert()
             } else {
+                savedEndTime = endTime
+                savedIsActive = true
                 handleTimerExpired()
             }
         } else if state.isPaused {
             timeRemaining = state.timeRemaining
             isActive = false
             savedIsActive = false
+            savedEndTime = 0
             savedTimeRemaining = state.timeRemaining
+            notificationService.cancelCompletion()
         } else {
             isActive = false
             savedIsActive = false
+            savedEndTime = 0
+            savedTimeRemaining = 0
+            sessionStartTime = nil
+            sessionID = ""
             timeRemaining = getDurationForType(state.timerType)
             totalSessionDuration = 0
-            stopExtendedSession()
+            notificationService.cancelCompletion()
         }
 
         updateComplications()
@@ -577,30 +627,6 @@ class WatchTimerViewModel: ObservableObject {
             return shortBreakDurationMinutes * 60
         case .longBreak:
             return longBreakDurationMinutes * 60
-        }
-    }
-}
-
-// MARK: - Extended Session Delegate
-
-class WatchExtendedSessionDelegate: NSObject, WKExtendedRuntimeSessionDelegate {
-    static let shared = WatchExtendedSessionDelegate()
-
-    func extendedRuntimeSessionDidStart(_ extendedRuntimeSession: WKExtendedRuntimeSession) {
-        print("[Watch] Extended runtime session started")
-    }
-
-    func extendedRuntimeSessionWillExpire(_ extendedRuntimeSession: WKExtendedRuntimeSession) {
-        print("[Watch] Extended runtime session will expire")
-    }
-
-    func extendedRuntimeSession(_ extendedRuntimeSession: WKExtendedRuntimeSession,
-                                 didInvalidateWith reason: WKExtendedRuntimeSessionInvalidationReason,
-                                 error: Error?) {
-        if let error = error {
-            print("[Watch] Extended session invalidated with error: \(error)")
-        } else {
-            print("[Watch] Extended session invalidated: \(reason.rawValue)")
         }
     }
 }

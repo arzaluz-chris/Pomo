@@ -9,9 +9,7 @@ struct PlayTimerIntent: LiveActivityIntent {
     static var description: IntentDescription = IntentDescription("Resumes the Pomo timer")
 
     func perform() async throws -> some IntentResult {
-        let defaults = UserDefaults(suiteName: Constants.LiveActivity.appGroupIdentifier)
-        defaults?.set(PomoTimerAction.play.rawValue, forKey: Constants.LiveActivity.pendingActionKey)
-        defaults?.set(Date().timeIntervalSince1970, forKey: Constants.LiveActivity.actionTimestampKey)
+        await PomoTimerActionDispatcher.dispatch(.play)
         return .result()
     }
 }
@@ -22,9 +20,7 @@ struct PauseTimerIntent: LiveActivityIntent {
     static var description: IntentDescription = IntentDescription("Pauses the Pomo timer")
 
     func perform() async throws -> some IntentResult {
-        let defaults = UserDefaults(suiteName: Constants.LiveActivity.appGroupIdentifier)
-        defaults?.set(PomoTimerAction.pause.rawValue, forKey: Constants.LiveActivity.pendingActionKey)
-        defaults?.set(Date().timeIntervalSince1970, forKey: Constants.LiveActivity.actionTimestampKey)
+        await PomoTimerActionDispatcher.dispatch(.pause)
         return .result()
     }
 }
@@ -35,9 +31,7 @@ struct ResetTimerIntent: LiveActivityIntent {
     static var description: IntentDescription = IntentDescription("Resets the Pomo timer")
 
     func perform() async throws -> some IntentResult {
-        let defaults = UserDefaults(suiteName: Constants.LiveActivity.appGroupIdentifier)
-        defaults?.set(PomoTimerAction.reset.rawValue, forKey: Constants.LiveActivity.pendingActionKey)
-        defaults?.set(Date().timeIntervalSince1970, forKey: Constants.LiveActivity.actionTimestampKey)
+        await PomoTimerActionDispatcher.dispatch(.reset)
         return .result()
     }
 }
@@ -48,9 +42,7 @@ struct SkipTimerIntent: LiveActivityIntent {
     static var description: IntentDescription = IntentDescription("Skips the current Pomo session")
 
     func perform() async throws -> some IntentResult {
-        let defaults = UserDefaults(suiteName: Constants.LiveActivity.appGroupIdentifier)
-        defaults?.set(PomoTimerAction.skip.rawValue, forKey: Constants.LiveActivity.pendingActionKey)
-        defaults?.set(Date().timeIntervalSince1970, forKey: Constants.LiveActivity.actionTimestampKey)
+        await PomoTimerActionDispatcher.dispatch(.skip)
         return .result()
     }
 }
