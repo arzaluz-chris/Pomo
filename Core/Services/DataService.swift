@@ -2,6 +2,7 @@
 
 import Foundation
 import SwiftData
+import WidgetKit
 
 @MainActor
 class DataService {
@@ -41,6 +42,30 @@ class DataService {
         } catch {
             print("Error saving session: \(error)")
         }
+        publishSnapshot()
+    }
+
+    /// All recorded sessions as plain values for statistics.
+    func fetchSamples(since startDate: Date? = nil) -> [SessionSample] {
+        guard let modelContext = modelContext else { return [] }
+        var descriptor = FetchDescriptor<TimerSession>(sortBy: [SortDescriptor(\.startDate)])
+        if let startDate {
+            descriptor.predicate = #Predicate { $0.startDate >= startDate }
+        }
+        let sessions = (try? modelContext.fetch(descriptor)) ?? []
+        return sessions.map {
+            SessionSample(start: $0.startDate, duration: $0.duration, type: $0.timerType, wasCompleted: $0.wasCompleted)
+        }
+    }
+
+    /// Writes today's totals and the streak to the App Group for the widgets.
+    func publishSnapshot(now: Date = Date()) {
+        guard modelContext != nil else { return }
+        let snapshot = StatsCalculator.snapshot(on: now, sessions: fetchSamples())
+        let defaults = UserDefaults(suiteName: Constants.AppGroup.identifier)
+        guard StatsSnapshot.load(from: defaults) != snapshot else { return }
+        snapshot.save(to: defaults)
+        WidgetCenter.shared.reloadAllTimelines()
     }
     
     func fetchTodaySessions() async -> [TimerSession] {

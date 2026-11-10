@@ -920,13 +920,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Total time"
+            "value" : "Focus time"
           }
         },
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Tiempo total"
+            "value" : "Tiempo de enfoque"
           }
         }
       }
