@@ -77,9 +77,10 @@ struct PomoTodayWidgetView: View {
     var body: some View {
         content
             .containerBackground(for: .widget) {
-                ZStack {
+                if entry.isRunning {
+                    entry.tint
+                } else {
                     PomoPalette.background
-                    RadialGradient(colors: [entry.tint.opacity(0.22), .clear], center: .topLeading, startRadius: 0, endRadius: 220)
                 }
             }
     }
@@ -96,48 +97,69 @@ struct PomoTodayWidgetView: View {
 
     // MARK: Home Screen / StandBy
 
+    @ViewBuilder
     private var small: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                if entry.isRunning {
+        if let interval = entry.countdownInterval {
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 6) {
                     Image(systemName: entry.state.type.symbolName)
-                        .foregroundStyle(entry.tint)
-                } else {
-                    PomoMark(showsDial: false).frame(width: 16, height: 16)
+                    Text(entry.state.type.displayName)
+                        .lineLimit(1)
                 }
-                Text(entry.isRunning ? entry.state.type.displayName : String(localized: "Today", comment: "Widget: today's stats"))
-                    .font(.caption.weight(.semibold))
-                    .foregroundStyle(.secondary)
+                .font(.system(size: 13, weight: .heavy, design: .rounded))
+                .foregroundStyle(entry.state.type.onFieldSecondary)
+
                 Spacer(minLength: 0)
-            }
 
-            Spacer(minLength: 0)
-
-            if let interval = entry.countdownInterval {
                 Text(timerInterval: entry.date...interval.upperBound, countsDown: true)
-                    .font(.system(size: 34, weight: .semibold, design: .rounded))
-                    .monospacedDigit()
+                    .font(.pomoNumber(size: 38))
                     .minimumScaleFactor(0.6)
+                    .foregroundStyle(PomoPalette.cream)
+
                 ProgressView(timerInterval: interval, countsDown: false) {
                     EmptyView()
                 } currentValueLabel: {
                     EmptyView()
                 }
-                .tint(entry.tint)
-            } else {
+                .tint(PomoPalette.cream)
+
+                Button(intent: PauseTimerIntent()) {
+                    Label(String(localized: "Pause"), systemImage: "pause.fill")
+                        .font(.system(size: 13, weight: .heavy, design: .rounded))
+                        .foregroundStyle(PomoPalette.cream)
+                        .frame(maxWidth: .infinity, minHeight: 30)
+                        .background(PomoPalette.ink, in: Capsule())
+                }
+                .buttonStyle(.plain)
+            }
+        } else {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    PomoMark(showsDial: false).frame(width: 18, height: 18)
+                    Text(String(localized: "Today", comment: "Widget: today's stats"))
+                        .font(.system(size: 13, weight: .heavy, design: .rounded))
+                        .foregroundStyle(PomoPalette.muted)
+                    Spacer(minLength: 0)
+                }
+
+                Spacer(minLength: 0)
+
                 Text("\(entry.pomodoros)")
-                    .font(.pomoNumber(size: 40, weight: .bold))
+                    .font(.pomoNumber(size: 44))
+                    .foregroundStyle(PomoPalette.focus)
                 Text(String(localized: "\(entry.focusMinutes) min focused", comment: "Widget: focus minutes today"))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: 12, weight: .bold, design: .rounded))
+                    .foregroundStyle(PomoPalette.muted)
 
                 Button(intent: StartFocusIntent()) {
                     Label(String(localized: "Focus", comment: "Widget button: start focus"), systemImage: "play.fill")
-                        .font(.caption.weight(.semibold))
-                        .frame(maxWidth: .infinity)
+                        .font(.system(size: 13, weight: .heavy, design: .rounded))
+                        .foregroundStyle(PomoPalette.cream)
+                        .frame(maxWidth: .infinity, minHeight: 30)
+                        .background(PomoPalette.ink, in: Capsule())
                 }
-                .buttonStyle(.borderedProminent)
-                .tint(PomoPalette.focus)
+                .buttonStyle(.plain)
+                .padding(.top, 4)
             }
         }
     }
