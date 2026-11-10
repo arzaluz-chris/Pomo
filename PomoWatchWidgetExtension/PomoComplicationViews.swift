@@ -63,6 +63,15 @@ struct PomoComplicationEntry: TimelineEntry {
         totalDuration / 60
     }
 
+    /// Remaining time that keeps counting down on the watch face between timeline entries.
+    var liveTimeText: Text {
+        let end = Date(timeIntervalSince1970: endTime)
+        if isActive, end > date {
+            return Text(timerInterval: date...end, countsDown: true)
+        }
+        return Text(timeString)
+    }
+
     var currentTimeRemaining: Int {
         guard isActive else { return timeRemaining }
         let remaining = Int(endTime - Date().timeIntervalSince1970)
@@ -170,7 +179,7 @@ struct PomoCircularComplication: Widget {
                     Gauge(value: entry.progress) {
                         Image(systemName: "timer")
                     } currentValueLabel: {
-                        Text(entry.timeString)
+                        entry.liveTimeText
                             .font(.system(size: 12, design: .rounded))
                             .monospacedDigit()
                     }
@@ -207,7 +216,7 @@ struct PomoInlineComplication: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: PomoComplicationProvider()) { entry in
             if entry.isActive {
-                Text("\(Image(systemName: "timer")) \(entry.shortDisplayName) \(entry.timeString)")
+                (Text("\(Image(systemName: "timer")) \(entry.shortDisplayName) ") + entry.liveTimeText)
                     .monospacedDigit()
             } else {
                 Text("\(Image(systemName: "timer")) Pomo · \(entry.durationMinutes) min")
@@ -236,7 +245,7 @@ struct PomoRectangularComplication: Widget {
                             .font(.caption2)
                             .fontWeight(.semibold)
                         Spacer()
-                        Text(entry.timeString)
+                        entry.liveTimeText
                             .font(.caption)
                             .fontWeight(.bold)
                             .monospacedDigit()
@@ -276,7 +285,7 @@ struct PomoCornerComplication: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: PomoComplicationProvider()) { entry in
             if entry.isActive {
-                Text(entry.timeString)
+                entry.liveTimeText
                     .font(.system(size: 14, design: .rounded))
                     .fontWeight(.semibold)
                     .monospacedDigit()

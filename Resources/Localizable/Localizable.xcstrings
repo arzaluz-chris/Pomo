@@ -3,7 +3,7 @@
   "strings" : {
     "" : {
 
-    },
+},
     "¿Restablecer ajustes?" : {
       "localizations" : {
         "en" : {
@@ -32,7 +32,7 @@
     },
     "%@ Pomo" : {
 
-    },
+},
     "%@ Pomo · %lld min" : {
       "localizations" : {
         "en" : {
@@ -141,7 +141,7 @@
     },
     "🔥" : {
 
-    },
+},
     "0 min" : {
       "localizations" : {
         "en" : {
@@ -617,7 +617,7 @@
     },
     "Pauses the Pomo timer" : {
 
-    },
+},
     "Pomo" : {
       "localizations" : {
         "en" : {
@@ -636,16 +636,16 @@
     },
     "Pomo Corner" : {
 
-    },
+},
     "Pomo Inline" : {
 
-    },
+},
     "Pomo Rectangular" : {
 
-    },
+},
     "Pomo Timer" : {
 
-    },
+},
     "Pomodoros" : {
       "localizations" : {
         "en" : {
@@ -679,7 +679,15 @@
       }
     },
     "Ready to focus" : {
-      "comment" : "Idle complication state"
+      "comment" : "Idle complication state",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Listo para enfocarte"
+          }
+        }
+      }
     },
     "Reiniciar" : {
       "localizations" : {
@@ -716,7 +724,7 @@
     },
     "Resets the Pomo timer" : {
 
-    },
+},
     "Restablecer" : {
       "localizations" : {
         "en" : {
@@ -785,7 +793,7 @@
     },
     "Resumes the Pomo timer" : {
 
-    },
+},
     "Saltar" : {
       "localizations" : {
         "en" : {
@@ -873,7 +881,7 @@
     },
     "Skips the current Pomo session" : {
 
-    },
+},
     "Sonido" : {
       "localizations" : {
         "en" : {
@@ -1021,6 +1029,100 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Has completado una sesión de trabajo. ¡Toma un descanso!"
+          }
+        }
+      }
+    },
+    "%@ remaining" : {
+      "comment" : "VoiceOver value of the timer",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quedan %@"
+          }
+        }
+      }
+    },
+    "%lld of %lld sessions before the long break" : {
+      "comment" : "VoiceOver label of the session cycle dots",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld of %2$lld sessions before the long break"
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld de %2$lld sesiones antes del descanso largo"
+          }
+        }
+      }
+    },
+    "Done" : {
+      "comment" : "Live Activity: session finished",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Listo"
+          }
+        }
+      }
+    },
+    "Next" : {
+      "comment" : "Live Activity: start next session",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Siguiente"
+          }
+        }
+      }
+    },
+    "Paused" : {
+      "comment" : "Timer state label",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En pausa"
+          }
+        }
+      }
+    },
+    "Paused, %@ remaining" : {
+      "comment" : "VoiceOver value of a paused timer",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En pausa, quedan %@"
+          }
+        }
+      }
+    },
+    "RESUME" : {
+      "comment" : "Resume button title",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "REANUDAR"
+          }
+        }
+      }
+    },
+    "Session complete" : {
+      "comment" : "Live Activity: session finished",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sesión completada"
           }
         }
       }

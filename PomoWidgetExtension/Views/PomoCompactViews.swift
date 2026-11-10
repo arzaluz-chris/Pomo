@@ -6,84 +6,44 @@ import WidgetKit
 struct CompactLeadingView: View {
     let state: PomoActivityAttributes.ContentState
 
-    private var isWorkSession: Bool {
-        state.timerType == TimerType.work.rawValue
-    }
-
     var body: some View {
-        if isWorkSession {
-            Image("PomoIcon")
-                .resizable()
-                .renderingMode(.original)
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 16, height: 16)
-        } else {
-            Image(systemName: "cup.and.saucer.fill")
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(Color("PomoSecondary"))
-        }
+        SessionIcon(state: state, size: 16)
     }
 }
 
 struct CompactTrailingView: View {
     let state: PomoActivityAttributes.ContentState
+    let isStale: Bool
 
     var body: some View {
-        if state.isRunning, let endTime = state.endTime {
-            Text(timerInterval: Date()...endTime, countsDown: true)
-                .monospacedDigit()
-                .font(.system(size: 14, weight: .semibold))
-                .frame(width: 56)
+        if isStale {
+            Image(systemName: "checkmark.circle.fill")
+                .foregroundStyle(state.tint)
+                .accessibilityLabel(String(localized: "Session complete", comment: "Live Activity: session finished"))
         } else {
-            Text(formatTime(state.timeRemaining))
-                .monospacedDigit()
-                .font(.system(size: 14, weight: .semibold))
-                .frame(width: 56)
+            HStack(spacing: 2) {
+                if !state.isRunning {
+                    Image(systemName: "pause.fill")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(state.tint)
+                }
+                ActivityCountdownText(state: state, isStale: isStale)
+                    .monospacedDigit()
+                    .font(.system(size: 14, weight: .semibold))
+                    .frame(width: 48)
+            }
         }
-    }
-
-    private func formatTime(_ seconds: Int) -> String {
-        let minutes = seconds / 60
-        let secs = seconds % 60
-        return String(format: "%02d:%02d", minutes, secs)
     }
 }
 
 struct MinimalView: View {
     let state: PomoActivityAttributes.ContentState
-
-    private var isWorkSession: Bool {
-        state.timerType == TimerType.work.rawValue
-    }
-
-    private var tintColor: Color {
-        isWorkSession ? Color("PomoPrimary") : Color("PomoSecondary")
-    }
+    let isStale: Bool
 
     var body: some View {
         ZStack {
-            // Background track
-            Circle()
-                .stroke(tintColor.opacity(0.3), lineWidth: 2)
-
-            // Progress arc
-            Circle()
-                .trim(from: 0, to: CGFloat(state.progress))
-                .stroke(tintColor, style: StrokeStyle(lineWidth: 2, lineCap: .round))
-                .rotationEffect(.degrees(-90))
-
-            // Centered app icon
-            if isWorkSession {
-                Image("PomoIcon")
-                    .resizable()
-                    .renderingMode(.original)
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 14, height: 14)
-            } else {
-                Image(systemName: "cup.and.saucer.fill")
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(tintColor)
-            }
+            ActivityProgressRing(state: state, isStale: isStale, lineWidth: 2)
+            SessionIcon(state: state, size: 12)
         }
     }
 }
