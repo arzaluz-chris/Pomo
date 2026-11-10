@@ -67,6 +67,24 @@ final class WatchTimerViewModel: ObservableObject {
             PomodoroState.removeLegacyKeys(from: .standard, prefix: "watch_")
         }
 
+        #if DEBUG
+        // Sample state for screenshots: launch with -PomoDemoData YES
+        if UserDefaults.standard.bool(forKey: "PomoDemoData") {
+            let now = Date()
+            var demo = PomodoroState()
+            demo.phase = .running
+            demo.totalDuration = 1500
+            demo.endDate = now.addingTimeInterval(1143)
+            demo.sessionStart = now.addingTimeInterval(-357)
+            demo.sessionID = UUID().uuidString
+            demo.completedToday = 3
+            demo.day = Calendar.current.startOfDay(for: now)
+            demo.updatedAt = now
+            state = demo
+            notificationsEnabled = false
+        }
+        #endif
+
         setupObservers()
         setupWatchConnectivityCallbacks()
         scheduleMidnightRefresh()

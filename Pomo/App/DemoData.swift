@@ -47,6 +47,13 @@ enum DemoData {
             state.sessionID = UUID().uuidString
         case "idle":
             break
+        case "break":
+            state.type = .shortBreak
+            state.phase = .running
+            state.totalDuration = 300
+            state.endDate = now.addingTimeInterval(192)
+            state.sessionStart = now.addingTimeInterval(-108)
+            state.sessionID = UUID().uuidString
         default:
             state.phase = .running
             state.totalDuration = 1500

@@ -24,7 +24,7 @@ struct WatchTimerView: View {
                                 radiusRatio: 0.95,
                                 pointerSpace: 12,
                                 showsLabels: false)
-                        .frame(height: proxy.size.height * 0.62)
+                        .frame(height: proxy.size.height * 0.8)
                         .frame(maxHeight: .infinity, alignment: .bottom)
                         .ignoresSafeArea(edges: .bottom)
                 }
@@ -55,7 +55,7 @@ struct WatchTimerView: View {
             }
         }
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
+            ToolbarItem(placement: .topBarLeading) {
                 NavigationLink(destination: WatchSettingsView()) {
                     Image(systemName: "gearshape.fill")
                         .foregroundStyle(PomoPalette.cream)
