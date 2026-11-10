@@ -415,8 +415,8 @@ private struct FoldedTimerLayout: View {
             VStack(spacing: 0) {
                 ZStack(alignment: .top) {
                     viewModel.currentType.tint
-                    SessionDial(radiusRatio: 0.42)
-                        .frame(height: upper * 0.24)
+                    SessionDial(radiusRatio: proxy.size.width < 760 ? 0.62 : 0.42)
+                        .frame(height: upper * 0.26)
                         .frame(maxHeight: .infinity, alignment: .bottom)
                     VStack(spacing: PomoSpace.s) {
                         ModeControl()
@@ -432,12 +432,23 @@ private struct FoldedTimerLayout: View {
                     .background(PomoPalette.background)
                     .accessibilityHidden(true)
 
-                HStack(spacing: PomoSpace.xl) {
-                    ControlsRow(primaryDiameter: 112, secondaryDiameter: 72, spacing: 28)
-                    TodaySummary(style: .rows)
-                        .frame(maxWidth: 360)
+                Group {
+                    if proxy.size.width < 760 {
+                        // Portrait inner screen: controls, then today's numbers in a row
+                        VStack(spacing: PomoSpace.xl) {
+                            ControlsRow(primaryDiameter: 112, secondaryDiameter: 72, spacing: 32)
+                            TodaySummary(style: .tiles)
+                        }
+                        .padding(.horizontal, PomoSpace.l)
+                    } else {
+                        HStack(spacing: PomoSpace.xl) {
+                            ControlsRow(primaryDiameter: 112, secondaryDiameter: 72, spacing: 28)
+                            TodaySummary(style: .rows)
+                                .frame(maxWidth: 360)
+                        }
+                        .padding(.horizontal, PomoSpace.xxl)
+                    }
                 }
-                .padding(.horizontal, PomoSpace.xxl)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background { PomoPage() }
             }
@@ -450,7 +461,7 @@ private struct FoldedTimerLayout: View {
 
 /// Today's pomodoros, focus time, streak and (in a column) the week.
 struct TodaySummary: View {
-    enum Style { case column, rows }
+    enum Style { case column, rows, tiles }
     var style: Style
 
     @StateObject private var stats = StatisticsViewModel()
@@ -462,6 +473,7 @@ struct TodaySummary: View {
             switch style {
             case .column: column
             case .rows: rows
+            case .tiles: tiles
             }
         }
         .task(id: timer.completedSessions) {
@@ -499,6 +511,14 @@ struct TodaySummary: View {
             row(String(localized: "Pomodoros"), "\(stats.todayPomodoros)", PomoPalette.focus)
             row(String(localized: "Tiempo total"), stats.todayTimeString, PomoPalette.shortBreak)
             row(String(localized: "Racha actual"), streakText, PomoPalette.leaf)
+        }
+    }
+
+    private var tiles: some View {
+        HStack(spacing: PomoSpace.s) {
+            PomoStatTile(value: "\(stats.todayPomodoros)", label: String(localized: "Pomodoros"), tint: PomoPalette.focus)
+            PomoStatTile(value: stats.todayTimeString, label: String(localized: "Tiempo total"), tint: PomoPalette.shortBreak)
+            PomoStatTile(value: streakText, label: String(localized: "Racha actual"), tint: PomoPalette.leaf)
         }
     }
 
