@@ -1,11 +1,12 @@
 // Shared/DesignSystem/PomoDesign.swift
 //
-// Pomo design system: tokens and the Pomo mark, shared by the iPhone app, the Watch
-// app, the widgets and the Live Activity.
+// Pomo design system ("Cocina"): tokens, the kitchen dial and the Pomo mark, shared by
+// the iPhone app, the Watch app, the widgets and the Live Activity.
 //
 // Principles
-// - Calm and minimal: one accent at a time (the current session's color), generous space.
-// - Numbers are the hero: rounded, monospaced digits for every time value.
+// - A kitchen timer: the session's color fills the screen, a cream dial turns as time passes.
+// - Few, warm colors: field, cream, ink and one small accent per session type.
+// - Numbers are the hero: heavy rounded, monospaced digits for every time value.
 // - No emoji: icons are SF Symbols or the vector Pomo mark below.
 // - Accessible by default: semantic text styles (Dynamic Type), 44 pt targets, VoiceOver
 //   labels, Reduce Motion respected.
@@ -27,33 +28,87 @@ enum PomoSpace {
 enum PomoRadius {
     static let s: CGFloat = 12
     static let m: CGFloat = 18
-    static let l: CGFloat = 26
+    static let l: CGFloat = 22
+    static let xl: CGFloat = 30
 }
 
+extension Color {
+    /// sRGB color from a 0xRRGGBB value (for brand colors that never change with appearance).
+    init(pomoHex hex: UInt32) {
+        self.init(.sRGB,
+                  red: Double((hex >> 16) & 0xFF) / 255,
+                  green: Double((hex >> 8) & 0xFF) / 255,
+                  blue: Double(hex & 0xFF) / 255)
+    }
+}
+
+/// "Cocina" palette: a tomato-red timer body, a cream dial, dark ink and a leaf-green accent.
+/// Each session type has its own field color so the mode is obvious at a glance.
 enum PomoPalette {
-    /// Focus sessions: tomato.
+    /// Focus field: tomato.
     static let focus = Color("PomoPrimary")
-    /// Short breaks: teal.
+    /// Short break field: deep teal.
     static let shortBreak = Color("PomoSecondary")
-    /// Long breaks: calm indigo.
+    /// Long break field: indigo.
     static let longBreak = Color("PomoLongBreak")
-    /// Warm neutral page background.
+
+    /// Dial face and text on colored fields.
+    static let cream = Color(pomoHex: 0xFFF4E6)
+    /// Primary button and dial numbers.
+    static let ink = Color(pomoHex: 0x2B1714)
+    /// Tomato stem: the focus accent.
+    static let leaf = Color(pomoHex: 0x2F9E62)
+
+    /// Page behind cards (warm cream; warm near-black in Dark Mode).
     static let background = Color("PomoBackground")
-    /// Cards and grouped content.
+    /// Cards.
     static let surface = Color("PomoSurface")
-    /// Thin separators and card outlines.
+    /// Card outlines and separators.
     static let hairline = Color("PomoHairline")
-    /// Leaves of the Pomo mark.
-    static let leaf = Color("PomoSecondary")
+    /// Secondary text on the page.
+    static let muted = Color("PomoMuted")
+    /// Tab bar and grouped controls on the page.
+    static let chrome = Color("PomoChrome")
+    /// Primary text on the page.
+    static let inkText = Color("PomoInkText")
+    /// Outline of the white secondary buttons.
+    static let buttonOutline = Color(pomoHex: 0xEAD8C6)
 }
 
 extension TimerType {
-    /// The single accent used while this session type is shown.
+    /// Field color of this session type.
     var tint: Color {
         switch self {
         case .work: return PomoPalette.focus
         case .shortBreak: return PomoPalette.shortBreak
         case .longBreak: return PomoPalette.longBreak
+        }
+    }
+
+    /// Small accent that pairs with the field (pointer, dots).
+    var accent: Color {
+        switch self {
+        case .work: return PomoPalette.leaf
+        case .shortBreak: return Color(pomoHex: 0xF07A5F)
+        case .longBreak: return Color(pomoHex: 0xF2B544)
+        }
+    }
+
+    /// Remaining-time band painted on the dial.
+    var wedge: Color {
+        switch self {
+        case .work: return Color(pomoHex: 0xF9CDB9)
+        case .shortBreak: return Color(pomoHex: 0xC4E8E1)
+        case .longBreak: return Color(pomoHex: 0xD5D6F3)
+        }
+    }
+
+    /// Secondary text on the field.
+    var onFieldSecondary: Color {
+        switch self {
+        case .work: return Color(pomoHex: 0xFFE1D2)
+        case .shortBreak: return Color(pomoHex: 0xD6F1EC)
+        case .longBreak: return Color(pomoHex: 0xE0E1FA)
         }
     }
 
@@ -68,14 +123,175 @@ extension TimerType {
 }
 
 extension Font {
-    /// Rounded, monospaced digits for time values.
-    static func pomoNumber(size: CGFloat, weight: Font.Weight = .semibold) -> Font {
+    /// Heavy rounded digits for the hero time.
+    static func pomoNumber(size: CGFloat, weight: Font.Weight = .black) -> Font {
         .system(size: size, weight: weight, design: .rounded).monospacedDigit()
     }
 
     /// Rounded text style that follows Dynamic Type.
-    static func pomoRounded(_ style: Font.TextStyle, weight: Font.Weight = .semibold) -> Font {
+    static func pomoRounded(_ style: Font.TextStyle, weight: Font.Weight = .heavy) -> Font {
         .system(style, design: .rounded, weight: weight)
+    }
+}
+
+// MARK: - Kitchen dial
+
+/// The signature element: a cream kitchen-timer dial that turns as time passes. The minute
+/// under the pointer is the time left; the tinted band shows the minutes still to go.
+/// Draw it inside a frame whose top is where the dial starts; it extends (and is clipped)
+/// below like a large physical dial.
+struct KitchenDial: View {
+    /// Seconds left in the session.
+    var remaining: Double
+    /// Planned session length in seconds.
+    var total: Double
+    var type: TimerType
+    /// Dial radius as a fraction of the available width.
+    var radiusRatio: CGFloat = 0.82
+    /// Space above the dial for the pointer.
+    var pointerSpace: CGFloat = 22
+    var showsLabels = true
+
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private var totalMinutes: Double { max(1, total / 60) }
+    /// Short sessions spread wider so each minute stays readable.
+    private var degreesPerMinute: Double { totalMinutes <= 10 ? 24 : 6 }
+    private var currentMinutes: Double { max(0, remaining / 60) }
+
+    var body: some View {
+        GeometryReader { proxy in
+            let radius = proxy.size.width * radiusRatio
+            let center = CGPoint(x: proxy.size.width / 2, y: pointerSpace + radius)
+            let scale = radius / 330
+
+            ZStack {
+                Circle()
+                    .fill(PomoPalette.ink.opacity(0.18))
+                    .frame(width: radius * 2, height: radius * 2)
+                    .position(x: center.x, y: center.y + 12 * scale)
+
+                Circle()
+                    .fill(PomoPalette.cream)
+                    .frame(width: radius * 2, height: radius * 2)
+                    .position(center)
+
+                ZStack {
+                    DialBand(sweepDegrees: currentMinutes * degreesPerMinute, innerRatio: 0.8)
+                        .fill(type.wedge)
+                    DialFace(maxMinutes: Int(totalMinutes.rounded(.up)) + 5,
+                             degreesPerMinute: degreesPerMinute,
+                             tint: type.tint,
+                             showsLabels: showsLabels,
+                             scale: scale)
+                }
+                .frame(width: radius * 2, height: radius * 2)
+                .rotationEffect(.degrees(-currentMinutes * degreesPerMinute))
+                .animation(reduceMotion ? nil : .linear(duration: 1), value: remaining)
+                .position(center)
+
+                DialPointer()
+                    .fill(type.accent)
+                    .frame(width: 22 * scale + 6, height: 20 * scale + 4)
+                    .position(x: center.x, y: pointerSpace - (10 * scale + 2))
+            }
+        }
+        .clipped()
+        .accessibilityHidden(true)
+    }
+}
+
+/// Band from the zero mark (top) clockwise to `sweepDegrees`, in the dial's own frame.
+struct DialBand: Shape {
+    var sweepDegrees: Double
+    var innerRatio: CGFloat
+
+    var animatableData: Double {
+        get { sweepDegrees }
+        set { sweepDegrees = newValue }
+    }
+
+    func path(in rect: CGRect) -> Path {
+        let center = CGPoint(x: rect.midX, y: rect.midY)
+        let outer = min(rect.width, rect.height) / 2
+        let inner = outer * innerRatio
+        let sweep = max(0, min(359, sweepDegrees))
+        guard sweep > 0 else { return Path() }
+
+        func point(_ degrees: Double, _ radius: CGFloat) -> CGPoint {
+            let radians = degrees * .pi / 180
+            return CGPoint(x: center.x + CGFloat(sin(radians)) * radius, y: center.y - CGFloat(cos(radians)) * radius)
+        }
+
+        var path = Path()
+        path.move(to: point(0, outer))
+        var angle = 0.0
+        while angle < sweep {
+            angle = min(sweep, angle + 1)
+            path.addLine(to: point(angle, outer))
+        }
+        while angle > 0 {
+            path.addLine(to: point(angle, inner))
+            angle = max(0, angle - 1)
+        }
+        path.addLine(to: point(0, inner))
+        path.closeSubpath()
+        return path
+    }
+}
+
+/// Minute ticks and numbers, minute 0 at the top, increasing clockwise.
+struct DialFace: View {
+    let maxMinutes: Int
+    let degreesPerMinute: Double
+    let tint: Color
+    let showsLabels: Bool
+    let scale: CGFloat
+
+    var body: some View {
+        Canvas { context, size in
+            let center = CGPoint(x: size.width / 2, y: size.height / 2)
+            let radius = min(size.width, size.height) / 2
+            let labelEvery = degreesPerMinute >= 12 ? 1 : 5
+            for minute in 0...max(0, maxMinutes) {
+                let degrees = Double(minute) * degreesPerMinute
+                guard degrees < 360 else { break }
+                let radians = degrees * .pi / 180
+                let major = minute % labelEvery == 0
+                let length = (major ? 24 : 13) * scale
+                let start = CGPoint(x: center.x + CGFloat(sin(radians)) * radius,
+                                    y: center.y - CGFloat(cos(radians)) * radius)
+                let end = CGPoint(x: center.x + CGFloat(sin(radians)) * (radius - length),
+                                  y: center.y - CGFloat(cos(radians)) * (radius - length))
+                var tick = Path()
+                tick.move(to: start)
+                tick.addLine(to: end)
+                context.stroke(tick, with: .color(tint.opacity(major ? 1 : 0.55)),
+                               style: StrokeStyle(lineWidth: (major ? 3 : 2) * max(scale, 0.6), lineCap: .round))
+
+                if showsLabels && major {
+                    let labelRadius = radius - 50 * scale
+                    let position = CGPoint(x: center.x + CGFloat(sin(radians)) * labelRadius,
+                                           y: center.y - CGFloat(cos(radians)) * labelRadius)
+                    context.draw(Text("\(minute)")
+                                    .font(.system(size: 18 * scale, weight: .black, design: .rounded))
+                                    .foregroundColor(PomoPalette.ink),
+                                 at: position)
+                }
+            }
+        }
+    }
+}
+
+/// Downward triangle marking the time left.
+struct DialPointer: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        path.move(to: CGPoint(x: rect.midX, y: rect.maxY))
+        path.addLine(to: CGPoint(x: rect.minX, y: rect.minY))
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
+        path.closeSubpath()
+        return path
     }
 }
 

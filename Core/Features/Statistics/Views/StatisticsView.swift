@@ -19,7 +19,7 @@ struct StatisticsView: View {
                 .frame(maxWidth: 640)
                 .frame(maxWidth: .infinity)
             }
-            .background { PomoScreenBackground(tint: PomoPalette.focus, intensity: 0.1) }
+            .background { PomoPage() }
             .navigationTitle("Estadísticas")
             .navigationBarTitleDisplayMode(.large)
             .refreshable { await viewModel.loadData() }
@@ -36,40 +36,29 @@ struct StatisticsView: View {
         VStack(alignment: .leading, spacing: PomoSpace.s) {
             PomoSectionHeader(title: String(localized: "Hoy"),
                               trailing: Date().formatted(.dateTime.weekday(.wide).day().month(.wide)))
-
             HStack(spacing: PomoSpace.s) {
-                PomoStatTile(value: "\(viewModel.todayPomodoros)",
-                             label: String(localized: "Pomodoros"),
-                             tint: PomoPalette.focus) {
-                    PomoMark(showsDial: false)
-                }
-
-                PomoStatTile(value: viewModel.todayTimeString,
-                             label: String(localized: "Tiempo total"),
-                             tint: PomoPalette.shortBreak) {
-                    Image(systemName: "clock.fill").font(.title2)
-                }
+                PomoStatTile(value: "\(viewModel.todayPomodoros)", label: String(localized: "Pomodoros"), tint: PomoPalette.focus)
+                PomoStatTile(value: viewModel.todayTimeString, label: String(localized: "Tiempo total"), tint: PomoPalette.shortBreak)
             }
-
             streakCard
         }
     }
 
     private var streakCard: some View {
-        HStack(spacing: PomoSpace.m) {
-            Image(systemName: viewModel.currentStreak > 0 ? "flame.fill" : "flame")
-                .font(.title2.weight(.semibold))
-                .foregroundStyle(viewModel.currentStreak > 0 ? PomoPalette.focus : .secondary)
-                .frame(width: 44, height: 44)
-                .background((viewModel.currentStreak > 0 ? PomoPalette.focus : Color.secondary).opacity(0.12),
-                            in: Circle())
-
+        let active = viewModel.currentStreak > 0
+        return HStack(spacing: PomoSpace.m) {
+            Image(systemName: active ? "flame.fill" : "flame")
+                .font(.title2.weight(.bold))
+                .foregroundStyle(active ? PomoPalette.cream : PomoPalette.muted)
+                .frame(width: 48, height: 48)
+                .background(active ? PomoPalette.leaf : PomoPalette.chrome, in: Circle())
             VStack(alignment: .leading, spacing: 2) {
                 Text("Racha actual")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .font(.subheadline.weight(.bold))
+                    .foregroundStyle(PomoPalette.muted)
                 Text(streakText)
-                    .font(.pomoRounded(.title3, weight: .bold))
+                    .font(.pomoRounded(.title2, weight: .black))
+                    .foregroundStyle(active ? PomoPalette.leaf : PomoPalette.inkText)
             }
             Spacer()
         }
@@ -87,17 +76,15 @@ struct StatisticsView: View {
     private var week: some View {
         let total = viewModel.weeklyData.reduce(0) { $0 + $1.pomodoros }
         return VStack(alignment: .leading, spacing: PomoSpace.s) {
-            PomoSectionHeader(title: String(localized: "Esta semana"),
-                              trailing: "\(total) pomodoros")
-
-            VStack(alignment: .leading, spacing: PomoSpace.m) {
+            PomoSectionHeader(title: String(localized: "Esta semana"), trailing: "\(total) pomodoros")
+            Group {
                 if total == 0 {
                     VStack(spacing: PomoSpace.s) {
-                        PomoMark(tint: Color.secondary.opacity(0.25), leafTint: Color.secondary.opacity(0.35))
+                        PomoMark(tint: PomoPalette.hairline, leafTint: PomoPalette.chrome)
                             .frame(width: 56, height: 56)
                         Text("No hay datos esta semana")
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(PomoPalette.muted)
                     }
                     .frame(maxWidth: .infinity, minHeight: 180)
                 } else {

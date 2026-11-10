@@ -7,7 +7,6 @@ import WatchConnectivity
 @main
 struct PomoApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
-    @AppStorage("selectedTab") private var selectedTab = 0
 
     let modelContainer: ModelContainer
     // Owned by the app (not by a view) so it exists even when the system launches the
@@ -45,18 +44,7 @@ struct PomoApp: App {
     
     var body: some Scene {
         WindowGroup {
-            TabView(selection: $selectedTab) {
-                Tab("Timer", systemImage: "timer", value: 0) {
-                    TimerView()
-                }
-                Tab("Estadísticas", systemImage: "chart.bar.xaxis", value: 1) {
-                    StatisticsView()
-                }
-                Tab("Ajustes", systemImage: "gearshape", value: 2) {
-                    SettingsView()
-                }
-            }
-            .tint(PomoPalette.focus)
+            RootView()
             .environmentObject(timerViewModel)
         }
         .modelContainer(modelContainer)

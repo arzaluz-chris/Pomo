@@ -23,7 +23,7 @@ struct SettingsView: View {
                 .frame(maxWidth: 640)
                 .frame(maxWidth: .infinity)
             }
-            .background { PomoScreenBackground(tint: PomoPalette.shortBreak, intensity: 0.1) }
+            .background { PomoPage() }
             .navigationTitle("Ajustes")
             .navigationBarTitleDisplayMode(.large)
             .alert("¿Restablecer ajustes?", isPresented: $showResetAlert) {
@@ -94,7 +94,7 @@ struct SettingsView: View {
                     PomoDivider()
                     PomoToggleRow(title: String(localized: "Alarm-style alert", comment: "Settings toggle"),
                                   subtitle: String(localized: "Rings even in silent mode or during a Focus.", comment: "Settings toggle subtitle"),
-                                  systemImage: "alarm.fill", tint: PomoPalette.longBreak,
+                                  systemImage: "alarm.fill", tint: PomoPalette.leaf,
                                   isOn: alarmBinding)
                 }
             }
@@ -112,15 +112,16 @@ struct SettingsView: View {
                     PomoIconBadge(systemImage: "star.fill", tint: PomoPalette.focus)
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Calificar en App Store")
-                            .foregroundStyle(.primary)
+                            .font(.body.weight(.semibold))
+                            .foregroundStyle(PomoPalette.inkText)
                         Text("Ayúdanos con una reseña")
                             .font(.footnote)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(PomoPalette.muted)
                     }
                     Spacer()
                     Image(systemName: "arrow.up.forward")
                         .font(.footnote.weight(.semibold))
-                        .foregroundStyle(.tertiary)
+                        .foregroundStyle(PomoPalette.muted)
                 }
                 .contentShape(Rectangle())
             }
@@ -132,14 +133,15 @@ struct SettingsView: View {
                 showResetAlert = true
             } label: {
                 HStack(spacing: PomoSpace.s) {
-                    PomoIconBadge(systemImage: "arrow.counterclockwise", tint: .red)
+                    PomoIconBadge(systemImage: "arrow.counterclockwise", tint: PomoPalette.focus)
                     Text("Restablecer valores predeterminados")
+                        .font(.body.weight(.semibold))
                     Spacer()
                 }
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .foregroundStyle(.red)
+            .foregroundStyle(PomoPalette.focus)
         }
         .pomoCard()
     }
@@ -174,7 +176,7 @@ private struct CyclePreview: View {
         HStack(spacing: 6) {
             ForEach(0..<sessions, id: \.self) { _ in
                 Capsule().fill(PomoPalette.focus).frame(width: 18, height: 8)
-                Capsule().fill(PomoPalette.shortBreak.opacity(0.6)).frame(width: 8, height: 8)
+                Capsule().fill(PomoPalette.shortBreak).frame(width: 8, height: 8)
             }
             Capsule().fill(PomoPalette.longBreak).frame(width: 26, height: 8)
         }

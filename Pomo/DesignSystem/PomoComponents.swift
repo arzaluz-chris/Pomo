@@ -1,25 +1,16 @@
 // Pomo/DesignSystem/PomoComponents.swift
 //
-// iPhone components of the Pomo design system (tokens and the mark live in
+// iPhone components of the "Cocina" design system (tokens, the dial and the mark live in
 // Shared/DesignSystem/PomoDesign.swift).
 
 import SwiftUI
 
-// MARK: - Screen background
+// MARK: - Page
 
-/// Warm neutral page with a soft wash of the current accent at the top.
-struct PomoScreenBackground: View {
-    var tint: Color = PomoPalette.focus
-    var intensity: Double = 0.16
-
+/// Warm cream page used by Statistics, Settings and the Duo's side panels.
+struct PomoPage: View {
     var body: some View {
-        ZStack {
-            PomoPalette.background
-            RadialGradient(colors: [tint.opacity(intensity), .clear],
-                           center: .top, startRadius: 0, endRadius: 520)
-        }
-        .ignoresSafeArea()
-        .accessibilityHidden(true)
+        PomoPalette.background.ignoresSafeArea().accessibilityHidden(true)
     }
 }
 
@@ -41,39 +32,174 @@ struct PomoCardModifier: ViewModifier {
 }
 
 extension View {
-    /// Groups content on an elevated surface.
+    /// White card with a warm outline.
     func pomoCard(padding: CGFloat = PomoSpace.m) -> some View {
         modifier(PomoCardModifier(padding: padding))
     }
+}
 
-    /// Liquid Glass on iOS 26, a material before.
-    @ViewBuilder
-    func pomoGlass<S: Shape>(in shape: S) -> some View {
-        if #available(iOS 26, *) {
-            self.glassEffect(.regular, in: shape)
-        } else {
-            self.background(.ultraThinMaterial, in: shape)
+// MARK: - Buttons
+
+/// Round control button: the ink primary (play/pause) or a white secondary.
+struct PomoRoundButton: View {
+    enum Role { case primary, secondary }
+
+    let systemImage: String
+    let label: String
+    var role: Role = .secondary
+    var diameter: CGFloat = 60
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: systemImage)
+                .font(.system(size: diameter * (role == .primary ? 0.34 : 0.34), weight: .bold))
+                .foregroundStyle(role == .primary ? PomoPalette.cream : PomoPalette.ink)
+                .frame(width: diameter, height: diameter)
+                .background {
+                    if role == .primary {
+                        Circle().fill(PomoPalette.ink)
+                            .shadow(color: PomoPalette.ink.opacity(0.25), radius: 10, y: 8)
+                    } else {
+                        Circle().fill(Color.white)
+                            .overlay(Circle().strokeBorder(PomoPalette.buttonOutline, lineWidth: 2))
+                    }
+                }
+                .contentShape(Circle())
+        }
+        .buttonStyle(PomoPressStyle())
+        .accessibilityLabel(label)
+    }
+}
+
+/// Subtle press feedback for custom buttons.
+struct PomoPressStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.94 : 1)
+            .opacity(configuration.isPressed ? 0.85 : 1)
+            .animation(.snappy(duration: 0.18), value: configuration.isPressed)
+    }
+}
+
+/// Capsule label on a colored field.
+struct PomoFieldPill: View {
+    let text: String
+    var systemImage: String? = nil
+
+    var body: some View {
+        HStack(spacing: 6) {
+            if let systemImage {
+                Image(systemName: systemImage).font(.subheadline.weight(.bold))
+            }
+            Text(text).font(.pomoRounded(.callout))
+        }
+        .foregroundStyle(PomoPalette.cream)
+        .padding(.horizontal, PomoSpace.m)
+        .frame(minHeight: 36)
+        .background(PomoPalette.ink.opacity(0.22), in: Capsule())
+    }
+}
+
+// MARK: - Tab bar
+
+enum PomoTab: Int, CaseIterable, Identifiable {
+    case timer, statistics, settings
+    var id: Int { rawValue }
+
+    var title: String {
+        switch self {
+        case .timer: return String(localized: "Timer")
+        case .statistics: return String(localized: "Estadísticas")
+        case .settings: return String(localized: "Ajustes")
         }
     }
 
-    /// The single prominent action of a screen.
-    @ViewBuilder
-    func pomoPrimaryButton(tint: Color) -> some View {
-        if #available(iOS 26, *) {
-            self.buttonStyle(.glassProminent).tint(tint)
-        } else {
-            self.buttonStyle(.borderedProminent).buttonBorderShape(.capsule).tint(tint)
+    var systemImage: String {
+        switch self {
+        case .timer: return "timer"
+        case .statistics: return "chart.bar.fill"
+        case .settings: return "gearshape.fill"
         }
     }
+}
 
-    /// Secondary actions next to the primary one.
-    @ViewBuilder
-    func pomoSecondaryButton() -> some View {
-        if #available(iOS 26, *) {
-            self.buttonStyle(.glass).tint(.primary)
-        } else {
-            self.buttonStyle(.bordered).buttonBorderShape(.capsule).tint(.primary)
+/// Bottom bar: the selected tab is a capsule in the current session color, the others are icons.
+struct PomoTabBar: View {
+    @Binding var selection: Int
+    var tint: Color
+    /// Shows every title (Duo inner screen header) instead of icons only.
+    var showsAllTitles = false
+
+    var body: some View {
+        HStack(spacing: 4) {
+            ForEach(PomoTab.allCases) { tab in
+                let isSelected = selection == tab.rawValue
+                Button {
+                    withAnimation(.snappy) { selection = tab.rawValue }
+                } label: {
+                    HStack(spacing: 6) {
+                        if !showsAllTitles || isSelected {
+                            Image(systemName: tab.systemImage)
+                                .font(.system(size: 17, weight: .bold))
+                        }
+                        if isSelected || showsAllTitles {
+                            Text(tab.title)
+                                .font(.pomoRounded(.footnote))
+                                .lineLimit(1)
+                        }
+                    }
+                    .foregroundStyle(isSelected ? PomoPalette.cream : PomoPalette.inkText)
+                    .padding(.horizontal, PomoSpace.m)
+                    .frame(maxWidth: isSelected && !showsAllTitles ? .infinity : nil, minHeight: 48)
+                    .frame(minWidth: 64)
+                    .background {
+                        if isSelected {
+                            Capsule().fill(tint)
+                        }
+                    }
+                    .contentShape(Capsule())
+                }
+                .buttonStyle(PomoPressStyle())
+                .accessibilityLabel(tab.title)
+                .accessibilityAddTraits(isSelected ? [.isSelected, .isButton] : .isButton)
+            }
         }
+        .padding(5)
+        .background(PomoPalette.chrome, in: Capsule())
+        .accessibilityElement(children: .contain)
+    }
+}
+
+/// Vertical section switcher that lives in a side safe area (iPhone Duo's sensor bar strip),
+/// so the main view keeps its full height.
+struct PomoSideToolbar: View {
+    @Binding var selection: Int
+    var tint: Color
+
+    var body: some View {
+        VStack(spacing: 6) {
+            ForEach(PomoTab.allCases) { tab in
+                let isSelected = selection == tab.rawValue
+                Button {
+                    withAnimation(.snappy) { selection = tab.rawValue }
+                } label: {
+                    Image(systemName: tab.systemImage)
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundStyle(isSelected ? PomoPalette.cream : PomoPalette.ink)
+                        .frame(width: 48, height: 48)
+                        .background(Circle().fill(isSelected ? tint : Color.clear))
+                        .contentShape(Circle())
+                }
+                .buttonStyle(PomoPressStyle())
+                .accessibilityLabel(tab.title)
+                .accessibilityAddTraits(isSelected ? [.isSelected, .isButton] : .isButton)
+            }
+        }
+        .padding(5)
+        .background(PomoPalette.chrome, in: Capsule())
+        .shadow(color: PomoPalette.ink.opacity(0.12), radius: 8, y: 4)
+        .accessibilityElement(children: .contain)
     }
 }
 
@@ -86,13 +212,14 @@ struct PomoSectionHeader: View {
     var body: some View {
         HStack(alignment: .firstTextBaseline) {
             Text(title)
-                .font(.pomoRounded(.title3, weight: .bold))
+                .font(.pomoRounded(.title3, weight: .black))
+                .foregroundStyle(PomoPalette.inkText)
                 .accessibilityAddTraits(.isHeader)
             Spacer()
             if let trailing {
                 Text(trailing)
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundStyle(PomoPalette.muted)
             }
         }
     }
@@ -100,28 +227,27 @@ struct PomoSectionHeader: View {
 
 // MARK: - Stat tile
 
-struct PomoStatTile<Icon: View>: View {
+struct PomoStatTile: View {
     let value: String
     let label: String
     let tint: Color
-    @ViewBuilder var icon: () -> Icon
 
     var body: some View {
-        VStack(alignment: .leading, spacing: PomoSpace.xs) {
-            icon()
-                .frame(width: 28, height: 28)
-                .foregroundStyle(tint)
+        VStack(alignment: .leading, spacing: 2) {
             Text(value)
-                .font(.pomoRounded(.title, weight: .bold))
+                .font(.pomoRounded(.largeTitle, weight: .black))
                 .monospacedDigit()
+                .foregroundStyle(tint)
                 .lineLimit(1)
-                .minimumScaleFactor(0.6)
+                .minimumScaleFactor(0.5)
             Text(label)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+                .font(.subheadline.weight(.bold))
+                .foregroundStyle(PomoPalette.muted)
                 .lineLimit(2)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .pomoCard()
+        .frame(maxWidth: .infinity)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(label)
         .accessibilityValue(value)
@@ -144,10 +270,11 @@ struct PomoSliderRow: View {
             HStack(spacing: PomoSpace.s) {
                 PomoIconBadge(systemImage: systemImage, tint: tint)
                 Text(title)
-                    .font(.body)
+                    .font(.body.weight(.semibold))
+                    .foregroundStyle(PomoPalette.inkText)
                 Spacer()
                 Text(valueText)
-                    .font(.pomoRounded(.body))
+                    .font(.pomoRounded(.body, weight: .black))
                     .monospacedDigit()
                     .foregroundStyle(tint)
             }
@@ -179,10 +306,12 @@ struct PomoToggleRow: View {
                 PomoIconBadge(systemImage: systemImage, tint: tint)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(title)
+                        .font(.body.weight(.semibold))
+                        .foregroundStyle(PomoPalette.inkText)
                     if let subtitle {
                         Text(subtitle)
                             .font(.footnote)
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(PomoPalette.muted)
                     }
                 }
             }
@@ -198,10 +327,10 @@ struct PomoIconBadge: View {
 
     var body: some View {
         Image(systemName: systemImage)
-            .font(.system(size: 15, weight: .semibold))
+            .font(.system(size: 15, weight: .bold))
             .foregroundStyle(tint)
-            .frame(width: 30, height: 30)
-            .background(tint.opacity(0.14), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            .frame(width: 32, height: 32)
+            .background(tint.opacity(0.14), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
             .accessibilityHidden(true)
     }
 }
@@ -213,5 +342,55 @@ struct PomoDivider: View {
             .fill(PomoPalette.hairline)
             .frame(height: 1)
             .padding(.vertical, PomoSpace.xs)
+    }
+}
+
+// MARK: - Hinge (iPhone Duo)
+
+/// Where iPhone Duo's hinge crosses the view, as reported by the system
+/// (`reservedRegions(kind: .division)`, iOS 27.1). Not inferred from the model or the size:
+/// the same device has a vertical hinge held open like a book, a horizontal one when rotated
+/// or half folded like a laptop. The region is reported inactive while the Duo lies flat, but
+/// content across it still reads broken, so inactive regions count too.
+struct PomoFold: Equatable {
+    enum Axis: Equatable {
+        /// Runs top to bottom: split left | right.
+        case vertical
+        /// Runs left to right: split top / bottom (laptop posture).
+        case horizontal
+    }
+
+    var axis: Axis
+    /// Width (vertical) or height (horizontal) of the part before the hinge.
+    var before: CGFloat
+    /// Space the hinge takes, margins included.
+    var gap: CGFloat
+
+    static func measure(in proxy: GeometryProxy) -> PomoFold? {
+        guard #available(iOS 27.1, *) else { return nil }
+        let size = proxy.size
+        for region in proxy.reservedRegions(kind: .division, options: .includeInactive) {
+            let frame = region.frame
+            if frame.height > frame.width, frame.minX > 0, frame.maxX < size.width {
+                return PomoFold(axis: .vertical, before: frame.minX.rounded(), gap: frame.width.rounded())
+            }
+            if frame.width > frame.height, frame.minY > 0, frame.maxY < size.height {
+                return PomoFold(axis: .horizontal, before: frame.minY.rounded(), gap: frame.height.rounded())
+            }
+        }
+        return nil
+    }
+}
+
+extension View {
+    /// Measures iPhone Duo's hinge on every geometry change (open, fold, rotate). Always nil
+    /// on other devices. Measure on a full-size container, never on a stack whose size depends
+    /// on the result (that would loop the layout).
+    func onPomoFoldChange(_ action: @escaping (PomoFold?) -> Void) -> some View {
+        onGeometryChange(for: PomoFold?.self) { proxy in
+            PomoFold.measure(in: proxy)
+        } action: { fold in
+            action(fold)
+        }
     }
 }
