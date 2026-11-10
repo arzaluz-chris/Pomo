@@ -183,7 +183,8 @@ struct KitchenDial: View {
                              degreesPerMinute: degreesPerMinute,
                              tint: type.tint,
                              showsLabels: showsLabels,
-                             scale: scale)
+                             scale: scale,
+                             labelRotation: currentMinutes * degreesPerMinute)
                 }
                 .frame(width: radius * 2, height: radius * 2)
                 .rotationEffect(.degrees(-currentMinutes * degreesPerMinute))
@@ -240,25 +241,32 @@ struct DialBand: Shape {
     }
 }
 
-/// Minute ticks and numbers, minute 0 at the top, increasing clockwise.
+/// Minute ticks and numbers, minute 0 at the top, increasing clockwise. Short sessions get
+/// quarter-minute ticks. Numbers are counter-rotated so they stay upright as the dial turns.
 struct DialFace: View {
     let maxMinutes: Int
     let degreesPerMinute: Double
     let tint: Color
     let showsLabels: Bool
     let scale: CGFloat
+    /// The dial's current rotation, undone on each number.
+    var labelRotation: Double = 0
 
     var body: some View {
         Canvas { context, size in
             let center = CGPoint(x: size.width / 2, y: size.height / 2)
             let radius = min(size.width, size.height) / 2
-            let labelEvery = degreesPerMinute >= 12 ? 1 : 5
-            for minute in 0...max(0, maxMinutes) {
-                let degrees = Double(minute) * degreesPerMinute
+            let isShort = degreesPerMinute >= 12
+            let ticksPerMinute = isShort ? 4 : 1
+            let labelEvery = isShort ? 1 : 5
+            for index in 0...(max(0, maxMinutes) * ticksPerMinute) {
+                let minute = Double(index) / Double(ticksPerMinute)
+                let degrees = minute * degreesPerMinute
                 guard degrees < 360 else { break }
                 let radians = degrees * .pi / 180
-                let major = minute % labelEvery == 0
-                let length = (major ? 24 : 13) * scale
+                let isWholeMinute = index % ticksPerMinute == 0
+                let major = isWholeMinute && Int(minute) % labelEvery == 0
+                let length = (major ? 24 : (isWholeMinute ? 16 : 10)) * scale
                 let start = CGPoint(x: center.x + CGFloat(sin(radians)) * radius,
                                     y: center.y - CGFloat(cos(radians)) * radius)
                 let end = CGPoint(x: center.x + CGFloat(sin(radians)) * (radius - length),
@@ -266,17 +274,20 @@ struct DialFace: View {
                 var tick = Path()
                 tick.move(to: start)
                 tick.addLine(to: end)
-                context.stroke(tick, with: .color(tint.opacity(major ? 1 : 0.55)),
+                context.stroke(tick, with: .color(tint.opacity(major ? 1 : (isWholeMinute ? 0.7 : 0.4))),
                                style: StrokeStyle(lineWidth: (major ? 3 : 2) * max(scale, 0.6), lineCap: .round))
 
                 if showsLabels && major {
                     let labelRadius = radius - 50 * scale
                     let position = CGPoint(x: center.x + CGFloat(sin(radians)) * labelRadius,
                                            y: center.y - CGFloat(cos(radians)) * labelRadius)
-                    context.draw(Text("\(minute)")
-                                    .font(.system(size: 18 * scale, weight: .black, design: .rounded))
-                                    .foregroundColor(PomoPalette.ink),
-                                 at: position)
+                    var layer = context
+                    layer.translateBy(x: position.x, y: position.y)
+                    layer.rotate(by: .degrees(labelRotation))
+                    layer.draw(Text("\(Int(minute))")
+                                .font(.system(size: 18 * scale, weight: .black, design: .rounded))
+                                .foregroundColor(PomoPalette.ink),
+                               at: .zero)
                 }
             }
         }

@@ -2,50 +2,86 @@
 
 import SwiftUI
 
+/// Watch timer in the "Cocina" style: the session color fills the screen, the cream kitchen
+/// dial turns at the bottom, with round controls on it.
 struct WatchTimerView: View {
     @StateObject private var viewModel = WatchTimerViewModel()
     @Environment(\.isLuminanceReduced) private var isLuminanceReduced
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    private var tint: Color { viewModel.currentType.tint }
+    private var type: TimerType { viewModel.currentType }
 
     var body: some View {
-        VStack(spacing: 4) {
-            timerRing
-                .frame(width: Constants.WatchUI.timerCircleSize, height: Constants.WatchUI.timerCircleSize)
+        GeometryReader { proxy in
+            ZStack(alignment: .top) {
+                (isLuminanceReduced ? Color.black : type.tint)
+                    .ignoresSafeArea()
 
-            cycleDots
+                if !isLuminanceReduced {
+                    KitchenDial(remaining: Double(viewModel.timeRemaining),
+                                total: Double(viewModel.state.plannedDuration(settings: viewModel.settings)),
+                                type: type,
+                                radiusRatio: 0.95,
+                                pointerSpace: 12,
+                                showsLabels: false)
+                        .frame(height: proxy.size.height * 0.62)
+                        .frame(maxHeight: .infinity, alignment: .bottom)
+                        .ignoresSafeArea(edges: .bottom)
+                }
 
-            controls
-        }
-        .navigationTitle("Pomo")
-        .navigationBarTitleDisplayMode(.inline)
-        .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: viewModel.state.phase)
-    }
+                VStack(spacing: 0) {
+                    Text(modeText)
+                        .font(.system(size: 12, weight: .heavy, design: .rounded))
+                        .foregroundStyle(isLuminanceReduced ? type.tint : type.onFieldSecondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
 
-    // MARK: - Ring
+                    timeText
+                        .font(.pomoNumber(size: 46))
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.6)
+                        .foregroundStyle(PomoPalette.cream)
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel(type.displayName)
+                        .accessibilityValue(accessibilityTimeValue)
 
-    private var timerRing: some View {
-        ZStack {
-            WatchCircularProgressView(progress: viewModel.progress, tint: tint)
+                    Spacer(minLength: 0)
 
-            VStack(spacing: 1) {
-                timeText
-                    .font(.pomoNumber(size: 26))
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.6)
-                    .foregroundStyle(.primary)
-
-                Text(viewModel.isPaused
-                     ? String(localized: "Paused", comment: "Timer state label")
-                     : viewModel.currentType.displayName)
-                    .font(.system(size: 10, weight: viewModel.isPaused ? .semibold : .regular))
-                    .foregroundStyle(viewModel.isPaused ? tint : .secondary)
+                    if !isLuminanceReduced {
+                        controls
+                    }
+                }
+                .padding(.horizontal, 6)
             }
         }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(viewModel.currentType.displayName)
-        .accessibilityValue(accessibilityTimeValue)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                NavigationLink(destination: WatchSettingsView()) {
+                    Image(systemName: "gearshape.fill")
+                        .foregroundStyle(PomoPalette.cream)
+                }
+                .accessibilityLabel(String(localized: "Ajustes"))
+            }
+        }
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: viewModel.state.phase)
+        .animation(reduceMotion ? nil : .easeInOut(duration: 0.3), value: type)
+    }
+
+    // MARK: - Pieces
+
+    private var modeText: String {
+        if viewModel.isPaused {
+            return String(localized: "Paused", comment: "Timer state label") + " · " + type.displayName
+        }
+        let total = max(1, viewModel.settings.sessionsUntilLongBreak)
+        let completed = viewModel.completedSessions
+        let done = completed == 0 ? 0 : ((completed - 1) % total) + 1
+        if type == .work {
+            let current = viewModel.state.isIdle ? max(done, 1) : (done % total) + 1
+            return String(localized: "\(type.displayName) · \(min(current, total)) of \(total)",
+                          comment: "Mode pill: session type and position in the cycle")
+        }
+        return type.displayName
     }
 
     /// In always-on mode the app is updated rarely, so let the system draw the countdown.
@@ -67,72 +103,35 @@ struct WatchTimerView: View {
         return String(localized: "\(remaining) remaining", comment: "VoiceOver value of the timer")
     }
 
-    // MARK: - Cycle
-
-    private var cycleDots: some View {
-        let total = max(1, viewModel.settings.sessionsUntilLongBreak)
-        let completed = viewModel.completedSessions
-        let position = completed == 0 ? 0 : ((completed - 1) % total) + 1
-
-        return HStack(spacing: 3) {
-            ForEach(0..<total, id: \.self) { index in
-                Capsule()
-                    .fill(index < position ? PomoPalette.focus : Color.gray.opacity(0.3))
-                    .frame(width: index < position ? 10 : 5, height: 5)
-            }
-        }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(String(localized: "\(position) of \(total) sessions before the long break",
-                                   comment: "VoiceOver label of the session cycle dots"))
-    }
-
-    // MARK: - Controls
-
     private var controls: some View {
         HStack(spacing: 8) {
-            Button {
-                viewModel.resetTimer()
-            } label: {
-                Image(systemName: "arrow.clockwise")
-                    .font(.body)
-            }
-            .buttonStyle(.bordered)
-            .tint(.gray)
-            .disabled(viewModel.state.isIdle)
-            .accessibilityLabel(String(localized: "Reset Timer"))
-
-            Button {
-                viewModel.toggleTimer()
-            } label: {
-                Image(systemName: viewModel.isActive ? "pause.fill" : "play.fill")
-                    .font(.title3)
-            }
-            .buttonStyle(.bordered)
-            .tint(tint)
-            .accessibilityLabel(viewModel.isActive ? String(localized: "Pause")
-                                : viewModel.isPaused ? String(localized: "Resume")
-                                : NSLocalizedString("START", comment: "Start button title"))
-
-            if !viewModel.state.isIdle {
-                Button {
-                    viewModel.skipSession()
-                } label: {
-                    Image(systemName: "forward.fill")
-                        .font(.body)
-                }
-                .buttonStyle(.bordered)
-                .tint(.gray)
-                .transition(.opacity.combined(with: .scale))
-                .accessibilityLabel(String(localized: "Skip Session"))
-            } else {
-                NavigationLink(destination: WatchSettingsView()) {
-                    Image(systemName: "gear")
-                        .font(.body)
-                }
-                .buttonStyle(.bordered)
-                .tint(.gray)
-                .accessibilityLabel(String(localized: "Ajustes"))
-            }
+            roundButton(systemImage: "arrow.counterclockwise", label: String(localized: "Reset Timer"),
+                        diameter: 40, primary: false) { viewModel.resetTimer() }
+                .disabled(viewModel.state.isIdle)
+                .opacity(viewModel.state.isIdle ? 0.5 : 1)
+            roundButton(systemImage: viewModel.isActive ? "pause.fill" : "play.fill",
+                        label: viewModel.isActive ? String(localized: "Pause")
+                            : viewModel.isPaused ? String(localized: "Resume")
+                            : NSLocalizedString("START", comment: "Start button title"),
+                        diameter: 52, primary: true) { viewModel.toggleTimer() }
+            roundButton(systemImage: "forward.end.fill", label: String(localized: "Skip Session"),
+                        diameter: 40, primary: false) { viewModel.skipSession() }
+                .disabled(viewModel.state.isIdle)
+                .opacity(viewModel.state.isIdle ? 0.5 : 1)
         }
+        .padding(.bottom, 2)
+    }
+
+    private func roundButton(systemImage: String, label: String, diameter: CGFloat, primary: Bool,
+                             action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: systemImage)
+                .font(.system(size: diameter * 0.36, weight: .bold))
+                .foregroundStyle(primary ? PomoPalette.cream : PomoPalette.ink)
+                .frame(width: diameter, height: diameter)
+                .background(primary ? PomoPalette.ink : Color.white, in: Circle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(label)
     }
 }
