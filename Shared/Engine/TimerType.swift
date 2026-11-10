@@ -1,8 +1,8 @@
-// TimerType.swift
+// Shared/Engine/TimerType.swift
 
 import Foundation
 
-enum TimerType: String, CaseIterable {
+enum TimerType: String, CaseIterable, Codable, Sendable {
     case work = "work"
     case shortBreak = "shortBreak"
     case longBreak = "longBreak"

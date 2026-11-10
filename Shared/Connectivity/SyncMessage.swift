@@ -25,7 +25,7 @@ struct SettingsSync: Codable {
 
     func toDictionary() -> [String: Any] {
         return [
-            Constants.WatchConnectivity.settingsKey: try! JSONEncoder().encode(self)
+            Constants.WatchConnectivity.settingsKey: (try? JSONEncoder().encode(self)) ?? Data()
         ]
     }
 
@@ -51,10 +51,13 @@ struct TimerStateSync: Codable {
     // compatibility with older app versions.
     let sessionID: String?
     let sessionStartDate: TimeInterval?
+    // Full engine state (4.0+). Receivers prefer it; the flat fields above stay filled
+    // so an older app version on the other device keeps working.
+    let state: PomodoroState?
 
     init(currentType: TimerType, timeRemaining: Int, isActive: Bool, isPaused: Bool,
          completedSessions: Int, totalSessionDuration: Int, endTime: TimeInterval?,
-         sessionID: String? = nil, sessionStartDate: TimeInterval? = nil) {
+         sessionID: String? = nil, sessionStartDate: TimeInterval? = nil, state: PomodoroState? = nil) {
         self.currentType = currentType.rawValue
         self.timeRemaining = timeRemaining
         self.isActive = isActive
@@ -65,6 +68,46 @@ struct TimerStateSync: Codable {
         self.timestamp = Date().timeIntervalSince1970
         self.sessionID = sessionID
         self.sessionStartDate = sessionStartDate
+        self.state = state
+    }
+
+    /// Message for an engine state.
+    init(_ state: PomodoroState, settings: PomodoroSettings, now: Date = Date()) {
+        self.currentType = state.type.rawValue
+        self.timeRemaining = state.remaining(at: now, settings: settings)
+        self.isActive = state.isRunning
+        self.isPaused = state.isPaused
+        self.completedSessions = state.completedSessions(on: now)
+        self.totalSessionDuration = state.totalDuration
+        self.endTime = state.endDate?.timeIntervalSince1970
+        self.timestamp = state.updatedAt.timeIntervalSince1970
+        self.sessionID = state.sessionID
+        self.sessionStartDate = state.sessionStart?.timeIntervalSince1970
+        self.state = state
+    }
+
+    /// Engine state carried by the message, rebuilt from the flat fields when the sender
+    /// is an older app version.
+    func pomodoroState(settings: PomodoroSettings, now: Date = Date()) -> PomodoroState {
+        if let state { return state }
+        var rebuilt = PomodoroState()
+        rebuilt.type = timerType
+        rebuilt.completedToday = completedSessions
+        rebuilt.day = Calendar.current.startOfDay(for: now)
+        rebuilt.updatedAt = Date(timeIntervalSince1970: timestamp)
+        if isActive, let endTime {
+            rebuilt.phase = .running
+            rebuilt.endDate = Date(timeIntervalSince1970: endTime)
+        } else if isPaused {
+            rebuilt.phase = .paused
+            rebuilt.pausedRemaining = timeRemaining
+        }
+        if rebuilt.phase != .idle {
+            rebuilt.totalDuration = totalSessionDuration > 0 ? totalSessionDuration : settings.duration(for: timerType)
+            rebuilt.sessionID = sessionID
+            rebuilt.sessionStart = sessionStartDate.map { Date(timeIntervalSince1970: $0) }
+        }
+        return rebuilt
     }
 
     var timerType: TimerType {
@@ -73,7 +116,7 @@ struct TimerStateSync: Codable {
 
     func toDictionary() -> [String: Any] {
         return [
-            Constants.WatchConnectivity.timerStateKey: try! JSONEncoder().encode(self)
+            Constants.WatchConnectivity.timerStateKey: (try? JSONEncoder().encode(self)) ?? Data()
         ]
     }
 
@@ -111,7 +154,7 @@ struct SessionSync: Codable {
 
     func toDictionary() -> [String: Any] {
         return [
-            Constants.WatchConnectivity.completedSessionKey: try! JSONEncoder().encode(self)
+            Constants.WatchConnectivity.completedSessionKey: (try? JSONEncoder().encode(self)) ?? Data()
         ]
     }
 

@@ -3,8 +3,9 @@
 import Foundation
 import ActivityKit
 
+/// Mirrors the Pomodoro state in the Lock Screen / Dynamic Island Live Activity.
 @MainActor
-class LiveActivityManager {
+final class LiveActivityManager {
     static let shared = LiveActivityManager()
 
     private var currentActivity: Activity<PomoActivityAttributes>?
@@ -22,30 +23,30 @@ class LiveActivityManager {
         activity.activityState == .active || activity.activityState == .stale
     }
 
-    func startLiveActivity(timerType: TimerType, timeRemaining: Int, totalDuration: Int) {
-        // Reuse the running activity (resume, skip, start from a paused state). Ending and
-        // re-requesting would flicker and fails while the app is in the background.
+    /// Shows `state`. A running session starts an activity if none is visible (this only
+    /// succeeds in the foreground or from a Live Activity intent); paused and idle states
+    /// only update an existing one, so its buttons can resume or start the next session.
+    func show(_ state: PomodoroState, settings: PomodoroSettings, now: Date = Date()) {
+        let contentState = PomoActivityAttributes.ContentState(
+            timerType: state.type.rawValue,
+            isRunning: state.isRunning,
+            endTime: state.isRunning ? state.endDate : nil,
+            timeRemaining: state.remaining(at: now, settings: settings),
+            totalDuration: state.plannedDuration(settings: settings)
+        )
+        let content = ActivityContent(state: contentState, staleDate: contentState.endTime)
+
         if let activity = currentActivity, Self.isVisible(activity) {
-            updateLiveActivity(timerType: timerType, isRunning: true, timeRemaining: timeRemaining, totalDuration: totalDuration)
+            enqueue { await activity.update(content) }
             return
         }
 
         currentActivity = nil
-        guard ActivityAuthorizationInfo().areActivitiesEnabled else { return }
-
-        let endTime = Date().addingTimeInterval(TimeInterval(timeRemaining))
-        let state = PomoActivityAttributes.ContentState(
-            timerType: timerType.rawValue,
-            isRunning: true,
-            endTime: endTime,
-            timeRemaining: timeRemaining,
-            totalDuration: totalDuration
-        )
-
+        guard state.isRunning, ActivityAuthorizationInfo().areActivitiesEnabled else { return }
         do {
             currentActivity = try Activity<PomoActivityAttributes>.request(
                 attributes: PomoActivityAttributes(),
-                content: ActivityContent(state: state, staleDate: endTime),
+                content: content,
                 pushType: nil
             )
         } catch {
@@ -53,25 +54,7 @@ class LiveActivityManager {
         }
     }
 
-    func updateLiveActivity(timerType: TimerType, isRunning: Bool, timeRemaining: Int, totalDuration: Int) {
-        guard let activity = currentActivity, Self.isVisible(activity) else { return }
-
-        let endTime: Date? = isRunning ? Date().addingTimeInterval(TimeInterval(timeRemaining)) : nil
-        let state = PomoActivityAttributes.ContentState(
-            timerType: timerType.rawValue,
-            isRunning: isRunning,
-            endTime: endTime,
-            timeRemaining: timeRemaining,
-            totalDuration: totalDuration
-        )
-        let content = ActivityContent(state: state, staleDate: endTime)
-
-        enqueue {
-            await activity.update(content)
-        }
-    }
-
-    func endLiveActivity() {
+    func end() {
         currentActivity = nil
 
         let finalState = PomoActivityAttributes.ContentState(
@@ -86,6 +69,7 @@ class LiveActivityManager {
         // End every Pomo activity, including any orphaned by an earlier process. Take the
         // list now, so an activity started after this call isn't ended when the queue runs.
         let activitiesToEnd = Activity<PomoActivityAttributes>.activities
+        guard !activitiesToEnd.isEmpty else { return }
         enqueue {
             for activity in activitiesToEnd {
                 await activity.end(content, dismissalPolicy: .immediate)
