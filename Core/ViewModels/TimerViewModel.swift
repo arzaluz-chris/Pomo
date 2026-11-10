@@ -5,6 +5,7 @@ import SwiftUI
 import Combine
 import UIKit
 import SwiftData
+import WidgetKit
 
 /// iPhone timer: a thin layer over `PomodoroEngine` that persists the state in the App
 /// Group and turns state changes into effects (alert, Live Activity, Watch sync,
@@ -157,6 +158,10 @@ final class TimerViewModel: ObservableObject {
             resetTimer()
         case .skip:
             skipSession()
+        case .startFocus:
+            startNew(.work)
+        case .startBreak:
+            startNew(state.type == .longBreak ? .longBreak : .shortBreak)
         }
         await liveActivityManager.waitForPendingUpdates()
         await notificationService.waitForPendingWork()
@@ -216,6 +221,12 @@ final class TimerViewModel: ObservableObject {
         }
 
         updateTicker()
+
+        // Control Center toggle and Home/Lock Screen widgets read the shared state
+        if new.phase != old.phase || new.endDate != old.endDate || new.type != old.type {
+            ControlCenter.shared.reloadControls(ofKind: Constants.Widgets.timerControlKind)
+            WidgetCenter.shared.reloadTimelines(ofKind: Constants.Widgets.todayWidgetKind)
+        }
 
         // Apple Watch
         if origin != .remote && new != old {
@@ -322,9 +333,14 @@ final class TimerViewModel: ObservableObject {
         guard shouldStartTimer, let type = TimerType(rawValue: quickActionTimerType) else { return }
         shouldStartTimer = false
         quickActionTimerType = ""
+        startNew(type)
+    }
 
+    /// Discards the current session (if any) and starts a session of `type`.
+    private func startNew(_ type: TimerType) {
         let now = Date()
         reconcile(now: now)
+        if state.isRunning && state.type == type { return }
         var next = PomodoroEngine.reset(state, now: now)
         next.type = type
         next = PomodoroEngine.start(next, settings: settings, now: now)

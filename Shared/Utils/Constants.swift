@@ -58,6 +58,12 @@ struct Constants {
         static let endTime = "watch_complication_endTime"
     }
 
+    // Widget and control kinds (the app reloads them when the timer changes)
+    struct Widgets {
+        static let timerControlKind = "com.christian-arzaluz.Pomo.TimerControl"
+        static let todayWidgetKind = "com.christian-arzaluz.Pomo.TodayWidget"
+    }
+
     // Local notification identifiers
     struct Notifications {
         static let timerCompletionIdentifier = "pomodoro-timer-completion"

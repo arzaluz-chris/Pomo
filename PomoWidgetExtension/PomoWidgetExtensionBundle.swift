@@ -7,5 +7,7 @@ import SwiftUI
 struct PomoWidgetExtensionBundle: WidgetBundle {
     var body: some Widget {
         PomoLiveActivity()
+        PomoTodayWidget()
+        PomoTimerControl()
     }
 }
