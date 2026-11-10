@@ -40,12 +40,7 @@ struct PomoComplicationEntry: TimelineEntry {
     }
 
     var tintColor: Color {
-        switch timerType {
-        case "shortBreak", "longBreak":
-            return .pomoSecondary
-        default:
-            return .pomoPrimary
-        }
+        (TimerType(rawValue: timerType) ?? .work).tint
     }
 
     var progress: Double {

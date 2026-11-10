@@ -507,7 +507,7 @@
         "es" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Descanso Largo"
+            "value" : "Descanso largo"
           }
         }
       }
@@ -530,7 +530,15 @@
       }
     },
     "min" : {
-      "comment" : "Minutes abbreviation for complication"
+      "comment" : "Minutes abbreviation for complication",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "min"
+          }
+        }
+      }
     },
     "No hay datos esta semana" : {
       "localizations" : {
@@ -616,8 +624,15 @@
       }
     },
     "Pauses the Pomo timer" : {
-
-},
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pausa el temporizador de Pomo"
+          }
+        }
+      }
+    },
     "Pomo" : {
       "localizations" : {
         "en" : {
@@ -723,8 +738,15 @@
       }
     },
     "Resets the Pomo timer" : {
-
-},
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reinicia el temporizador de Pomo"
+          }
+        }
+      }
+    },
     "Restablecer" : {
       "localizations" : {
         "en" : {
@@ -792,8 +814,15 @@
       }
     },
     "Resumes the Pomo timer" : {
-
-},
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reanuda el temporizador de Pomo"
+          }
+        }
+      }
+    },
     "Saltar" : {
       "localizations" : {
         "en" : {
@@ -880,8 +909,15 @@
       }
     },
     "Skips the current Pomo session" : {
-
-},
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Salta la sesión actual de Pomo"
+          }
+        }
+      }
+    },
     "Sonido" : {
       "localizations" : {
         "en" : {
@@ -1123,6 +1159,308 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Sesión completada"
+          }
+        }
+      }
+    },
+    "Ready" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Listo"
+          }
+        }
+      }
+    },
+    "Ends at %@" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Termina a las %@"
+          }
+        }
+      }
+    },
+    "%lld pomodoros today" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld pomodoros hoy"
+          }
+        }
+      }
+    },
+    "%lld min focused" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%lld min de enfoque"
+          }
+        }
+      }
+    },
+    "Today" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hoy"
+          }
+        }
+      }
+    },
+    "Focus" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enfocar"
+          }
+        }
+      }
+    },
+    "Focusing" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enfocando"
+          }
+        }
+      }
+    },
+    "Start" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iniciar"
+          }
+        }
+      }
+    },
+    "Start or pause your focus session." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inicia o pausa tu sesión de enfoque."
+          }
+        }
+      }
+    },
+    "Your current session and today's focus." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tu sesión actual y el enfoque de hoy."
+          }
+        }
+      }
+    },
+    "Alerts" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alertas"
+          }
+        }
+      }
+    },
+    "Alarm-style alert" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alerta tipo alarma"
+          }
+        }
+      }
+    },
+    "Rings even in silent mode or during a Focus." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Suena aunque estés en silencio o en Concentración."
+          }
+        }
+      }
+    },
+    "Alarms are turned off for Pomo" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Las alarmas están desactivadas para Pomo"
+          }
+        }
+      }
+    },
+    "Allow alarms for Pomo in Settings to use alarm-style alerts." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Permite las alarmas de Pomo en Configuración para usar alertas tipo alarma."
+          }
+        }
+      }
+    },
+    "No session is running." : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No hay ninguna sesión en curso."
+          }
+        }
+      }
+    },
+    "%@ is paused with %@ left." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ is paused with %2$@ left."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ está en pausa con %2$@ restantes."
+          }
+        }
+      }
+    },
+    "%@ left in %@." : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ left in %2$@."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Quedan %1$@ de %2$@."
+          }
+        }
+      }
+    },
+    "Start Focus Session" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iniciar sesión de enfoque"
+          }
+        }
+      }
+    },
+    "Starts a new Pomo focus session" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inicia una nueva sesión de enfoque en Pomo"
+          }
+        }
+      }
+    },
+    "Start Break" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iniciar descanso"
+          }
+        }
+      }
+    },
+    "Starts a Pomo break" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inicia un descanso en Pomo"
+          }
+        }
+      }
+    },
+    "Start or Pause Timer" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Iniciar o pausar temporizador"
+          }
+        }
+      }
+    },
+    "Starts, resumes or pauses the Pomo timer" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inicia, reanuda o pausa el temporizador de Pomo"
+          }
+        }
+      }
+    },
+    "Running" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "En curso"
+          }
+        }
+      }
+    },
+    "Time Remaining" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tiempo restante"
+          }
+        }
+      }
+    },
+    "Tells how much time is left in the current Pomo session" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Indica cuánto falta en la sesión actual de Pomo"
+          }
+        }
+      }
+    },
+    "Start Focus" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enfocar"
+          }
+        }
+      }
+    },
+    "OK" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK"
           }
         }
       }

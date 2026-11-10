@@ -19,7 +19,7 @@ struct PomoTodayEntry: TimelineEntry {
         return endDate > date
     }
 
-    var tint: Color { state.type == .work ? Color("PomoPrimary") : Color("PomoSecondary") }
+    var tint: Color { state.type.tint }
 
     var countdownInterval: ClosedRange<Date>? {
         guard isRunning, let endDate = state.endDate else { return nil }
@@ -77,8 +77,10 @@ struct PomoTodayWidgetView: View {
     var body: some View {
         content
             .containerBackground(for: .widget) {
-                LinearGradient(colors: [entry.tint.opacity(0.25), Color("PomoBackground")],
-                               startPoint: .topLeading, endPoint: .bottomTrailing)
+                ZStack {
+                    PomoPalette.background
+                    RadialGradient(colors: [entry.tint.opacity(0.22), .clear], center: .topLeading, startRadius: 0, endRadius: 220)
+                }
             }
     }
 
@@ -97,8 +99,12 @@ struct PomoTodayWidgetView: View {
     private var small: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Image(systemName: entry.isRunning ? "timer" : "flame.fill")
-                    .foregroundStyle(entry.tint)
+                if entry.isRunning {
+                    Image(systemName: entry.state.type.symbolName)
+                        .foregroundStyle(entry.tint)
+                } else {
+                    PomoMark(showsDial: false).frame(width: 16, height: 16)
+                }
                 Text(entry.isRunning ? entry.state.type.displayName : String(localized: "Today", comment: "Widget: today's stats"))
                     .font(.caption.weight(.semibold))
                     .foregroundStyle(.secondary)
@@ -120,8 +126,7 @@ struct PomoTodayWidgetView: View {
                 .tint(entry.tint)
             } else {
                 Text("\(entry.pomodoros)")
-                    .font(.system(size: 40, weight: .bold, design: .rounded))
-                    + Text(" 🍅").font(.title3)
+                    .font(.pomoNumber(size: 40, weight: .bold))
                 Text(String(localized: "\(entry.focusMinutes) min focused", comment: "Widget: focus minutes today"))
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -132,7 +137,7 @@ struct PomoTodayWidgetView: View {
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(.borderedProminent)
-                .tint(Color("PomoPrimary"))
+                .tint(PomoPalette.focus)
             }
         }
     }
@@ -150,10 +155,10 @@ struct PomoTodayWidgetView: View {
                 }
                 .progressViewStyle(.circular)
             } else {
-                VStack(spacing: 0) {
+                VStack(spacing: 1) {
+                    PomoMark(showsDial: false).frame(width: 14, height: 14)
                     Text("\(entry.pomodoros)")
-                        .font(.system(size: 20, weight: .bold, design: .rounded))
-                    Text("🍅").font(.system(size: 10))
+                        .font(.pomoNumber(size: 18, weight: .bold))
                 }
             }
         }
@@ -191,7 +196,7 @@ struct PomoTodayWidgetView: View {
             if let interval = entry.countdownInterval {
                 Text("\(Image(systemName: "timer")) ") + Text(timerInterval: entry.date...interval.upperBound, countsDown: true)
             } else {
-                Text("\(Image(systemName: "timer")) \(entry.pomodoros) 🍅 · \(entry.focusMinutes) min")
+                Text("\(Image(systemName: "timer")) \(entry.pomodoros) · \(entry.focusMinutes) min")
             }
         }
     }

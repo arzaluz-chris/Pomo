@@ -1,382 +1,183 @@
 // Core/Features/Settings/Views/SettingsView.swift
 
 import SwiftUI
-import StoreKit
 
 struct SettingsView: View {
     @StateObject private var viewModel = SettingsViewModel()
-    @State private var backgroundGradient = Gradient(colors: [Color.pomoPrimary.opacity(0.3), Color.pomoSecondary.opacity(0.4), .blue.opacity(0.3)])
+    @EnvironmentObject private var timerViewModel: TimerViewModel
     @State private var showResetAlert = false
+    @State private var alarmPermissionDenied = false
     private let reviewService = ReviewService.shared
-    
+
     var body: some View {
-        NavigationView {
-            if #available(iOS 26, *) {
-                ZStack {
-                    // FONDO LÍQUIDO ANIMADO (mismo que TimerView)
-                    LinearGradient(
-                        gradient: backgroundGradient,
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                    .ignoresSafeArea()
-                    .blur(radius: 60)
-                    .animation(.easeInOut(duration: 3), value: backgroundGradient)
-                    
-                    ScrollView {
-                        VStack(spacing: 20) {
-                            // SECCIÓN DURACIÓN DE SESIONES
-                            VStack(alignment: .leading, spacing: 20) {
-                                HStack {
-                                    Image(systemName: "clock.fill")
-                                        .foregroundStyle(
-                                            LinearGradient(
-                                                colors: [.pomoPrimary, .pomoSecondary],
-                                                startPoint: .topLeading,
-                                                endPoint: .bottomTrailing
-                                            )
-                                        )
-                                    Text("Duración de las sesiones")
-                                        .font(.headline)
-                                        .foregroundColor(.primary)
-                                }
-                                .padding(.bottom, 8)
-                                
-                                DurationSliderGlass(
-                                    title: String(localized: "Trabajo"),
-                                    value: $viewModel.workDuration,
-                                    range: 10...60,
-                                    icon: "laptopcomputer"
-                                )
-                                
-                                DurationSliderGlass(
-                                    title: String(localized: "Descanso corto"),
-                                    value: $viewModel.shortBreakDuration,
-                                    range: 3...15,
-                                    icon: "cup.and.saucer.fill"
-                                )
-                                
-                                DurationSliderGlass(
-                                    title: String(localized: "Descanso largo"),
-                                    value: $viewModel.longBreakDuration,
-                                    range: 10...30,
-                                    icon: "moon.fill"
-                                )
-                            }
-                            .padding(24)
-                            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 24)
-                                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                            )
-                            .shadow(color: .black.opacity(0.1), radius: 10, y: 5)
-                            
-                            // SECCIÓN CONFIGURACIÓN
-                            VStack(spacing: 20) {
-                                HStack {
-                                    Image(systemName: "gearshape.fill")
-                                        .foregroundStyle(
-                                            LinearGradient(
-                                                colors: [.pomoPrimary, .pomoSecondary],
-                                                startPoint: .topLeading,
-                                                endPoint: .bottomTrailing
-                                            )
-                                        )
-                                    Text("Configuración")
-                                        .font(.headline)
-                                        .foregroundColor(.primary)
-                                    Spacer()
-                                }
-                                
-                                // Slider para sesiones hasta descanso largo
-                                DurationSliderGlass(
-                                    title: String(localized: "Sesiones para descanso largo"),
-                                    value: $viewModel.sessionsUntilLongBreak,
-                                    range: 2...6,
-                                    icon: "arrow.uturn.right.circle",
-                                    isMinutes: false
-                                )
-                                
-                                Divider()
-                                    .background(Color.white.opacity(0.1))
-                                
-                                // Toggle de Notificaciones
-                                Toggle(isOn: $viewModel.isNotificationEnabled) {
-                                    HStack(spacing: 12) {
-                                        Image(systemName: "bell.badge.fill")
-                                            .font(.title3)
-                                            .foregroundStyle(
-                                                LinearGradient(
-                                                    colors: viewModel.isNotificationEnabled ? [.pomoPrimary, .purple] : [.gray],
-                                                    startPoint: .topLeading,
-                                                    endPoint: .bottomTrailing
-                                                )
-                                            )
-                                        VStack(alignment: .leading, spacing: 2) {
-                                            Text("Notificaciones")
-                                                .font(.subheadline)
-                                                .foregroundColor(.primary)
-                                            Text("Alertas al completar sesiones")
-                                                .font(.caption)
-                                                .foregroundColor(.secondary)
-                                        }
-                                    }
-                                }
-                                .tint(.pomoPrimary)
-                                
-                                // Toggle de Sonido
-                                Toggle(isOn: $viewModel.isSoundEnabled) {
-                                    HStack(spacing: 12) {
-                                        Image(systemName: "speaker.wave.2.fill")
-                                            .font(.title3)
-                                            .foregroundStyle(
-                                                LinearGradient(
-                                                    colors: viewModel.isSoundEnabled ? [.pomoSecondary, .green] : [.gray],
-                                                    startPoint: .topLeading,
-                                                    endPoint: .bottomTrailing
-                                                )
-                                            )
-                                        VStack(alignment: .leading, spacing: 2) {
-                                            Text("Sonido")
-                                                .font(.subheadline)
-                                                .foregroundColor(.primary)
-                                            Text("Efectos de sonido")
-                                                .font(.caption)
-                                                .foregroundColor(.secondary)
-                                        }
-                                    }
-                                }
-                                .tint(.pomoSecondary)
-                            }
-                            .padding(24)
-                            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 24)
-                                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                            )
-                            .shadow(color: .black.opacity(0.1), radius: 10, y: 5)
-                            
-                            // SECCIÓN DE RESEÑA
-                            VStack(spacing: 16) {
-                                HStack {
-                                    Image(systemName: "star.fill")
-                                        .foregroundStyle(
-                                            LinearGradient(
-                                                colors: [.yellow, .orange],
-                                                startPoint: .topLeading,
-                                                endPoint: .bottomTrailing
-                                            )
-                                        )
-                                    Text("Calificar en App Store")
-                                        .font(.headline)
-                                        .foregroundColor(.primary)
-                                    Spacer()
-                                }
-                                
-                                Text("Ayúdanos con una reseña")
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                
-                                Button(action: {
-                                    reviewService.openAppStoreForReview()
-                                }) {
-                                    HStack {
-                                        Image(systemName: "star.bubble")
-                                        Text("Escribir reseña")
-                                    }
-                                    .font(.subheadline)
-                                    .fontWeight(.medium)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 12)
-                                    .background(
-                                        LinearGradient(
-                                            colors: [.yellow.opacity(0.3), .orange.opacity(0.3)],
-                                            startPoint: .leading,
-                                            endPoint: .trailing
-                                        )
-                                    )
-                                    .clipShape(Capsule())
-                                }
-                            }
-                            .padding(24)
-                            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 24))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 24)
-                                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                            )
-                            .shadow(color: .black.opacity(0.1), radius: 10, y: 5)
-                            
-                            // BOTÓN DE RESET
-                            Button(role: .destructive) {
-                                showResetAlert = true
-                            } label: {
-                                HStack(spacing: 8) {
-                                    Image(systemName: "arrow.counterclockwise")
-                                    Text("Restablecer")
-                                }
-                                .font(.subheadline)
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 10)
-                                .background(.red.opacity(0.1))
-                                .clipShape(Capsule())
-                            }
-                            .padding(.top, 10)
-                        }
-                        .padding()
-                        .padding(.bottom, 20)
-                    }
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: PomoSpace.l) {
+                    durations
+                    cycle
+                    alerts
+                    about
                 }
-                .navigationTitle("Ajustes")
-                .navigationBarTitleDisplayMode(.large)
-                .alert("¿Restablecer ajustes?", isPresented: $showResetAlert) {
-                    Button("Cancelar", role: .cancel) { }
-                    Button("Restablecer", role: .destructive) {
-                        withAnimation(.spring()) {
-                            viewModel.resetToDefaults()
-                        }
-                    }
-                } message: {
-                    Text("Esto restablecerá todos los ajustes a sus valores predeterminados.")
+                .padding(.horizontal, PomoSpace.m)
+                .padding(.bottom, PomoSpace.xl)
+                .frame(maxWidth: 640)
+                .frame(maxWidth: .infinity)
+            }
+            .background { PomoScreenBackground(tint: PomoPalette.shortBreak, intensity: 0.1) }
+            .navigationTitle("Ajustes")
+            .navigationBarTitleDisplayMode(.large)
+            .alert("¿Restablecer ajustes?", isPresented: $showResetAlert) {
+                Button("Cancelar", role: .cancel) { }
+                Button("Restablecer", role: .destructive) {
+                    viewModel.resetToDefaults()
+                    timerViewModel.alertPreferenceChanged()
                 }
-                .onAppear {
-                    // Animación suave del gradiente
-                    withAnimation(.easeInOut(duration: 3).repeatForever(autoreverses: true)) {
-                        backgroundGradient = Gradient(colors: [
-                            Color.purple.opacity(0.2),
-                            Color.pomoSecondary.opacity(0.4),
-                            Color.pomoPrimary.opacity(0.3)
-                        ])
-                    }
+            } message: {
+                Text("Esto restablecerá todos los ajustes a sus valores predeterminados.")
+            }
+            .alert(String(localized: "Alarms are turned off for Pomo", comment: "Alert title"),
+                   isPresented: $alarmPermissionDenied) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text(String(localized: "Allow alarms for Pomo in Settings to use alarm-style alerts.", comment: "Alert message"))
+            }
+        }
+    }
+
+    // MARK: - Sections
+
+    private var durations: some View {
+        VStack(alignment: .leading, spacing: PomoSpace.s) {
+            PomoSectionHeader(title: String(localized: "Duración de las sesiones"))
+            VStack(spacing: PomoSpace.m) {
+                PomoSliderRow(title: TimerType.work.displayName, systemImage: TimerType.work.symbolName,
+                              tint: TimerType.work.tint, value: $viewModel.workDuration, range: 10...60)
+                PomoDivider()
+                PomoSliderRow(title: TimerType.shortBreak.displayName, systemImage: TimerType.shortBreak.symbolName,
+                              tint: TimerType.shortBreak.tint, value: $viewModel.shortBreakDuration, range: 3...15)
+                PomoDivider()
+                PomoSliderRow(title: TimerType.longBreak.displayName, systemImage: TimerType.longBreak.symbolName,
+                              tint: TimerType.longBreak.tint, value: $viewModel.longBreakDuration, range: 10...30)
+            }
+            .pomoCard()
+        }
+    }
+
+    private var cycle: some View {
+        VStack(alignment: .leading, spacing: PomoSpace.s) {
+            PomoSectionHeader(title: String(localized: "Configuración"))
+            VStack(alignment: .leading, spacing: PomoSpace.s) {
+                PomoSliderRow(title: String(localized: "Sesiones para descanso largo"),
+                              systemImage: "repeat", tint: PomoPalette.longBreak,
+                              value: $viewModel.sessionsUntilLongBreak, range: 2...6, unit: nil)
+                CyclePreview(sessions: viewModel.sessionsUntilLongBreak)
+                    .padding(.leading, 42)
+            }
+            .pomoCard()
+        }
+    }
+
+    private var alerts: some View {
+        VStack(alignment: .leading, spacing: PomoSpace.s) {
+            PomoSectionHeader(title: String(localized: "Alerts", comment: "Settings section"))
+            VStack(spacing: PomoSpace.xs) {
+                PomoToggleRow(title: String(localized: "Notificaciones"),
+                              subtitle: String(localized: "Alertas al completar sesiones"),
+                              systemImage: "bell.badge.fill", tint: PomoPalette.focus,
+                              isOn: $viewModel.isNotificationEnabled)
+                PomoDivider()
+                PomoToggleRow(title: String(localized: "Sonido"),
+                              subtitle: String(localized: "Efectos de sonido"),
+                              systemImage: "speaker.wave.2.fill", tint: PomoPalette.shortBreak,
+                              isOn: $viewModel.isSoundEnabled)
+                if #available(iOS 26, *) {
+                    PomoDivider()
+                    PomoToggleRow(title: String(localized: "Alarm-style alert", comment: "Settings toggle"),
+                                  subtitle: String(localized: "Rings even in silent mode or during a Focus.", comment: "Settings toggle subtitle"),
+                                  systemImage: "alarm.fill", tint: PomoPalette.longBreak,
+                                  isOn: alarmBinding)
                 }
-            } else {
-                // CÓDIGO ORIGINAL PARA iOS 18 Y ANTERIORES
-                Form {
-                    Section("Duración de las sesiones") {
-                        DurationSlider(
-                            title: String(localized: "Trabajo"),
-                            value: $viewModel.workDuration,
-                            range: 10...60
-                        )
-                        
-                        DurationSlider(
-                            title: String(localized: "Descanso corto"),
-                            value: $viewModel.shortBreakDuration,
-                            range: 3...15
-                        )
-                        
-                        DurationSlider(
-                            title: String(localized: "Descanso largo"),
-                            value: $viewModel.longBreakDuration,
-                            range: 10...30
-                        )
+            }
+            .pomoCard()
+            .onChange(of: viewModel.isNotificationEnabled) { timerViewModel.alertPreferenceChanged() }
+        }
+    }
+
+    private var about: some View {
+        VStack(spacing: PomoSpace.xs) {
+            Button {
+                reviewService.openAppStoreForReview()
+            } label: {
+                HStack(spacing: PomoSpace.s) {
+                    PomoIconBadge(systemImage: "star.fill", tint: PomoPalette.focus)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Calificar en App Store")
+                            .foregroundStyle(.primary)
+                        Text("Ayúdanos con una reseña")
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
                     }
-                    
-                    Section("Configuración") {
-                        Stepper(String(localized: "Sesiones hasta descanso largo: \(viewModel.sessionsUntilLongBreak)"),
-                            value: $viewModel.sessionsUntilLongBreak,
-                            in: 2...6
-                        )
-                        
-                        Toggle("Notificaciones", isOn: $viewModel.isNotificationEnabled)
-                        
-                        Toggle("Sonido", isOn: $viewModel.isSoundEnabled)
-                    }
-                    
-                    Section {
-                        Button(action: {
-                            reviewService.openAppStoreForReview()
-                        }) {
-                            HStack {
-                                Image(systemName: "star.bubble")
-                                Text("Calificar en App Store")
-                                Spacer()
-                                Image(systemName: "arrow.up.forward.app")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                        .foregroundColor(.pomoPrimary)
-                        
-                        Button("Restablecer valores predeterminados") {
-                            viewModel.resetToDefaults()
-                        }
-                        .foregroundColor(.red)
-                    }
+                    Spacer()
+                    Image(systemName: "arrow.up.forward")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(.tertiary)
                 }
-                .navigationTitle("Ajustes")
-                .navigationBarTitleDisplayMode(.large)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            PomoDivider()
+
+            Button(role: .destructive) {
+                showResetAlert = true
+            } label: {
+                HStack(spacing: PomoSpace.s) {
+                    PomoIconBadge(systemImage: "arrow.counterclockwise", tint: .red)
+                    Text("Restablecer valores predeterminados")
+                    Spacer()
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(.red)
+        }
+        .pomoCard()
+    }
+
+    // MARK: - Alarm permission
+
+    private var alarmBinding: Binding<Bool> {
+        Binding {
+            viewModel.useAlarmAlerts
+        } set: { enabled in
+            guard enabled else {
+                viewModel.useAlarmAlerts = false
+                timerViewModel.alertPreferenceChanged()
+                return
+            }
+            guard #available(iOS 26, *) else { return }
+            Task {
+                let granted = await PomoAlarmService.shared.requestAuthorization()
+                viewModel.useAlarmAlerts = granted
+                alarmPermissionDenied = !granted
+                timerViewModel.alertPreferenceChanged()
             }
         }
     }
 }
 
-// Componente para sliders con efecto glass
-struct DurationSliderGlass: View {
-    let title: String
-    @Binding var value: Int
-    let range: ClosedRange<Int>
-    let icon: String
-    var isMinutes: Bool = true
-    
+/// Dots showing the focus sessions before each long break.
+private struct CyclePreview: View {
+    let sessions: Int
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Image(systemName: icon)
-                    .font(.callout)
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.pomoPrimary, .pomoSecondary],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
-                Text(title)
-                    .font(.subheadline)
-                    .fontWeight(.medium)
-                    .foregroundColor(.primary)
-                Spacer()
-                Text(isMinutes ? "\(value) min" : "\(value)")
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [.pomoPrimary, .pomoSecondary],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        )
-                    )
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 4)
-                    .background(.ultraThinMaterial, in: Capsule())
-                    .overlay(
-                        Capsule()
-                            .stroke(Color.white.opacity(0.1), lineWidth: 1)
-                    )
+        HStack(spacing: 6) {
+            ForEach(0..<sessions, id: \.self) { _ in
+                Capsule().fill(PomoPalette.focus).frame(width: 18, height: 8)
+                Capsule().fill(PomoPalette.shortBreak.opacity(0.6)).frame(width: 8, height: 8)
             }
-            
-            Slider(value: Binding(
-                get: { Double(value) },
-                set: { value = Int($0) }
-            ), in: Double(range.lowerBound)...Double(range.upperBound), step: 1) {
-                Text(title)
-            } minimumValueLabel: {
-                Text("\(range.lowerBound)")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-            } maximumValueLabel: {
-                Text("\(range.upperBound)")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-            }
-            .tint(
-                LinearGradient(
-                    colors: [.pomoPrimary, .pomoSecondary],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
-            )
+            Capsule().fill(PomoPalette.longBreak).frame(width: 26, height: 8)
         }
-        .padding(.vertical, 8)
+        .accessibilityHidden(true)
     }
 }

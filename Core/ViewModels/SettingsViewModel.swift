@@ -21,6 +21,8 @@ class SettingsViewModel: ObservableObject {
         didSet { syncSettingsToWatch() }
     }
     @AppStorage(Constants.UserDefaults.isSoundEnabled) var isSoundEnabled: Bool = true
+    /// Alarm-style alerts with AlarmKit (iOS 26+).
+    @AppStorage(PomoAlarmPreference.key) var useAlarmAlerts: Bool = false
 
     init() {
         // Establecer valores por defecto si es la primera vez
@@ -39,6 +41,7 @@ class SettingsViewModel: ObservableObject {
         sessionsUntilLongBreak = Constants.Defaults.sessionsUntilLongBreak
         isNotificationEnabled = true
         isSoundEnabled = true
+        useAlarmAlerts = false
     }
 
     private func syncSettingsToWatch() {

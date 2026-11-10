@@ -165,6 +165,9 @@ final class TimerViewModel: ObservableObject {
         }
         await liveActivityManager.waitForPendingUpdates()
         await notificationService.waitForPendingWork()
+        if #available(iOS 26, *) {
+            await PomoAlarmService.shared.waitForPendingWork()
+        }
     }
 
     // MARK: - State changes and effects
@@ -202,13 +205,10 @@ final class TimerViewModel: ObservableObject {
 
         let timingChanged = forceEffects || old.phase != new.phase || old.endDate != new.endDate || old.type != new.type
 
-        // End-of-session alert
+        // End-of-session alert: a notification, or an AlarmKit alarm when the user chose
+        // alarm-style alerts (iOS 26+)
         if timingChanged {
-            if new.isRunning, let endDate = new.endDate {
-                notificationService.scheduleCompletion(for: new.type, at: endDate)
-            } else {
-                notificationService.cancelCompletion()
-            }
+            scheduleCompletionAlert(for: new)
         }
 
         // Live Activity
@@ -232,6 +232,28 @@ final class TimerViewModel: ObservableObject {
         if origin != .remote && new != old {
             WatchConnectivityManager.shared.syncTimerState(TimerStateSync(new, settings: settings, now: now))
         }
+    }
+
+    private func scheduleCompletionAlert(for state: PomodoroState) {
+        let useAlarm = PomoAlarmPreference.isActive
+        if state.isRunning, let endDate = state.endDate {
+            if useAlarm, #available(iOS 26, *) {
+                notificationService.cancelCompletion()
+                PomoAlarmService.shared.scheduleCompletion(for: state.type, at: endDate)
+                return
+            }
+            notificationService.scheduleCompletion(for: state.type, at: endDate)
+        } else {
+            notificationService.cancelCompletion()
+        }
+        if #available(iOS 26, *) {
+            PomoAlarmService.shared.cancelCompletion()
+        }
+    }
+
+    /// Re-applies the alert after the user switches between notification and alarm alerts.
+    func alertPreferenceChanged() {
+        scheduleCompletionAlert(for: state)
     }
 
     private func save(_ record: CompletedSessionRecord) {

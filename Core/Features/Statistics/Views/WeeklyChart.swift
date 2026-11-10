@@ -5,35 +5,29 @@ import Charts
 
 struct WeeklyChart: View {
     let data: [DailyStats]
-    
+
     var body: some View {
         Chart(data) { item in
             BarMark(
-                x: .value("Día", item.dayName),
-                y: .value("Pomodoros", item.pomodoros)
+                x: .value(String(localized: "Día"), item.date, unit: .day),
+                y: .value("Pomodoros", item.pomodoros),
+                width: .ratio(0.55)
             )
-            .foregroundStyle(Color.accentColor)
-            .cornerRadius(8)
-        }
-        .chartYAxis {
-            AxisMarks(position: .leading) { value in
-                AxisGridLine()
-                AxisValueLabel {
-                    if let intValue = value.as(Int.self) {
-                        Text("\(intValue)")
-                            .font(.caption)
-                    }
-                }
-            }
+            .foregroundStyle(PomoPalette.focus.opacity(Calendar.current.isDateInToday(item.date) ? 1 : 0.45))
+            .clipShape(Capsule())
+            .accessibilityLabel(item.date.formatted(.dateTime.weekday(.wide)))
+            .accessibilityValue("\(item.pomodoros) pomodoros")
         }
         .chartXAxis {
-            AxisMarks { value in
-                AxisValueLabel {
-                    if let day = value.as(String.self) {
-                        Text(day)
-                            .font(.caption)
-                    }
-                }
+            AxisMarks(values: .stride(by: .day)) { _ in
+                AxisValueLabel(format: .dateTime.weekday(.narrow), centered: true)
+            }
+        }
+        .chartYAxis {
+            AxisMarks(position: .trailing, values: .automatic(desiredCount: 3)) { _ in
+                AxisGridLine(stroke: StrokeStyle(lineWidth: 1, dash: [3, 3]))
+                    .foregroundStyle(PomoPalette.hairline)
+                AxisValueLabel()
             }
         }
     }
@@ -43,21 +37,12 @@ struct DailyStats: Identifiable {
     let id = UUID()
     let date: Date
     let pomodoros: Int
-    
-    var dayName: String {
-        let formatter = DateFormatter()
-        formatter.locale = Locale.current
-        formatter.dateFormat = "EEE"
-        return formatter.string(from: date).capitalized
-    }
 }
 
 #Preview {
-    WeeklyChart(data: [
-        DailyStats(date: Date(), pomodoros: 5),
-        DailyStats(date: Date().addingTimeInterval(-86400), pomodoros: 8),
-        DailyStats(date: Date().addingTimeInterval(-172800), pomodoros: 3)
-    ])
+    WeeklyChart(data: (0..<7).map {
+        DailyStats(date: Calendar.current.date(byAdding: .day, value: -6 + $0, to: Date())!, pomodoros: [2, 5, 0, 3, 6, 1, 4][$0])
+    })
     .frame(height: 200)
     .padding()
 }

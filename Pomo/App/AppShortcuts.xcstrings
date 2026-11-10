@@ -1,0 +1,116 @@
+{
+  "sourceLanguage" : "en",
+  "strings" : {
+    "Start a focus session in ${applicationName}" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inicia una sesión de enfoque en ${applicationName}"
+          }
+        }
+      }
+    },
+    "Start focusing with ${applicationName}" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Empieza a enfocarte con ${applicationName}"
+          }
+        }
+      }
+    },
+    "Start a ${applicationName}" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inicia un ${applicationName}"
+          }
+        }
+      }
+    },
+    "Start a break in ${applicationName}" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Inicia un descanso en ${applicationName}"
+          }
+        }
+      }
+    },
+    "Take a break with ${applicationName}" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Toma un descanso con ${applicationName}"
+          }
+        }
+      }
+    },
+    "Pause ${applicationName}" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pausa ${applicationName}"
+          }
+        }
+      }
+    },
+    "Pause the ${applicationName} timer" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pausa el temporizador de ${applicationName}"
+          }
+        }
+      }
+    },
+    "Resume ${applicationName}" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reanuda ${applicationName}"
+          }
+        }
+      }
+    },
+    "Resume the ${applicationName} timer" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reanuda el temporizador de ${applicationName}"
+          }
+        }
+      }
+    },
+    "How much time is left in ${applicationName}" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cuánto tiempo queda en ${applicationName}"
+          }
+        }
+      }
+    },
+    "Check my ${applicationName} timer" : {
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Revisa mi temporizador de ${applicationName}"
+          }
+        }
+      }
+    }
+  },
+  "version" : "1.0"
+}

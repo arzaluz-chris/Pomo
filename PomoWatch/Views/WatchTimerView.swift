@@ -7,9 +7,7 @@ struct WatchTimerView: View {
     @Environment(\.isLuminanceReduced) private var isLuminanceReduced
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
-    private var tint: Color {
-        viewModel.currentType == .work ? .pomoPrimary : .pomoSecondary
-    }
+    private var tint: Color { viewModel.currentType.tint }
 
     var body: some View {
         VStack(spacing: 4) {
@@ -33,8 +31,7 @@ struct WatchTimerView: View {
 
             VStack(spacing: 1) {
                 timeText
-                    .font(.system(size: 26, weight: .semibold, design: .rounded))
-                    .monospacedDigit()
+                    .font(.pomoNumber(size: 26))
                     .lineLimit(1)
                     .minimumScaleFactor(0.6)
                     .foregroundStyle(.primary)
@@ -79,9 +76,9 @@ struct WatchTimerView: View {
 
         return HStack(spacing: 3) {
             ForEach(0..<total, id: \.self) { index in
-                Circle()
-                    .fill(index < position ? Color.pomoPrimary : Color.gray.opacity(0.3))
-                    .frame(width: 5, height: 5)
+                Capsule()
+                    .fill(index < position ? PomoPalette.focus : Color.gray.opacity(0.3))
+                    .frame(width: index < position ? 10 : 5, height: 5)
             }
         }
         .accessibilityElement(children: .ignore)

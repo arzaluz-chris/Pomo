@@ -29,6 +29,10 @@ struct PomoApp: App {
             fatalError("Could not create ModelContainer: \(error)")
         }
 
+        #if DEBUG
+        DemoData.seed(into: modelContainer)
+        #endif
+
         // Activate WatchConnectivity for iPhone <-> Watch sync
         WatchConnectivityManager.shared.activate()
 
@@ -42,25 +46,17 @@ struct PomoApp: App {
     var body: some Scene {
         WindowGroup {
             TabView(selection: $selectedTab) {
-                TimerView()
-                    .tabItem {
-                        Label("Timer", systemImage: "timer")
-                    }
-                    .tag(0)
-                
-                StatisticsView()
-                    .tabItem {
-                        Label("Estadísticas", systemImage: "chart.bar.fill")
-                    }
-                    .tag(1)
-                
-                SettingsView()
-                    .tabItem {
-                        Label("Ajustes", systemImage: "gear")
-                    }
-                    .tag(2)
+                Tab("Timer", systemImage: "timer", value: 0) {
+                    TimerView()
+                }
+                Tab("Estadísticas", systemImage: "chart.bar.xaxis", value: 1) {
+                    StatisticsView()
+                }
+                Tab("Ajustes", systemImage: "gearshape", value: 2) {
+                    SettingsView()
+                }
             }
-            .tint(.pomoPrimary)
+            .tint(PomoPalette.focus)
             .environmentObject(timerViewModel)
         }
         .modelContainer(modelContainer)

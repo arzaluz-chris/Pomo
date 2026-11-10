@@ -99,7 +99,6 @@
 		119177CA550AE4B14490D427 /* Exceptions for "Core" folder in "PomoWidgetExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Features/Settings/Views/DurationSlider.swift,
 				Features/Settings/Views/SettingsView.swift,
 				Features/Statistics/Views/StatisticsView.swift,
 				Features/Statistics/Views/WeeklyChart.swift,
@@ -137,7 +136,6 @@
 		AAAA000E000000000000000E /* Exceptions for "Core" folder in "PomoWatch" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Features/Settings/Views/DurationSlider.swift,
 				Features/Settings/Views/SettingsView.swift,
 				Features/Statistics/Views/StatisticsView.swift,
 				Features/Statistics/Views/WeeklyChart.swift,
@@ -191,7 +189,6 @@
 		BBBB000A000000000000000A /* Exceptions for "Core" folder in "PomoWatchWidgetExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Features/Settings/Views/DurationSlider.swift,
 				Features/Settings/Views/SettingsView.swift,
 				Features/Statistics/Views/StatisticsView.swift,
 				Features/Statistics/Views/WeeklyChart.swift,

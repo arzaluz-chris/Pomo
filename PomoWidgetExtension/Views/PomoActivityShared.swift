@@ -6,7 +6,9 @@ import WidgetKit
 extension PomoActivityAttributes.ContentState {
     var isWorkSession: Bool { timerType == TimerType.work.rawValue }
 
-    var tint: Color { isWorkSession ? Color("PomoPrimary") : Color("PomoSecondary") }
+    var type: TimerType { TimerType(rawValue: timerType) ?? .work }
+
+    var tint: Color { type.tint }
 
     /// Interval the live ring and countdown animate over (pauses already excluded).
     var countdownInterval: ClosedRange<Date>? {
@@ -27,14 +29,10 @@ struct SessionIcon: View {
 
     var body: some View {
         if state.isWorkSession {
-            Image("PomoIcon")
-                .resizable()
-                .renderingMode(.original)
-                .aspectRatio(contentMode: .fit)
+            PomoMark(showsDial: size >= 24)
                 .frame(width: size, height: size)
-                .accessibilityHidden(true)
         } else {
-            Image(systemName: "cup.and.saucer.fill")
+            Image(systemName: state.type.symbolName)
                 .font(.system(size: size * 0.8, weight: .semibold))
                 .foregroundStyle(state.tint)
                 .accessibilityHidden(true)
