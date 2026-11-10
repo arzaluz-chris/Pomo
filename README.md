@@ -5,12 +5,12 @@
 <h1 align="center">Pomo — Pomodoro Timer</h1>
 
 <p align="center">
-  A clean, modern Pomodoro timer for iPhone and Apple Watch. Customizable sessions, Dynamic Island support, detailed statistics, and bidirectional Watch sync.
+  A kitchen-timer Pomodoro app for iPhone, iPhone Duo and Apple Watch: a cream dial that turns as you focus, Live Activities and Dynamic Island controls, Siri and Control Center, statistics, and bidirectional Watch sync.
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/iOS-18+-000000?style=flat&logo=apple&logoColor=white" alt="iOS 18+">
-  <img src="https://img.shields.io/badge/watchOS-10+-000000?style=flat&logo=apple&logoColor=white" alt="watchOS 10+">
+  <img src="https://img.shields.io/badge/watchOS-11+-000000?style=flat&logo=apple&logoColor=white" alt="watchOS 11+">
   <img src="https://img.shields.io/badge/Swift-5-FA7343?style=flat&logo=swift&logoColor=white" alt="Swift 5">
   <img src="https://img.shields.io/badge/SwiftUI-blue?style=flat&logo=swift&logoColor=white" alt="SwiftUI">
 </p>
@@ -43,37 +43,32 @@
 
 ## Features
 
-### Core Timer
-- **Customizable Sessions** — Work (10–60 min), short break (3–15 min), long break (10–30 min)
-- **Circular Progress** — Beautiful animated progress ring with time remaining
-- **Automatic Flow** — Seamlessly transitions between work and break periods
-- **Pause, Resume, Skip, Reset** — Full control over your sessions
-- **Background Support** — Timer continues when the app is backgrounded
-- **Push Notifications** — Get notified when sessions complete
-- **Quick Actions** — Start work, take a break, or view stats from the home screen
+### Timer
+- **Kitchen dial** — the session color fills the screen and a cream dial turns as time passes, with the minutes left painted on it
+- **Focus, short and long breaks** — each with its own color; cycle dots toward the long break
+- **Reliable in the background** — time is stored as end dates, so it stays right if the app is suspended or closed; sessions that end while closed are still recorded
+- **Alerts** — Time Sensitive notification, or an optional alarm-style alert with AlarmKit (iOS 26+) that rings in silent mode and Focus
 
-### Dynamic Island & Live Activities
-- **Lock Screen Widget** — See your timer on the lock screen without unlocking
-- **Dynamic Island** — Compact and expanded views on supported iPhones
-- **Real-Time Updates** — Timer countdown updates live
+### Live Activities & Dynamic Island
+- Pause, resume, skip and reset from the Lock Screen and the Dynamic Island, even with the app closed (App Intents run in the app's process)
+- Live ring and countdown without app updates; "Session complete" with a Next button when a session ends in the background
+- Narrow island support (`isDynamicIslandLimitedInWidth`): iPhone Duo's vertical island, landscape, several activities
+- Apple Watch Smart Stack layout
 
 ### Apple Watch
-- **Independent Timer** — Start, pause, and track sessions directly on your wrist
-- **Bidirectional Sync** — Settings and timer state sync between iPhone and Watch via WatchConnectivity
-- **Complications** — Glanceable timer status on your watch face
-- **Haptic Feedback** — Subtle taps when sessions complete
+- Independent timer with its own alert, bidirectional sync with iPhone (newest change wins, no duplicate statistics)
+- Complications that count down live
 
-### Statistics & Tracking
-- **Daily Stats** — Completed Pomodoros and total focus time
-- **Weekly Charts** — Visual bar chart of your productivity over the week
-- **Streak Counter** — Maintain daily productivity streaks
-- **Session History** — All sessions saved automatically with SwiftData
+### Across the system
+- **Siri, Shortcuts, Spotlight, Action button** — start focus, start a break, pause, resume, time remaining (English and Spanish phrases)
+- **Control Center / Lock Screen control** (iOS 18) and a **Today widget** for Home Screen, Lock Screen and StandBy
 
-### Customization
-- **Flexible Durations** — Adjust all timer durations with sliders
-- **Configurable Long Breaks** — Set sessions until long break (2–6)
-- **Notification & Sound Control** — Toggle independently
-- **Light & Dark Mode** — Adaptive design
+### iPhone Duo
+- Outer screen: sections move to a vertical toolbar in the side sensor-bar strip
+- Inner screen: split exactly at the hinge reported by the system — timer | today's stats when open like a book, timer on top and controls below in laptop posture
+
+### Statistics
+- Today's pomodoros, focus time, daily streak and a 7-day chart, stored with SwiftData
 
 ## Architecture
 
@@ -113,8 +108,8 @@ Pomo/
 ## Getting Started
 
 ### Requirements
-- **iOS 18.0+** / **watchOS 10.0+**
-- **Xcode 16.0+**
+- **iOS 18.0+** / **watchOS 11.0+** (AlarmKit alerts on iOS 26+, iPhone Duo hinge layouts on iOS 27.1+)
+- **Xcode 27+**
 - **Swift 5.0+**
 
 ### Installation
