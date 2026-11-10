@@ -1,4 +1,7 @@
 // PomoLockScreenView.swift
+//
+// Lock Screen / StandBy / banner: the session's color field with a cream ring and controls.
+// The Apple Watch Smart Stack uses the small layout.
 
 import SwiftUI
 import WidgetKit
@@ -10,6 +13,9 @@ struct PomoLockScreenView: View {
 
     @Environment(\.activityFamily) private var activityFamily
 
+    private let cream = Color(pomoHex: 0xFFF4E6)
+    private let ink = Color(pomoHex: 0x2B1714)
+
     var body: some View {
         switch activityFamily {
         case .small:
@@ -20,41 +26,44 @@ struct PomoLockScreenView: View {
     }
 
     private var lockScreen: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 14) {
             ZStack {
-                ActivityProgressRing(state: state, isStale: isStale, lineWidth: 4)
-                SessionIcon(state: state, size: 20)
+                ActivityProgressRing(state: state, isStale: isStale, color: cream,
+                                     track: cream.opacity(0.25), lineWidth: 5)
+                SessionIcon(state: state, size: 22, color: cream)
             }
-            .frame(width: 44, height: 44)
+            .frame(width: 52, height: 52)
 
             VStack(alignment: .leading, spacing: 2) {
-                ActivityCountdownText(state: state, isStale: isStale)
-                    .monospacedDigit()
-                    .font(.system(size: 24, weight: .bold, design: .rounded))
-                    .foregroundStyle(.primary)
-
                 Text(subtitle)
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: 13, weight: .heavy, design: .rounded))
+                    .foregroundStyle(state.type.onFieldSecondary)
+                ActivityCountdownText(state: state, isStale: isStale)
+                    .font(.system(size: 34, weight: .black, design: .rounded))
+                    .monospacedDigit()
+                    .foregroundStyle(cream)
             }
             .accessibilityElement(children: .combine)
 
-            Spacer()
+            Spacer(minLength: 0)
 
-            HStack(spacing: 8) {
-                ActivityControlButton(intent: ResetTimerIntent(), systemImage: "arrow.counterclockwise",
-                                      label: String(localized: "Reset Timer"))
-
+            HStack(spacing: 10) {
+                ActivityRoundButton(intent: ResetTimerIntent(), systemImage: "arrow.counterclockwise",
+                                    label: String(localized: "Reset Timer"), diameter: 38,
+                                    foreground: cream, background: ink.opacity(0.22))
                 if state.isRunning && !isStale {
-                    roundButton(PauseTimerIntent(), systemImage: "pause.fill", label: String(localized: "Pause"))
+                    ActivityRoundButton(intent: PauseTimerIntent(), systemImage: "pause.fill",
+                                        label: String(localized: "Pause"), diameter: 48,
+                                        foreground: cream, background: ink)
                 } else {
-                    roundButton(PlayTimerIntent(), systemImage: "play.fill",
-                                label: isStale ? String(localized: "Next", comment: "Live Activity: start next session")
-                                               : String(localized: "Resume"))
+                    ActivityRoundButton(intent: PlayTimerIntent(), systemImage: "play.fill",
+                                        label: isStale ? String(localized: "Next", comment: "Live Activity: start next session")
+                                                       : String(localized: "Resume"),
+                                        diameter: 48, foreground: cream, background: ink)
                 }
-
-                ActivityControlButton(intent: SkipTimerIntent(), systemImage: "forward.fill",
-                                      label: String(localized: "Skip Session"))
+                ActivityRoundButton(intent: SkipTimerIntent(), systemImage: "forward.end.fill",
+                                    label: String(localized: "Skip Session"), diameter: 38,
+                                    foreground: cream, background: ink.opacity(0.22))
             }
         }
         .padding(16)
@@ -69,41 +78,33 @@ struct PomoLockScreenView: View {
         }
         return state.timerTypeDisplayName
     }
-
-    private func roundButton<I: AppIntent>(_ intent: I, systemImage: String, label: String) -> some View {
-        Button(intent: intent) {
-            Image(systemName: systemImage)
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(.white)
-                .frame(width: 30, height: 30)
-                .background(state.tint, in: Circle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(label)
-    }
 }
 
-/// Apple Watch Smart Stack layout (also used by other small presentations).
+/// Apple Watch Smart Stack layout.
 struct SmallActivityView: View {
     let state: PomoActivityAttributes.ContentState
     let isStale: Bool
 
+    private let cream = Color(pomoHex: 0xFFF4E6)
+
     var body: some View {
         HStack(spacing: 8) {
             ZStack {
-                ActivityProgressRing(state: state, isStale: isStale, lineWidth: 3)
-                SessionIcon(state: state, size: 14)
+                ActivityProgressRing(state: state, isStale: isStale, color: cream,
+                                     track: cream.opacity(0.25), lineWidth: 3)
+                SessionIcon(state: state, size: 14, color: cream)
             }
             .frame(width: 32, height: 32)
 
             VStack(alignment: .leading, spacing: 0) {
                 ActivityCountdownText(state: state, isStale: isStale)
+                    .font(.system(size: 22, weight: .black, design: .rounded))
                     .monospacedDigit()
-                    .font(.system(size: 20, weight: .semibold, design: .rounded))
+                    .foregroundStyle(cream)
                 Text(isStale ? String(localized: "Session complete", comment: "Live Activity: session finished")
                              : state.timerTypeDisplayName)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: 11, weight: .heavy, design: .rounded))
+                    .foregroundStyle(state.type.onFieldSecondary)
             }
             Spacer(minLength: 0)
         }

@@ -2,13 +2,23 @@
 
 import SwiftUI
 import WidgetKit
+import AppIntents
 
 extension PomoActivityAttributes.ContentState {
-    var isWorkSession: Bool { timerType == TimerType.work.rawValue }
-
     var type: TimerType { TimerType(rawValue: timerType) ?? .work }
+    var isWorkSession: Bool { type == .work }
 
+    /// Field color of the session (Lock Screen background, primary icons).
     var tint: Color { type.tint }
+
+    /// Brighter version of the session color for the black Dynamic Island.
+    var islandTint: Color {
+        switch type {
+        case .work: return Color(pomoHex: 0xFF7A66)
+        case .shortBreak: return Color(pomoHex: 0x45D1BF)
+        case .longBreak: return Color(pomoHex: 0x9095F7)
+        }
+    }
 
     /// Interval the live ring and countdown animate over (pauses already excluded).
     var countdownInterval: ClosedRange<Date>? {
@@ -22,19 +32,20 @@ extension PomoActivityAttributes.ContentState {
     }
 }
 
-/// Session icon: the Pomo tomato for focus, a cup for breaks.
+/// Session glyph: the Pomo tomato for focus, the break symbol otherwise.
 struct SessionIcon: View {
     let state: PomoActivityAttributes.ContentState
     var size: CGFloat = 16
+    var color: Color? = nil
 
     var body: some View {
         if state.isWorkSession {
-            PomoMark(showsDial: size >= 24)
+            PomoMark(tint: color ?? state.islandTint, leafTint: state.type.accent, showsDial: size >= 28)
                 .frame(width: size, height: size)
         } else {
             Image(systemName: state.type.symbolName)
-                .font(.system(size: size * 0.8, weight: .semibold))
-                .foregroundStyle(state.tint)
+                .font(.system(size: size * 0.8, weight: .bold))
+                .foregroundStyle(color ?? state.islandTint)
                 .accessibilityHidden(true)
         }
     }
@@ -44,6 +55,8 @@ struct SessionIcon: View {
 struct ActivityProgressRing: View {
     let state: PomoActivityAttributes.ContentState
     let isStale: Bool
+    var color: Color
+    var track: Color
     var lineWidth: CGFloat = 4
 
     var body: some View {
@@ -54,14 +67,13 @@ struct ActivityProgressRing: View {
                 EmptyView()
             }
             .progressViewStyle(.circular)
-            .tint(state.tint)
+            .tint(color)
         } else {
             ZStack {
-                Circle()
-                    .stroke(state.tint.opacity(0.3), lineWidth: lineWidth)
+                Circle().stroke(track, lineWidth: lineWidth)
                 Circle()
                     .trim(from: 0, to: isStale ? 1 : CGFloat(state.progress))
-                    .stroke(state.tint, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+                    .stroke(color, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
                     .rotationEffect(.degrees(-90))
             }
         }
@@ -83,3 +95,48 @@ struct ActivityCountdownText: View {
         }
     }
 }
+
+/// Passes whether the Dynamic Island is narrower than usual (iPhone Duo, landscape, or
+/// several Live Activities at once; iOS 27+).
+struct IslandWidthReader<Content: View>: View {
+    @ViewBuilder var content: (_ isLimited: Bool) -> Content
+
+    var body: some View {
+        if #available(iOS 27, *) {
+            LimitedWidthReader(content: content)
+        } else {
+            content(false)
+        }
+    }
+}
+
+@available(iOS 27, *)
+private struct LimitedWidthReader<Content: View>: View {
+    @Environment(\.isDynamicIslandLimitedInWidth) private var isLimited
+    let content: (Bool) -> Content
+
+    var body: some View { content(isLimited) }
+}
+
+/// Round control button used in the Live Activity.
+struct ActivityRoundButton<I: AppIntent>: View {
+    let intent: I
+    let systemImage: String
+    let label: String
+    var diameter: CGFloat = 34
+    var foreground: Color
+    var background: Color
+
+    var body: some View {
+        Button(intent: intent) {
+            Image(systemName: systemImage)
+                .font(.system(size: diameter * 0.38, weight: .bold))
+                .foregroundStyle(foreground)
+                .frame(width: diameter, height: diameter)
+                .background(background, in: Circle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(label)
+    }
+}
+
