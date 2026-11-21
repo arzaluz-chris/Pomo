@@ -37,6 +37,9 @@ struct PomoApp: App {
 
         let timerViewModel = TimerViewModel(modelContainer: modelContainer)
         self.timerViewModel = timerViewModel
+        #if DEBUG
+        DemoData.applyAdjusting(to: timerViewModel)
+        #endif
         PomoTimerActionDispatcher.handler = { action in
             await timerViewModel.perform(action)
         }

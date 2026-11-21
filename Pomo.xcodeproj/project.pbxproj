@@ -872,7 +872,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = Pomo;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2025 Christian Arzaluz. All rights reserved.";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2026 Christian Arzaluz. All rights reserved.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UIRequiresFullScreen = NO;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
@@ -911,7 +911,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = Pomo;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2025 Christian Arzaluz. All rights reserved.";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2026 Christian Arzaluz. All rights reserved.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UIRequiresFullScreen = NO;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;

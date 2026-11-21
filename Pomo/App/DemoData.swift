@@ -1,7 +1,8 @@
 // Pomo/App/DemoData.swift
 //
 // DEBUG only: realistic sample data for screenshots and design reviews.
-// Launch with `-PomoDemoData YES` (optionally `-PomoDemoState running|paused|idle`).
+// Launch with `-PomoDemoData YES` (optionally `-PomoDemoState running|break|paused|idle|adjusting`).
+// `adjusting` shows the idle timer mid-drag (hold and slide), set to 35 minutes.
 
 #if DEBUG
 import Foundation
@@ -45,7 +46,7 @@ enum DemoData {
             state.pausedRemaining = 1105
             state.sessionStart = now.addingTimeInterval(-600)
             state.sessionID = UUID().uuidString
-        case "idle":
+        case "idle", "adjusting":
             break
         case "break":
             state.type = .shortBreak
@@ -62,6 +63,14 @@ enum DemoData {
             state.sessionID = UUID().uuidString
         }
         TimerStateStore.appGroup().save(state)
+    }
+
+    /// Leaves the timer mid-adjustment, as if a finger were holding and sliding it.
+    @MainActor
+    static func applyAdjusting(to timer: TimerViewModel) {
+        guard isEnabled, UserDefaults.standard.string(forKey: "PomoDemoState") == "adjusting" else { return }
+        timer.beginAdjustingDuration()
+        timer.adjustDuration(to: 35)
     }
 }
 #endif

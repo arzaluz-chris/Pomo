@@ -1,47 +1,46 @@
 #!/bin/zsh
-# Capture raw App Store screenshots from the simulators.
-# usage: capture.sh RAW_DIR PHONE69_UDID PHONE63_UDID WATCH_UDID
-RAW=$1; P69=$2; P63=$3; W=$4
-mkdir -p $RAW
+# Capture raw App Store screenshots from one simulator, in Spanish and English, light and dark.
+# usage: capture.sh RAW_DIR SIM_UDID DEVICE [DISPLAY]
+#   DEVICE  iphone | duo-folded   (folder name under RAW_DIR)
+#   DISPLAY simctl display to capture (iPhone Duo outer screen: LCD)
+# Output: RAW_DIR/DEVICE/{es,en}/{light,dark}/NN_name.png
+# Optional env: LANGS="es en", MODES="light dark", SHOTS="timer adjust break stats settings"
+RAW=$1; SIM=$2; DEVICE=$3; DISPLAY_ARG=${4:+--display=$4}
 APP=com.christian-arzaluz.Pomo
-WAPP=com.christian-arzaluz.Pomo.watch
+LANGS=(${=LANGS:-es en}); MODES=(${=MODES:-light dark}); SHOTS=(${=SHOTS:-timer adjust break stats settings})
 
-shoot_phone() { # sim size lang tab state name
-  local SIM=$1 SIZE=$2 LANG=$3 TAB=$4 STATE=$5 NAME=$6
+# shot name -> tab, demo state, file number
+typeset -A TAB STATE NUM
+TAB=(timer 0 adjust 0 break 0 stats 1 settings 2)
+STATE=(timer running adjust adjusting break break stats running settings idle)
+NUM=(timer 01 adjust 02 break 03 stats 04 settings 05)
+
+shoot() { # lang mode shot
+  local LANG=$1 MODE=$2 NAME=$3
   local LOCALE=$([ "$LANG" = es ] && echo es_MX || echo en_US)
+  local OUT="$RAW/$DEVICE/$LANG/$MODE"; mkdir -p "$OUT"
   local A=$(xcrun simctl get_app_container $SIM $APP data)
   xcrun simctl terminate $SIM $APP >/dev/null 2>&1
-  xcrun simctl spawn $SIM defaults write "$A/Library/Preferences/$APP" selectedTab -int $TAB
-  xcrun simctl terminate $SIM com.apple.Preferences >/dev/null 2>&1
-  local NOTIF=$([ "$NAME" = settings ] && echo true || echo false)
-  xcrun simctl spawn $SIM defaults write "$A/Library/Preferences/$APP" isNotificationEnabled -bool $NOTIF
-  xcrun simctl launch $SIM $APP -PomoDemoData YES -PomoDemoState $STATE -AppleLanguages "($LANG)" -AppleLocale $LOCALE >/dev/null
-  sleep 22
+  xcrun simctl spawn $SIM defaults write "$A/Library/Preferences/$APP" selectedTab -int ${TAB[$NAME]}
+  # Durations back to the defaults (an earlier run may have changed them)
+  for K in workDuration:25 shortBreakDuration:5 longBreakDuration:15 sessionsUntilLongBreak:4; do
+    xcrun simctl spawn $SIM defaults write "$A/Library/Preferences/$APP" ${K%%:*} -int ${K##*:}
+  done
+  xcrun simctl launch $SIM $APP -PomoDemoData YES -PomoDemoState ${STATE[$NAME]} \
+    -AppleLanguages "($LANG)" -AppleLocale $LOCALE >/dev/null
+  sleep ${WAIT:-20}
   # Status bar shows the real time so it matches the timer's "ends at"
-  xcrun simctl status_bar $SIM override --time "$(date +%-I:%M)" --batteryState charged --batteryLevel 100 --cellularBars 4 --wifiBars 3 >/dev/null 2>&1
+  xcrun simctl status_bar $SIM override --time "$(date +%-I:%M)" --batteryState charged --batteryLevel 100 \
+    --cellularBars 4 --wifiBars 3 >/dev/null 2>&1
   sleep 2
-  xcrun simctl io $SIM screenshot "$RAW/${LANG}_${SIZE}_${NAME}.png" >/dev/null 2>&1
+  xcrun simctl io $SIM screenshot $DISPLAY_ARG "$OUT/${NUM[$NAME]}_$NAME.png" >/dev/null 2>&1
+  echo "$OUT/${NUM[$NAME]}_$NAME.png"
 }
 
-for SIM_SIZE in "$P69:69" "$P63:63"; do
-  SIM=${SIM_SIZE%%:*}; SIZE=${SIM_SIZE##*:}
-  xcrun simctl status_bar $SIM override --time 9:41 --batteryState charged --batteryLevel 100 --cellularBars 4 --wifiBars 3 >/dev/null 2>&1
-  xcrun simctl ui $SIM appearance light >/dev/null 2>&1
-  for LANG in es en; do
-    shoot_phone $SIM $SIZE $LANG 0 running timer
-    shoot_phone $SIM $SIZE $LANG 0 break break
-    [ -n "$ONLY_TIMERS" ] || shoot_phone $SIM $SIZE $LANG 1 running stats
-    shoot_phone $SIM $SIZE $LANG 2 idle settings
+for MODE in $MODES; do
+  xcrun simctl ui $SIM appearance $MODE >/dev/null 2>&1
+  for LANG in $LANGS; do
+    for NAME in $SHOTS; do shoot $LANG $MODE $NAME; done
   done
 done
-
-if [ -n "$W" ] && [ -z "$ONLY_TIMERS" ]; then
-  for LANG in es en; do
-    LOCALE=$([ "$LANG" = es ] && echo es_MX || echo en_US)
-    xcrun simctl terminate $W $WAPP >/dev/null 2>&1
-    xcrun simctl launch $W $WAPP -PomoDemoData YES -AppleLanguages "($LANG)" -AppleLocale $LOCALE >/dev/null
-    sleep 14
-    xcrun simctl io $W screenshot "$RAW/${LANG}_watch_timer.png" >/dev/null 2>&1
-  done
-fi
 echo captured

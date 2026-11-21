@@ -289,7 +289,15 @@
       }
     },
     "Corner timer" : {
-      "comment" : "Corner complication description"
+      "comment" : "Corner complication description",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Temporizador en la esquina"
+          }
+        }
+      }
     },
     "Descanso corto" : {
       "localizations" : {
@@ -324,7 +332,15 @@
       }
     },
     "Detailed timer status" : {
-      "comment" : "Rectangular complication description"
+      "comment" : "Rectangular complication description",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estado detallado del temporizador"
+          }
+        }
+      }
     },
     "día" : {
       "localizations" : {
@@ -391,7 +407,15 @@
       }
     },
     "Durations" : {
-      "comment" : "Settings section header"
+      "comment" : "Settings section header",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Duraciones"
+          }
+        }
+      }
     },
     "Efectos de sonido" : {
       "localizations" : {
@@ -490,10 +514,26 @@
       }
     },
     "Inline timer status" : {
-      "comment" : "Inline complication description"
+      "comment" : "Inline complication description",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Estado del temporizador en línea"
+          }
+        }
+      }
     },
     "Long" : {
-      "comment" : "Long break short name"
+      "comment" : "Long break short name",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Larga"
+          }
+        }
+      }
     },
     "Long Break" : {
       "comment" : "Long break duration label\nLong break section header\nLong break session type",
@@ -889,7 +929,15 @@
       }
     },
     "Settings" : {
-      "comment" : "Watch settings navigation title"
+      "comment" : "Watch settings navigation title",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ajustes"
+          }
+        }
+      }
     },
     "Skip Session" : {
       "comment" : "Intent title for skipping session",
@@ -1001,7 +1049,15 @@
       }
     },
     "Timer remaining time" : {
-      "comment" : "Circular complication description"
+      "comment" : "Circular complication description",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tiempo restante del temporizador"
+          }
+        }
+      }
     },
     "Total semanal:" : {
       "localizations" : {
