@@ -88,6 +88,9 @@ button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px
     <div class="row" style="justify-content:space-between">
       <span class="spec" id="spec"></span>
       <div class="row">
+        <span class="note" id="fontNote" role="status"></span>
+        <button class="ghost" id="fontPick" type="button" hidden>Usar SF Pro Rounded…</button>
+        <input id="fontFile" type="file" accept=".otf,.ttf,font/otf,font/ttf" multiple hidden>
         <button class="ghost" id="loadJson" type="button">Cargar diseño (.json)</button>
         <input id="jsonFile" type="file" accept=".json,application/json" hidden>
         <button class="ghost" id="dlJson" type="button">Descargar diseño (.json)</button>
@@ -288,7 +291,32 @@ function shotSrc(d, mode, screen) {
 }
 
 // ---------- Dibujo ----------
-const FONT = 'ui-rounded, "SF Pro Rounded", "Nunito", sans-serif';
+// Letra de las imágenes: SF Pro Rounded, como en la app. Safari la ofrece como ui-rounded; en Chrome se toma de la
+// copia instalada en la Mac (local()) o de los .otf que elija la persona (se quedan en su navegador: la licencia de
+// Apple no permite publicar la fuente). Si no hay ninguna, Nunito, que se le parece.
+const FONT = '"Pomo Rounded", ui-rounded, "SF Pro Rounded", "Nunito", sans-serif';
+const ROUNDED_WEIGHTS = [["900", "Black"], ["800", "Heavy"], ["600", "Semibold"], ["700", "Bold"]]; // Semibold antes que Bold al reconocer archivos
+let roundedFrom = "";
+async function loadLocalRounded() {
+  if (!window.FontFace || !document.fonts) return;
+  let ok = 0;
+  for (const [w, n] of ROUNDED_WEIGHTS) {
+    try {
+      const f = new FontFace("Pomo Rounded", `local("SF Pro Rounded ${n}"), local("SFProRounded-${n}")`, { weight: w });
+      await f.load(); document.fonts.add(f); ok++;
+    } catch (e) {}
+  }
+  if (ok) roundedFrom = "instalada";
+}
+function roundedAvailable() {
+  if (roundedFrom) return true;
+  try { return document.fonts.check('900 20px ui-rounded') && /Safari/.test(navigator.userAgent) && !/Chrome|Chromium|Edg/.test(navigator.userAgent); } catch (e) { return false; }
+}
+function updateFontNote() {
+  const ok = roundedAvailable();
+  $("fontNote").textContent = ok ? "Letra: SF Pro Rounded" : "Letra: Nunito (sustituta)";
+  $("fontPick").hidden = ok;
+}
 function rr(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); }
 
 function wrapLines(ctx, text, maxW) {
@@ -804,7 +832,9 @@ async function renderStrip() {
   const d = dev(), st = state[d.id];
   $("spec").textContent = `${d.slot} · ${d.out[0]}×${d.out[1]} px · ${st.slides.length} de ${CONFIG.max} · ${d.note || ""}`;
   const strip = $("strip"); strip.innerHTML = "";
-  if (!shotsFor(d, st.mode)) {
+  // Dúo: cada imagen usa las capturas de su postura
+  const hasShots = (x) => !!shotsFor(devFor(d, x), modeOf(st, x));
+  if (!(d.id === "duo" ? st.slides.some(hasShots) || shotsFor(d, st.mode) : shotsFor(d, st.mode))) {
     strip.innerHTML = `<div class="empty">${d.missing || "Aún no hay capturas para esta postura."}</div>`;
     return;
   }
@@ -833,7 +863,7 @@ function renderBig() {
   clearTimeout(bigTimer);
   bigTimer = setTimeout(() => {
     const d = dev(), s = state[d.id].slides[cur.i];
-    if (!s || !shotsFor(d, state[d.id].mode)) { const c = $("big"); c.width = 10; c.height = 10; return; }
+    if (!s || !shotsFor(devFor(d, s), modeOf(state[d.id], s))) { const c = $("big"); c.width = 10; c.height = 10; return; }
     render($("big"), d, s, { preview: Math.round(Math.min(2200, Math.max(1100, innerHeight * 0.72 * (devicePixelRatio || 1)))) });
     const card = $("strip").querySelectorAll(".card canvas")[cur.i]; if (card) render(card, d, s, { preview: 260 });
   }, 60);
@@ -1066,7 +1096,7 @@ $("jsonFile").onchange = async (ev) => {
 $("dlOne").onclick = () => downloadOne(dev(), cur.i);
 $("dlAll").onclick = async () => {
   if (!downloads) return;
-  const d = dev(), st = state[d.id]; if (!st.slides.length || !shotsFor(d, st.mode)) return;
+  const d = dev(), st = state[d.id]; if (!st.slides.length) return;
   try {
     const zip = new JSZip();
     for (let i = 0; i < st.slides.length; i++) { say(`Generando ${i + 1} de ${st.slides.length}…`); zip.file(fileName(d, i), await pngOf(d, i)); }
@@ -1076,7 +1106,19 @@ $("dlAll").onclick = async () => {
   } catch (e) { say(e && e.code === "declined" ? "Descarga cancelada." : "No se pudo descargar.", e && e.code !== "declined"); }
 };
 
-(document.fonts ? Promise.all([document.fonts.load('900 40px "Nunito"'), document.fonts.load('600 20px "Nunito"')]).catch(() => {}) : Promise.resolve())
+$("fontPick").onclick = () => $("fontFile").click();
+$("fontFile").onchange = async (ev) => {
+  const files = [...(ev.target.files || [])]; ev.target.value = ""; let ok = 0;
+  for (const f of files) {
+    const hit = ROUNDED_WEIGHTS.find(([, n]) => new RegExp(n + "(?!\\w)", "i").test(f.name.replace(/\.(otf|ttf)$/i, "")));
+    if (!hit || !/rounded/i.test(f.name)) continue;
+    try { const face = new FontFace("Pomo Rounded", await f.arrayBuffer(), { weight: hit[0] }); await face.load(); document.fonts.add(face); ok++; } catch (e) {}
+  }
+  if (ok) { roundedFrom = "archivo"; updateFontNote(); refreshAll(); say(`SF Pro Rounded lista (${ok} ${ok === 1 ? "peso" : "pesos"}).`); }
+  else say("Elige los archivos SF-Pro-Rounded-Black.otf y SF-Pro-Rounded-Semibold.otf (están en /Library/Fonts).", true);
+};
+(document.fonts ? Promise.all([document.fonts.load('900 40px "Nunito"'), document.fonts.load('600 20px "Nunito"'), loadLocalRounded()]).catch(() => {}) : Promise.resolve())
+  .then(() => updateFontNote())
   .then(refreshAll);
 refreshAll();
 </script>
