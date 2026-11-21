@@ -46,13 +46,13 @@ struct SettingsView: View {
             PomoSectionHeader(title: String(localized: "Duración de las sesiones"))
             VStack(spacing: PomoSpace.m) {
                 PomoSliderRow(title: TimerType.work.displayName, systemImage: TimerType.work.symbolName,
-                              tint: TimerType.work.tint, value: $viewModel.workDuration, range: 10...60)
+                              tint: TimerType.work.tint, value: $viewModel.workDuration, range: TimerType.work.adjustableMinutes)
                 PomoDivider()
                 PomoSliderRow(title: TimerType.shortBreak.displayName, systemImage: TimerType.shortBreak.symbolName,
-                              tint: TimerType.shortBreak.tint, value: $viewModel.shortBreakDuration, range: 3...15)
+                              tint: TimerType.shortBreak.tint, value: $viewModel.shortBreakDuration, range: TimerType.shortBreak.adjustableMinutes)
                 PomoDivider()
                 PomoSliderRow(title: TimerType.longBreak.displayName, systemImage: TimerType.longBreak.symbolName,
-                              tint: TimerType.longBreak.tint, value: $viewModel.longBreakDuration, range: 10...30)
+                              tint: TimerType.longBreak.tint, value: $viewModel.longBreakDuration, range: TimerType.longBreak.adjustableMinutes)
             }
             .pomoCard()
         }

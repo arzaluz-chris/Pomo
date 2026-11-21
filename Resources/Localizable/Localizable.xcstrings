@@ -1512,6 +1512,39 @@
           }
         }
       }
+    },
+    "Up for more, down for less" : {
+      "comment" : "Timer subtitle while dragging to change the session length",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Arriba suma, abajo resta"
+          }
+        }
+      }
+    },
+    "Hold and slide to adjust" : {
+      "comment" : "Timer idle subtitle: hint for the gesture that changes the session length",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mantén y desliza para ajustar"
+          }
+        }
+      }
+    },
+    "Swipe up or down to change the length" : {
+      "comment" : "VoiceOver hint of the idle timer",
+      "localizations" : {
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Desliza arriba o abajo para cambiar la duración"
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

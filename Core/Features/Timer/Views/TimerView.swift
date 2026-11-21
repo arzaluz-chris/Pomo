@@ -55,12 +55,15 @@ private struct TimerPresentation {
         case .work:
             return String(localized: "\(type.displayName) · \(cycle.current) of \(cycle.total)", comment: "Mode pill: session type and position in the cycle")
         case .shortBreak, .longBreak:
-            let minutes = viewModel.state.plannedDuration(settings: viewModel.settings) / 60
+            let minutes = viewModel.plannedDuration / 60
             return "\(type.displayName) · \(minutes) min"
         }
     }
 
     var subtitle: String {
+        if viewModel.isAdjustingDuration {
+            return String(localized: "Up for more, down for less", comment: "Timer subtitle while dragging to change the session length")
+        }
         if viewModel.isPaused {
             return String(localized: "Paused", comment: "Timer state label")
         }
@@ -71,7 +74,8 @@ private struct TimerPresentation {
             }
             return String(localized: "Back to work at \(time)", comment: "Running break subtitle with the end time")
         }
-        return String(localized: "Ready", comment: "Timer idle subtitle")
+        // Idle: the subtitle teaches the hold-and-slide gesture that changes the length
+        return String(localized: "Hold and slide to adjust", comment: "Timer idle subtitle: hint for the gesture that changes the session length")
     }
 
     var primaryLabel: String {
@@ -132,30 +136,94 @@ private struct ModeControl: View {
     }
 }
 
-/// Big time, with its subtitle.
+/// Big time, with its subtitle. Before the session starts, holding it and sliding up or
+/// down changes the session length.
 private struct TimeBlock: View {
     @EnvironmentObject private var viewModel: TimerViewModel
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     var size: CGFloat
     var subtitleFont: Font = .pomoRounded(.headline, weight: .bold)
 
     var body: some View {
         let presentation = TimerPresentation(viewModel: viewModel)
+        let adjusting = viewModel.isAdjustingDuration
         VStack(spacing: 6) {
             Text(viewModel.timeString)
                 .font(.pomoNumber(size: size))
                 .lineLimit(1)
                 .minimumScaleFactor(0.4)
-                .contentTransition(.numericText(countsDown: true))
+                .contentTransition(.numericText(countsDown: !adjusting))
                 .foregroundStyle(PomoPalette.cream)
+                .scaleEffect(adjusting && !reduceMotion ? 1.08 : 1)
             Text(presentation.subtitle)
                 .font(subtitleFont)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
                 .foregroundStyle(presentation.type.onFieldSecondary)
+                .contentTransition(.opacity)
         }
+        .animation(reduceMotion ? nil : .snappy(duration: 0.25), value: adjusting)
+        .animation(reduceMotion ? nil : .snappy(duration: 0.15), value: viewModel.draftMinutes)
+        .durationAdjustable()
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(presentation.type.displayName)
         .accessibilityValue(presentation.accessibilityTimeValue)
         .accessibilityAddTraits(.updatesFrequently)
+        .accessibilityHint(viewModel.canAdjustDuration
+                           ? String(localized: "Swipe up or down to change the length", comment: "VoiceOver hint of the idle timer")
+                           : "")
+        .accessibilityAdjustableAction { direction in
+            switch direction {
+            case .increment: viewModel.stepDuration(by: 1)
+            case .decrement: viewModel.stepDuration(by: -1)
+            @unknown default: break
+            }
+        }
     }
+}
+
+/// Hold (long press), then slide up for more minutes or down for fewer, with a haptic tick
+/// for every minute, like the system Timer. Only before the session starts; the new length
+/// is saved as that session type's duration when the finger lifts.
+private struct DurationAdjuster: ViewModifier {
+    @EnvironmentObject private var viewModel: TimerViewModel
+    @GestureState private var isHolding = false
+    @State private var startMinutes: Int?
+    /// Vertical travel for one minute.
+    private let pointsPerMinute: CGFloat = 14
+
+    func body(content: Content) -> some View {
+        content
+            .contentShape(Rectangle())
+            .gesture(adjustGesture, isEnabled: viewModel.canAdjustDuration)
+            .onChange(of: isHolding) { _, holding in
+                // Also runs when the system cancels the gesture
+                guard !holding else { return }
+                startMinutes = nil
+                viewModel.endAdjustingDuration()
+            }
+    }
+
+    private var adjustGesture: some Gesture {
+        LongPressGesture(minimumDuration: 0.3)
+            .sequenced(before: DragGesture(minimumDistance: 0, coordinateSpace: .global))
+            .updating($isHolding) { value, state, _ in
+                if case .second(true, _) = value { state = true }
+            }
+            .onChanged { value in
+                guard case .second(true, let drag) = value else { return }
+                if startMinutes == nil {
+                    startMinutes = viewModel.beginAdjustingDuration()
+                }
+                guard let start = startMinutes, let drag else { return }
+                let steps = Int((-drag.translation.height / pointsPerMinute).rounded())
+                viewModel.adjustDuration(to: start + steps)
+            }
+    }
+}
+
+private extension View {
+    func durationAdjustable() -> some View { modifier(DurationAdjuster()) }
 }
 
 /// Reset, play/pause and skip.
@@ -230,9 +298,11 @@ private struct SessionDial: View {
 
     var body: some View {
         KitchenDial(remaining: Double(viewModel.timeRemaining),
-                    total: Double(viewModel.state.plannedDuration(settings: viewModel.settings)),
+                    total: Double(viewModel.plannedDuration),
                     type: viewModel.currentType,
-                    radiusRatio: radiusRatio)
+                    radiusRatio: radiusRatio,
+                    turnAnimation: viewModel.isAdjustingDuration ? .snappy(duration: 0.2) : .linear(duration: 1))
+            .durationAdjustable()
     }
 }
 

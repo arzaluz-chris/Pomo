@@ -151,6 +151,9 @@ struct KitchenDial: View {
     /// Space above the dial for the pointer.
     var pointerSpace: CGFloat = 22
     var showsLabels = true
+    /// How the dial turns when `remaining` changes: one second at a time while running,
+    /// quicker while the user drags the length.
+    var turnAnimation: Animation = .linear(duration: 1)
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -188,7 +191,7 @@ struct KitchenDial: View {
                 }
                 .frame(width: radius * 2, height: radius * 2)
                 .rotationEffect(.degrees(-currentMinutes * degreesPerMinute))
-                .animation(reduceMotion ? nil : .linear(duration: 1), value: remaining)
+                .animation(reduceMotion ? nil : turnAnimation, value: remaining)
                 .position(center)
 
                 DialPointer()

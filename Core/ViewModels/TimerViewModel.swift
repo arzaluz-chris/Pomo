@@ -15,6 +15,8 @@ final class TimerViewModel: ObservableObject {
     @Published private(set) var state = PomodoroState()
     /// Clock used to derive the remaining time; refreshed every second while running.
     @Published private(set) var now = Date()
+    /// Minutes being chosen by holding and dragging the idle timer; nil when not adjusting.
+    @Published private(set) var draftMinutes: Int?
 
     // Duration settings (edited in Settings, synced with Apple Watch)
     @AppStorage(Constants.UserDefaults.workDuration) private var workDurationMinutes: Int = Constants.Defaults.workDuration / 60
@@ -52,7 +54,18 @@ final class TimerViewModel: ObservableObject {
         )
     }
 
-    var timeRemaining: Int { state.remaining(at: now, settings: settings) }
+    var timeRemaining: Int {
+        if let draftMinutes { return draftMinutes * 60 }
+        return state.remaining(at: now, settings: settings)
+    }
+    /// Length of the current session in seconds, including a duration being adjusted.
+    var plannedDuration: Int {
+        if let draftMinutes { return draftMinutes * 60 }
+        return state.plannedDuration(settings: settings)
+    }
+    var isAdjustingDuration: Bool { draftMinutes != nil }
+    /// The session length can be changed from the timer only before it starts.
+    var canAdjustDuration: Bool { state.isIdle }
     var isActive: Bool { state.isRunning }
     var isPaused: Bool { state.isPaused }
     var currentType: TimerType { state.type }
@@ -106,6 +119,7 @@ final class TimerViewModel: ObservableObject {
     // MARK: - User actions
 
     func toggleTimer() {
+        endAdjustingDuration()
         impactFeedback.impactOccurred()
         if isActive { pause() } else { start() }
     }
@@ -129,6 +143,76 @@ final class TimerViewModel: ObservableObject {
         guard state.isIdle, type != state.type else { return }
         selectionFeedback.selectionChanged()
         commit(PomodoroTransition(PomodoroEngine.select(type, in: state, now: Date())), origin: .local)
+    }
+
+    // MARK: - Adjusting the duration from the timer
+
+    /// Starts a hold-and-drag adjustment of the idle session's length. Returns the starting
+    /// minutes, or nil when the session already started.
+    @discardableResult
+    func beginAdjustingDuration() -> Int? {
+        guard canAdjustDuration else { return nil }
+        let minutes = clampedMinutes(settings.duration(for: state.type) / 60)
+        draftMinutes = minutes
+        impactFeedback.impactOccurred()
+        selectionFeedback.prepare()
+        return minutes
+    }
+
+    /// Moves the adjustment to `minutes` (clamped to the type's range), with a tick for every
+    /// minute and a firmer bump at either end of the range.
+    func adjustDuration(to minutes: Int) {
+        guard let current = draftMinutes else { return }
+        let range = state.type.adjustableMinutes
+        let next = min(max(minutes, range.lowerBound), range.upperBound)
+        guard next != current else { return }
+        draftMinutes = next
+        if next == range.lowerBound || next == range.upperBound {
+            UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
+        } else {
+            selectionFeedback.selectionChanged()
+        }
+        selectionFeedback.prepare()
+    }
+
+    /// Saves the adjusted length as this session type's duration (as in Settings).
+    func endAdjustingDuration() {
+        guard let minutes = draftMinutes else { return }
+        draftMinutes = nil
+        setDurationMinutes(minutes, for: state.type)
+    }
+
+    /// One-minute step, for VoiceOver's adjustable action.
+    func stepDuration(by delta: Int) {
+        guard canAdjustDuration else { return }
+        let range = state.type.adjustableMinutes
+        let current = clampedMinutes(settings.duration(for: state.type) / 60)
+        let next = min(max(current + delta, range.lowerBound), range.upperBound)
+        guard next != current else { return }
+        selectionFeedback.selectionChanged()
+        setDurationMinutes(next, for: state.type)
+    }
+
+    private func clampedMinutes(_ minutes: Int) -> Int {
+        let range = state.type.adjustableMinutes
+        return min(max(minutes, range.lowerBound), range.upperBound)
+    }
+
+    private func setDurationMinutes(_ minutes: Int, for type: TimerType) {
+        guard settings.duration(for: type) != minutes * 60 else { return }
+        objectWillChange.send()
+        switch type {
+        case .work: workDurationMinutes = minutes
+        case .shortBreak: shortBreakDurationMinutes = minutes
+        case .longBreak: longBreakDurationMinutes = minutes
+        }
+        WatchConnectivityManager.shared.syncSettings(SettingsSync(
+            workDuration: workDurationMinutes,
+            shortBreakDuration: shortBreakDurationMinutes,
+            longBreakDuration: longBreakDurationMinutes,
+            sessionsUntilLongBreak: sessionsUntilLongBreak,
+            notificationsEnabled: UserDefaults.standard.object(forKey: Constants.UserDefaults.isNotificationEnabled) as? Bool ?? true
+        ))
     }
 
     private func start() {
@@ -193,6 +277,10 @@ final class TimerViewModel: ObservableObject {
         if new != old {
             state = new
             store.save(new)
+        }
+        // A session started (here, on the Watch or from a Live Activity) ends any adjustment
+        if !new.isIdle || new.type != old.type {
+            draftMinutes = nil
         }
         now = Date()
 
