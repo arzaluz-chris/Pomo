@@ -8,6 +8,7 @@ struct RootView: View {
     @AppStorage("selectedTab") private var selectedTab = 0
     @EnvironmentObject private var timerViewModel: TimerViewModel
     @State private var fold: PomoFold?
+    @State private var tabBarHeight: CGFloat = 0
 
     var body: some View {
         #if DEBUG
@@ -63,11 +64,15 @@ struct RootView: View {
                             .offset(x: onTrailing ? sideStrip : -sideStrip)
                     }
             } else {
+                // The bar floats over the section; each section keeps its content clear of it
+                // (pomoBottomBarSpace) inside its own navigation stack
                 section(layout: .compact)
-                    .safeAreaInset(edge: .bottom, spacing: 0) {
+                    .environment(\.pomoBottomBarHeight, tabBarHeight)
+                    .overlay(alignment: .bottom) {
                         PomoTabBar(selection: $selectedTab, tint: tabTint)
                             .padding(.horizontal, PomoSpace.l)
                             .padding(.bottom, PomoSpace.xxs)
+                            .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { tabBarHeight = $0 }
                     }
             }
         }
@@ -97,7 +102,7 @@ struct RootView: View {
     @ViewBuilder
     private func section(layout: TimerLayout) -> some View {
         switch PomoTab(rawValue: selectedTab) ?? .timer {
-        case .timer: TimerView(layout: layout, selectedTab: $selectedTab)
+        case .timer: TimerView(layout: layout, selectedTab: $selectedTab).pomoBottomBarSpace()
         case .statistics: StatisticsView()
         case .settings: SettingsView()
         }

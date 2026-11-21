@@ -385,6 +385,27 @@ struct PomoFold: Equatable {
 extension EnvironmentValues {
     /// iPhone Duo's hinge across the current screen, if any (set by the root view).
     @Entry var pomoFold: PomoFold? = nil
+    /// Height of the floating tab bar over the bottom of the screen (0 when there is none).
+    @Entry var pomoBottomBarHeight: CGFloat = 0
+}
+
+extension View {
+    /// Keeps content clear of the floating tab bar. Apply it inside navigation stacks, right on
+    /// the scrolling content: a bottom inset added outside a NavigationStack does not reach
+    /// its scroll views, so the last rows ended up under the bar.
+    func pomoBottomBarSpace() -> some View {
+        modifier(PomoBottomBarSpace())
+    }
+}
+
+private struct PomoBottomBarSpace: ViewModifier {
+    @Environment(\.pomoBottomBarHeight) private var height
+
+    func body(content: Content) -> some View {
+        content.safeAreaInset(edge: .bottom, spacing: 0) {
+            Color.clear.frame(height: height)
+        }
+    }
 }
 
 /// Two scrolling panes split exactly at a vertical hinge, or one scrolling column otherwise.
@@ -394,6 +415,11 @@ struct PomoFoldPanes<Leading: View, Trailing: View>: View {
     @ViewBuilder var trailing: () -> Trailing
 
     var body: some View {
+        panes.pomoBottomBarSpace()
+    }
+
+    @ViewBuilder
+    private var panes: some View {
         if let fold, fold.axis == .vertical {
             HStack(spacing: 0) {
                 pane(leading).frame(width: fold.before)
