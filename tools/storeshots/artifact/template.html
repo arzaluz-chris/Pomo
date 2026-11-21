@@ -1,0 +1,1082 @@
+<title>Pomo para App Store</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap">
+<style>
+/* Mesa de montaje: tira de imágenes de la ficha arriba, editor de la imagen elegida abajo (vista previa | controles). */
+:root {
+  --bg: #fbf1e6; --panel: #fffaf3; --ink: #2b1714; --muted: #7a5e55; --line: #ecdccb;
+  --brand: #c93b2b; --brand-ink: #fff4e6; --brand-soft: #f9dfd6; --ok: #2f7d4f; --warn: #a15c00;
+  --display: ui-rounded, "SF Pro Rounded", "Nunito", system-ui, sans-serif;
+  --body: ui-rounded, "SF Pro Rounded", "Nunito", system-ui, -apple-system, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #1a1210; --panel: #251a17; --ink: #fff4e6; --muted: #c4a99c; --line: #3a2a25;
+  --brand: #e0564a; --brand-ink: #fff4e6; --brand-soft: #3a201b; --ok: #4cc27f; --warn: #f0a640; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #1a1210; --panel: #251a17; --ink: #fff4e6; --muted: #c4a99c; --line: #3a2a25;
+  --brand: #e0564a; --brand-ink: #fff4e6; --brand-soft: #3a201b; --ok: #4cc27f; --warn: #f0a640; color-scheme: dark }
+* { box-sizing: border-box }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 15px; line-height: 1.45;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 20px 48px }
+.wrap { max-width: 1240px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px }
+.wrap > * { min-width: 0 }
+header { display: flex; flex-wrap: wrap; align-items: end; justify-content: space-between; gap: 12px }
+h1 { font-family: var(--display); font-weight: 900; font-size: 30px; line-height: 1.05; margin: 0; text-wrap: balance }
+.sub { color: var(--muted); margin: 4px 0 0; max-width: 70ch }
+.tabs { display: flex; flex-wrap: wrap; gap: 6px }
+.tab { border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 999px; padding: 7px 14px;
+  font: 700 14px var(--body); cursor: pointer }
+.tab[aria-selected="true"] { background: var(--brand); border-color: var(--brand); color: var(--brand-ink) }
+.tab small { font-weight: 600; opacity: .75; margin-left: 6px; font-variant-numeric: tabular-nums }
+.spec { font: 600 12px var(--mono); color: var(--muted); letter-spacing: .02em }
+.strip { display: flex; gap: 12px; overflow-x: auto; padding: 4px 2px 10px }
+.card { flex: 0 0 auto; display: grid; gap: 6px; border: 2px solid transparent; border-radius: 12px; padding: 6px; background: var(--panel);
+  cursor: pointer; position: relative }
+.card[aria-current="true"] { border-color: var(--brand) }
+.card canvas { display: block; border-radius: 6px; background: var(--line) }
+.card .n { font: 700 12px var(--body); color: var(--muted); display: flex; justify-content: space-between; gap: 6px; align-items: center }
+.card button { border: 0; background: none; color: var(--brand); font: 800 12px var(--body); cursor: pointer; padding: 2px 4px }
+.add { flex: 0 0 auto; align-self: stretch; min-width: 110px; border: 2px dashed var(--line); border-radius: 12px; background: none;
+  color: var(--muted); font: 700 13px var(--body); cursor: pointer }
+.editor { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 18px; align-items: start }
+@media (max-width: 860px) { .editor { grid-template-columns: minmax(0, 1fr) } }
+.stage { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 14px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; justify-items: center; min-width: 0 }
+.stage canvas { width: auto; max-width: 100%; max-height: 72vh; height: auto; border-radius: 8px; box-shadow: 0 1px 0 var(--line) }
+.controls { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 16px; display: grid; gap: 16px; min-width: 0 }
+fieldset { border: 0; margin: 0; padding: 0; display: grid; gap: 8px; min-width: 0 }
+legend, label.l { font: 800 12px var(--body); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); padding: 0 }
+input[type=text], textarea { width: 100%; border: 1px solid var(--line); background: var(--bg); color: var(--ink); border-radius: 10px;
+  padding: 9px 11px; font: 600 15px var(--body) }
+textarea { resize: vertical; min-height: 60px }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center }
+.seg { display: inline-flex; flex-wrap: wrap; border: 1px solid var(--line); border-radius: 10px; overflow: hidden }
+.seg button { border: 0; background: var(--panel); color: var(--ink); padding: 7px 12px; font: 700 13px var(--body); cursor: pointer }
+.seg button[aria-pressed="true"] { background: var(--brand-soft); color: var(--brand) }
+.swatch { width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--line); cursor: pointer }
+.swatch[aria-pressed="true"] { outline: 3px solid var(--brand); outline-offset: 2px }
+.picker { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px }
+.thumb { flex: 0 0 auto; border: 2px solid transparent; border-radius: 8px; padding: 0; background-repeat: no-repeat; cursor: pointer;
+  background-color: var(--line) }
+.thumb[aria-pressed="true"] { border-color: var(--brand) }
+input[type=range] { width: 100%; accent-color: var(--brand) }
+.primary { border: 0; background: var(--brand); color: var(--brand-ink); border-radius: 12px; padding: 11px 18px; font: 800 15px var(--body); cursor: pointer }
+.ghost { border: 1px solid var(--line); background: var(--panel); color: var(--ink); border-radius: 12px; padding: 10px 14px; font: 700 14px var(--body); cursor: pointer }
+button:focus-visible, input:focus-visible, textarea:focus-visible { outline: 3px solid var(--brand); outline-offset: 2px }
+.note { font-size: 13px; color: var(--muted); margin: 0 }
+.note.warn { color: var(--warn) }
+.status { font: 700 13px var(--body); color: var(--ok); min-height: 1.2em }
+.empty { padding: 28px; text-align: center; color: var(--muted); max-width: 46ch }
+@media (prefers-reduced-motion: no-preference) { .card, .thumb { transition: border-color .15s } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Pomo para App Store</h1>
+      <p class="sub">Imágenes de la ficha de Pomo en el estilo «Cocina», con los marcos oficiales de Apple y capturas reales de la app, en español e inglés. Cada una se descarga a la medida exacta de su espacio en App Store Connect.</p>
+    </div>
+    <div class="row">
+      <div class="seg" id="lang" aria-label="Idioma de la ficha"><button type="button" data-v="es">Español</button><button type="button" data-v="en">English</button></div>
+      <div class="tabs" id="tabs" role="tablist"></div>
+    </div>
+  </header>
+
+  <section>
+    <div class="row" style="justify-content:space-between">
+      <span class="spec" id="spec"></span>
+      <div class="row">
+        <button class="ghost" id="loadJson" type="button">Cargar diseño (.json)</button>
+        <input id="jsonFile" type="file" accept=".json,application/json" hidden>
+        <button class="ghost" id="dlJson" type="button">Descargar diseño (.json)</button>
+        <button class="ghost" id="dlAll" type="button">Descargar todas (.zip)</button>
+      </div>
+    </div>
+    <div class="strip" id="strip"></div>
+  </section>
+
+  <section class="editor">
+    <div class="stage">
+      <canvas id="big" width="10" height="10" aria-label="Vista previa de la imagen elegida"></canvas>
+      <div class="row">
+        <button class="primary" id="dlOne" type="button">Descargar PNG</button>
+        <span class="status" id="status" role="status"></span>
+      </div>
+    </div>
+
+    <div class="controls">
+      <fieldset>
+        <legend>Pantalla</legend>
+        <div class="picker" id="picker"></div>
+      </fieldset>
+      <fieldset>
+        <label class="l" for="tag">Etiqueta (opcional)</label>
+        <input id="tag" type="text" maxlength="28" placeholder="Ej. Nuevo · Apple Watch">
+        <label class="l" for="title">Título</label>
+        <input id="title" type="text" maxlength="80">
+        <p class="note">Rodea una palabra con *asteriscos* para resaltarla en color.</p>
+        <p class="note" id="tip"></p>
+        <label class="l" for="subtitle">Subtítulo</label>
+        <textarea id="subtitle" maxlength="160"></textarea>
+      </fieldset>
+      <fieldset>
+        <legend>Solo esta imagen</legend>
+        <div class="row" id="sbgs"></div>
+        <div class="row">
+          <div class="seg" id="smode"><button type="button" data-v="">Como la serie</button><button type="button" data-v="light">Claro</button><button type="button" data-v="dark">Oscuro</button></div>
+          <div class="seg" id="sdeco"><button type="button" data-v="">Como la serie</button><button type="button" data-v="ninguna">Lisa</button><button type="button" data-v="burbujas">Burbujas</button><button type="button" data-v="puntos">Puntos</button></div>
+        </div>
+        <div class="row" id="poseBox" hidden>
+          <span class="l">Postura del Dúo</span>
+          <div class="seg" id="pose"><button type="button" data-v="cerrado">Cerrado</button><button type="button" data-v="abierto">Abierto</button><button type="button" data-v="libro">En L</button></div>
+        </div>
+        <p class="note">Fondo, modo y decoración propios de esta imagen. Lo demás sigue los ajustes de la serie.</p>
+      </fieldset>
+      <fieldset>
+        <legend>Todas las de este dispositivo</legend>
+        <div class="row">
+          <div class="seg" id="mode">
+            <button type="button" data-v="light">Claro</button><button type="button" data-v="dark">Oscuro</button>
+          </div>
+          <div class="row" id="bgs"></div>
+        </div>
+        <div id="canvasBox" hidden style="display:grid;gap:8px">
+          <label class="l">Lienzo del Dúo (medida de subida)</label>
+          <div class="seg" id="canvas"><button type="button" data-v="interior">Interior · 2007×2853</button><button type="button" data-v="exterior">Exterior · 1398×2034</button></div>
+          <p class="note">Todas las imágenes de la serie salen a esta medida, sea cual sea su postura. Sube cada medida en su espacio de App Store Connect.</p>
+        </div>
+        <label class="l">Plantilla</label>
+        <div class="seg" id="layout">
+          <button type="button" data-v="clasica">Clásica</button><button type="button" data-v="protagonista">Protagonista</button><button type="button" data-v="inclinada">Inclinada</button><button type="button" data-v="panoramica">Panorámica</button>
+        </div>
+        <p class="note" id="layoutNote"></p>
+        <label class="l">Decoración</label>
+        <div class="row">
+          <div class="seg" id="deco">
+            <button type="button" data-v="ninguna">Lisa</button><button type="button" data-v="burbujas">Burbujas</button><button type="button" data-v="puntos">Puntos</button>
+          </div>
+          <div class="seg" id="align">
+            <button type="button" data-v="center">Centrado</button><button type="button" data-v="left">A la izquierda</button>
+          </div>
+        </div>
+        <label class="l" for="tsize">Tamaño del texto</label>
+        <input id="tsize" type="range" min="0.8" max="1.3" step="0.01">
+        <label class="l" for="scale">Tamaño del aparato</label>
+        <input id="scale" type="range" min="0.6" max="1.15" step="0.01">
+        <label class="l" for="drop">Altura del aparato</label>
+        <input id="drop" type="range" min="-0.12" max="0.18" step="0.005">
+      </fieldset>
+      <fieldset id="frameBox">
+        <legend>Marco</legend>
+        <div class="seg" id="frameMode"></div>
+        <p class="note" id="frameNote"></p>
+      </fieldset>
+      <div class="row">
+        <button class="ghost" id="remove" type="button">Quitar de la ficha</button>
+        <button class="ghost" id="reset" type="button">Restaurar textos</button>
+      </div>
+      <p class="note" id="limit"></p>
+    </div>
+  </section>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+const CONFIG = __CONFIG__;
+
+// Títulos por idioma (palabras entre *asteriscos* salen resaltadas)
+const CAPTIONS_ALL = __CAPTIONS__;
+// Fondo propio de cada pantalla, como en la ficha actual: cada modo de la app en su color
+const SCREEN_BG = __SCREEN_BG__;
+const LANGS = ["es", "en"];
+let LANG = (() => { try { return LANGS.includes(localStorage.getItem("pomo-store-art-lang")) ? localStorage.getItem("pomo-store-art-lang") : "es"; } catch (e) { return "es"; } })();
+let CAPTIONS = CAPTIONS_ALL[LANG];
+// accent: color de la palabra resaltada · pill/pillInk: etiqueta · deco: formas decorativas
+// Campos de color de Pomo («Cocina»): tomate, verde azulado, índigo, crema, tinta y hoja
+const CREAM = "#fff4e6", CPILL = "rgba(255,244,230,.2)", CDECO = "rgba(255,244,230,.09)";
+const BGS = [
+  { id: "tomate", name: "Tomate", a: "#cc3f2e", b: "#c23726", ink: CREAM, sub: "rgba(255,229,214,.95)", accent: "#ffcb8e", pill: CPILL, pillInk: CREAM, deco: CDECO },
+  { id: "teal", name: "Descanso", a: "#1b8075", b: "#136d63", ink: CREAM, sub: "rgba(214,241,236,.95)", accent: "#ffcb8e", pill: CPILL, pillInk: CREAM, deco: CDECO },
+  { id: "indigo", name: "Descanso largo", a: "#575cc8", b: "#4a4fb8", ink: CREAM, sub: "rgba(228,229,252,.95)", accent: "#ffcb8e", pill: CPILL, pillInk: CREAM, deco: CDECO },
+  { id: "crema", name: "Crema", a: "#fbf1e6", b: "#f5e5d3", ink: "#2b1714", sub: "#7a5e55", accent: "#c93b2b", pill: "#c93b2b", pillInk: CREAM, deco: "rgba(201,59,43,.08)" },
+  { id: "tinta", name: "Tinta", a: "#2e1a16", b: "#1a0e0c", ink: CREAM, sub: "rgba(255,244,230,.78)", accent: "#f06a55", pill: "rgba(240,106,85,.22)", pillInk: "#ffd9cf", deco: "rgba(255,244,230,.06)" },
+  { id: "hoja", name: "Hoja", a: "#319f64", b: "#258352", ink: CREAM, sub: "rgba(232,250,238,.95)", accent: "#ffe08a", pill: CPILL, pillInk: CREAM, deco: CDECO },
+];
+const LAYOUT_NOTES = {
+  clasica: "Texto arriba y el aparato completo. La opción más segura y la más usada en apps de estudio y productividad.",
+  protagonista: "El aparato crece y se sale por abajo: la interfaz se lee mejor en la miniatura de los resultados de búsqueda.",
+  inclinada: "Aparato girado, con más movimiento.",
+  panoramica: "El fondo sigue de una imagen a la siguiente y el aparato alterna de lado: en la tienda se leen como una sola tira.",
+};
+
+const $ = (id) => document.getElementById(id);
+const KEY = "pomo-store-art-" + CONFIG.store + "-v1";
+let saved = {};
+try { saved = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { saved = {}; }
+const persist = () => { try { localStorage.setItem(KEY, JSON.stringify(STATES)); localStorage.setItem("pomo-store-art-lang", LANG); } catch (e) {} };
+
+// Dúo: una sola serie. El lienzo (pantalla interior vertical o exterior) es de toda la serie, porque App Store Connect
+// pide una medida por pantalla; la postura (cerrado, abierto o en L) es diseño y se elige en cada imagen.
+const DUO_POSES = {};
+for (const [pose, id] of [["cerrado", "duo-cerrado"], ["abierto", "duo-abierto"], ["libro", "duo-libro"]]) {
+  const c = CONFIG.devices.find((x) => x.id === id); if (c) DUO_POSES[pose] = c;
+}
+const DUO_CANVAS = {
+  interior: { out: [2007, 2853], slot: "App Store · iPhone Duo, pantalla interior (vertical)" },
+  exterior: { out: [1398, 2034], slot: "App Store · iPhone Duo, pantalla exterior" },
+};
+if (DUO_POSES.cerrado) {
+  const duo = { id: "duo", name: "Dúo", frame: "duoClosed", shots: "duo-folded", bezels: DUO_POSES.cerrado.bezels,
+    defaults: DUO_POSES.cerrado.defaults, bezelNote: "Marcos oficiales de Apple (Apple Design Resources). La postura del Dúo se elige en cada imagen." };
+  const canvasOf = () => DUO_CANVAS[(typeof state !== "undefined" && state.duo && state.duo.canvas) || "interior"];
+  Object.defineProperty(duo, "out", { get: () => canvasOf().out });
+  Object.defineProperty(duo, "slot", { get: () => canvasOf().slot });
+  CONFIG.devices = CONFIG.devices.filter((x) => !x.id.startsWith("duo-")).concat(duo);
+}
+// Aparato con el que se dibuja una imagen: en el Dúo, el de su postura con el lienzo de la serie.
+function devFor(d, s) {
+  if (d.id !== "duo") return d;
+  const { id, name, out, slot, defaults, missing, ...rest } = DUO_POSES[(s && s.pose) || "cerrado"] || DUO_POSES.cerrado;
+  return Object.assign(Object.create(d), rest);
+}
+const POSES = ["cerrado", "abierto", "libro"];
+
+// Estado por idioma y dispositivo: imágenes de la ficha y ajustes comunes. Las imágenes por omisión pueden fijar la
+// postura del Dúo con «pantalla@postura».
+function slideFor(k, lang) {
+  const [screen, pose] = k.split("@"), c = CAPTIONS_ALL[lang][screen] || ["", ""];
+  return { screen, title: c[0], subtitle: c[1], ...(pose ? { pose } : {}), ...(SCREEN_BG[screen] ? { bg: SCREEN_BG[screen] } : {}) };
+}
+const STATES = {};
+for (const lang of LANGS) {
+  const box = STATES[lang] = {}, old = saved[lang] || {};
+  for (const d of CONFIG.devices) {
+    const s = old[d.id];
+    box[d.id] = s && Array.isArray(s.slides) ? s : {
+      mode: "light", bg: d.bg || "tomate", scale: d.scale || 1, drop: 0, frame: (d.bezels && d.bezels[0]) ? d.bezels[0].id : "drawn",
+      slides: (d.defaults || []).map((k) => slideFor(k, lang)),
+    };
+    const st = box[d.id];
+    st.layout = st.layout || "clasica"; st.deco = st.deco || "ninguna"; st.align = st.align || "center"; st.tsize = st.tsize || 1;
+    if (d.id === "duo") st.canvas = st.canvas || "interior";
+  }
+}
+let state = STATES[LANG];
+let cur = { dev: CONFIG.devices[0].id, i: 0 };
+// Cada imagen puede llevar su propio fondo, modo (claro/oscuro) y decoración; si no, usa los de la serie.
+const DECOS = ["ninguna", "burbujas", "puntos"];
+const modeOf = (st, s) => (s && s.mode) || st.mode;
+const bgOf = (st, s) => BGS.find((b) => b.id === ((s && s.bg) || st.bg)) || BGS[0];
+const imgCache = new Map();
+
+function dev() { return CONFIG.devices.find((d) => d.id === cur.dev); }
+function shotsFor(d, mode) { return ((CONFIG.shots[d.shots] || {})[LANG] || {})[mode]; }
+function screenKey(name) { return name.replace(/^\d+_/, ""); }
+
+function loadImg(src) {
+  if (imgCache.has(src)) return imgCache.get(src);
+  const p = new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = src; });
+  imgCache.set(src, p);
+  return p;
+}
+function shotSrc(d, mode, screen) {
+  const set = shotsFor(d, mode); if (!set) return null;
+  const name = set.names.find((n) => screenKey(n) === screen); if (!name) return null;
+  return `shots/${d.shots}/${LANG}/${mode}/${name}.png`;
+}
+
+// ---------- Dibujo ----------
+const FONT = 'ui-rounded, "SF Pro Rounded", "Nunito", sans-serif';
+function rr(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.roundRect(x, y, w, h, r); }
+
+function wrapLines(ctx, text, maxW) {
+  const words = (text || "").split(/\s+/).filter(Boolean); const lines = []; let line = "";
+  for (const w of words) { const t = line ? line + " " + w : w; if (ctx.measureText(t).width > maxW && line) { lines.push(line); line = w; } else line = t; }
+  if (line) lines.push(line);
+  return lines;
+}
+
+// Título con *palabras resaltadas*: devuelve palabras como listas de tramos { t, hi }.
+function richWords(text) {
+  const out = []; let hi = false, word = [], seg = "";
+  const push = () => { if (seg) { word.push({ t: seg, hi }); seg = ""; } };
+  for (const ch of (text || "")) {
+    if (ch === "*") { push(); hi = !hi; }
+    else if (/\s/.test(ch)) { push(); if (word.length) { out.push(word); word = []; } }
+    else seg += ch;
+  }
+  push(); if (word.length) out.push(word);
+  return out;
+}
+const plainText = (t) => (t || "").replace(/\*/g, "");
+
+// Dibuja (o solo mide, con dry) etiqueta, título y subtítulo. Devuelve dónde termina el texto.
+function drawCaption(ctx, W, H, s, bg, area, st, dry) {
+  const base = Math.min(W, H * 0.75) * (st.tsize || 1);
+  const tSize = base * (area.landscape ? 0.058 : 0.084), sSize = base * (area.landscape ? 0.032 : 0.044);
+  const left = st.align === "left", pad = W * (area.landscape ? 0.07 : 0.075);
+  const maxT = left ? W - pad * 2 : area.w * 0.9, maxS = left ? W - pad * 2 : area.w * 0.84;
+  ctx.textBaseline = "top"; ctx.textAlign = "left";
+  let y = area.y;
+  if (s.tag) {
+    const fs = sSize * 0.8, label = s.tag.toUpperCase();
+    ctx.font = `800 ${fs}px ${FONT}`;
+    const ls = fs * 0.08, tw = ctx.measureText(label).width + ls * label.length, ph = fs * 1.9, pw = tw + fs * 1.8;
+    const px = left ? pad : area.cx - pw / 2;
+    if (!dry) {
+      ctx.fillStyle = bg.pill; rr(ctx, px, y, pw, ph, ph / 2); ctx.fill();
+      ctx.fillStyle = bg.pillInk; let x = px + fs * 0.9;
+      for (const ch of label) { ctx.fillText(ch, x, y + (ph - fs) / 2 + fs * 0.06); x += ctx.measureText(ch).width + ls; }
+    }
+    y += ph + tSize * 0.3;
+  }
+  ctx.font = `900 ${tSize}px ${FONT}`;
+  const sp = ctx.measureText(" ").width;
+  const words = richWords(s.title).map((segs) => ({ segs, w: segs.reduce((a, g) => a + ctx.measureText(g.t).width, 0) }));
+  const lines = []; let line = [], lw = 0;
+  for (const wd of words) {
+    const nw = line.length ? lw + sp + wd.w : wd.w;
+    if (nw > maxT && line.length) { lines.push([line, lw]); line = [wd]; lw = wd.w; } else { line.push(wd); lw = nw; }
+  }
+  if (line.length) lines.push([line, lw]);
+  for (const [ln, w] of lines) {
+    let x = left ? pad : area.cx - w / 2;
+    if (!dry) for (const wd of ln) {
+      for (const g of wd.segs) { ctx.fillStyle = g.hi ? bg.accent : bg.ink; ctx.fillText(g.t, x, y); x += ctx.measureText(g.t).width; }
+      x += sp;
+    }
+    y += tSize * 1.02;
+  }
+  y += tSize * 0.22;
+  ctx.fillStyle = bg.sub; ctx.font = `600 ${sSize}px ${FONT}`; ctx.textAlign = left ? "left" : "center";
+  for (const l of wrapLines(ctx, plainText(s.subtitle), maxS)) { if (!dry) ctx.fillText(l, left ? pad : area.cx, y); y += sSize * 1.32; }
+  return y;
+}
+
+// Decoración del fondo. En panorámica las formas se colocan en coordenadas de toda la serie,
+// así cada círculo y la cinta continúan en la imagen de al lado.
+function drawDeco(ctx, W, H, st, bg, idx, n, pano) {
+  ctx.save();
+  const m = Math.min(W, H);
+  if (pano) {
+    ctx.fillStyle = bg.deco;
+    for (let j = 0; j <= n; j++) {
+      const cx = (j - idx) * W, cy = H * (j % 2 ? 0.8 : 0.36), r = m * 0.46;
+      if (cx + r < 0 || cx - r > W) continue;
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.strokeStyle = bg.accent; ctx.globalAlpha = 0.45; ctx.lineWidth = m * 0.016; ctx.lineCap = "round"; ctx.beginPath();
+    for (let t = 0; t <= 80; t++) {
+      const gx = (idx - 0.05) * W + t / 80 * W * 1.1, x = gx - idx * W, y = H * (0.6 + 0.16 * Math.sin(gx / W * Math.PI * 0.9));
+      t ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+    }
+    ctx.stroke(); ctx.globalAlpha = 1;
+  }
+  if (st.deco === "burbujas") {
+    let seed = (idx + 1) * 9301; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    ctx.fillStyle = bg.deco;
+    for (let k = 0; k < 6; k++) {
+      const r = m * (0.05 + rnd() * 0.13), x = (k % 2 ? W * (0.82 + rnd() * 0.25) : W * (-0.07 + rnd() * 0.22)), y = H * (0.08 + rnd() * 0.9);
+      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+    }
+  } else if (st.deco === "puntos") {
+    ctx.fillStyle = bg.deco.replace(/[\d.]+\)$/, (a) => Math.min(0.5, parseFloat(a) * 2.4) + ")");
+    const gap = m * 0.034, r = m * 0.0055;
+    for (const [ox, oy] of [[W - gap * 7.5, H * 0.03], [gap * 1.5, H * 0.72]])
+      for (let a = 0; a < 6; a++) for (let b = 0; b < 6; b++) { ctx.beginPath(); ctx.arc(ox + a * gap, oy + b * gap, r, 0, Math.PI * 2); ctx.fill(); }
+  }
+  ctx.restore();
+}
+
+// Plantilla: escala y desplazamiento (sin giro) más un giro aparte alrededor de un pivote.
+// Separarlos permite dibujar el aparato derecho con reducción de alta calidad y girarlo después a 1:1.
+function layoutOf(L, W, H, top, idx, landscape) {
+  const cx = W / 2, room = H - top;
+  if (L === "protagonista") return { cx, cy: top, ox: 0, oy: 0, f: landscape ? 1.14 : 1.2, rot: 0 };
+  if (L === "inclinada") return { cx, cy: top + room * 0.5, ox: W * 0.02, oy: room * (landscape ? 0.04 : 0.1), f: landscape ? 1.0 : 1.1, rot: -7 * Math.PI / 180 };
+  if (L === "panoramica") {
+    const sg = idx % 2 ? 1 : -1;
+    return { cx, cy: top + room * 0.5, ox: sg * W * (landscape ? 0.05 : 0.08), oy: room * 0.04, f: landscape ? 0.96 : 1.04, rot: sg * 4 * Math.PI / 180 };
+  }
+  return { cx, cy: top, ox: 0, oy: 0, f: 1, rot: 0 };
+}
+function applyAxis(ctx, o) { ctx.translate(o.cx + o.ox, o.cy + o.oy); ctx.scale(o.f, o.f); ctx.translate(-o.cx, -o.cy); }
+
+// Máscara con la forma exacta del hueco de pantalla: relleno desde el centro por los píxeles transparentes
+// del marco. Así la captura no se asoma por las esquinas redondeadas.
+const maskCache = new Map();
+function holeMask(bim, key) {
+  if (maskCache.has(key)) return maskCache.get(key);
+  const w = bim.width, h = bim.height, c = document.createElement("canvas"); c.width = w; c.height = h;
+  const x = c.getContext("2d", { willReadFrequently: true }); x.drawImage(bim, 0, 0);
+  const src = x.getImageData(0, 0, w, h), a = src.data, out = x.createImageData(w, h), o = out.data;
+  const seen = new Uint8Array(w * h), stack = [((h >> 1) * w) + (w >> 1)];
+  while (stack.length) {
+    const i = stack.pop(); if (seen[i]) continue; seen[i] = 1;
+    if (a[i * 4 + 3] > 250) continue;           // borde del marco
+    o[i * 4] = o[i * 4 + 1] = o[i * 4 + 2] = 255; o[i * 4 + 3] = 255 - a[i * 4 + 3];
+    const px = i % w;
+    if (px > 0) stack.push(i - 1); if (px < w - 1) stack.push(i + 1);
+    if (i >= w) stack.push(i - w); if (i < w * (h - 1)) stack.push(i + w);
+  }
+  x.clearRect(0, 0, w, h); x.putImageData(out, 0, 0);
+  maskCache.set(key, c); return c;
+}
+function bezelOf(d) { return (d.bezels || []).find((b) => b.id === state[d.id].frame) || null; }
+function detectHoleUnused(im) {
+  const c = document.createElement("canvas"); c.width = im.width; c.height = im.height;
+  const x = c.getContext("2d", { willReadFrequently: true }); x.drawImage(im, 0, 0);
+  const { data } = x.getImageData(0, 0, c.width, c.height);
+  const a = (px, py) => data[(py * c.width + px) * 4 + 3];
+  const cx = c.width >> 1, cy = c.height >> 1;
+  if (a(cx, cy) > 20) return null;
+  let l = cx, r = cx, t = cy, b = cy;
+  while (l > 0 && a(l - 1, cy) < 200) l--;
+  while (r < c.width - 1 && a(r + 1, cy) < 200) r++;
+  while (t > 0 && a(cx, t - 1) < 200) t--;
+  while (b < c.height - 1 && a(cx, b + 1) < 200) b++;
+  return { x: l, y: t, w: r - l + 1, h: b - t + 1 };
+}
+
+// Coloca la captura en un rectángulo SIN deformarla: misma proporción, centrada.
+function fitShot(ctx, im, x, y, w, h) {
+  const s = Math.min(w / im.width, h / im.height);
+  const dw = im.width * s, dh = im.height * s;
+  ctx.drawImage(im, x + (w - dw) / 2, y + (h - dh) / 2, dw, dh);
+}
+
+function drawPhone(ctx, im, x, y, w, kind) {
+  const h = w * im.height / im.width;
+  const tablet = kind === "tablet" || kind === "tabletLand";
+  const bz = w * (tablet ? 0.028 : kind === "duoOpen" ? 0.022 : 0.034);
+  const R = (tablet ? Math.min(w, h) * 0.06 : kind === "duoOpen" ? Math.min(w, h) * 0.075 : w * 0.15);
+  const X = x - bz, Y = y - bz, Wd = w + bz * 2, Hd = h + bz * 2;
+  ctx.save();
+  ctx.shadowColor = "rgba(43,23,20,.35)"; ctx.shadowBlur = Wd * 0.06; ctx.shadowOffsetY = Wd * 0.02;
+  rr(ctx, X, Y, Wd, Hd, R + bz); ctx.fillStyle = "#16141c"; ctx.fill();
+  ctx.restore();
+  // canto
+  ctx.save(); rr(ctx, X, Y, Wd, Hd, R + bz); ctx.lineWidth = Math.max(2, bz * 0.18);
+  const g = ctx.createLinearGradient(X, Y, X + Wd, Y + Hd); g.addColorStop(0, "#5d5a66"); g.addColorStop(.5, "#2a2830"); g.addColorStop(1, "#6a6773");
+  ctx.strokeStyle = g; ctx.stroke(); ctx.restore();
+  // botones laterales
+  if (!tablet && kind !== "duoOpen") {
+    ctx.fillStyle = "#2b2932";
+    rr(ctx, X - bz * 0.22, Y + Hd * 0.2, bz * 0.3, Hd * 0.06, bz * 0.12); ctx.fill();
+    rr(ctx, X - bz * 0.22, Y + Hd * 0.29, bz * 0.3, Hd * 0.06, bz * 0.12); ctx.fill();
+    rr(ctx, X + Wd - bz * 0.08, Y + Hd * 0.25, bz * 0.3, Hd * 0.1, bz * 0.12); ctx.fill();
+  }
+  ctx.save(); rr(ctx, x, y, w, h, R); ctx.clip(); ctx.drawImage(im, x, y, w, h);
+  if (kind === "duoOpen") { // bisagra
+    const hg = ctx.createLinearGradient(x + w / 2 - w * 0.02, 0, x + w / 2 + w * 0.02, 0);
+    hg.addColorStop(0, "rgba(0,0,0,0)"); hg.addColorStop(.5, "rgba(0,0,0,.10)"); hg.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = hg; ctx.fillRect(x + w / 2 - w * 0.02, y, w * 0.04, h);
+  }
+  ctx.restore();
+  if (kind === "phone") { // isla dinámica
+    ctx.fillStyle = "#000"; const iw = w * 0.27, ih = w * 0.078;
+    rr(ctx, x + (w - iw) / 2, y + w * 0.028, iw, ih, ih / 2); ctx.fill();
+  }
+  if (kind === "android") { ctx.fillStyle = "#000"; ctx.beginPath(); ctx.arc(x + w / 2, y + w * 0.045, w * 0.022, 0, Math.PI * 2); ctx.fill(); }
+  return { h: h + bz * 2 };
+}
+
+// Dúo en «L» (libro): mitad de arriba de pie, mitad de abajo apoyada, en perspectiva.
+const BOOK_FORESHORTEN = 0.55;
+// Alto total del Dúo en «L» para un ancho dado (para centrarlo en el espacio libre).
+function bookHeight(im, w) { const topH = w * 0.94 * (im.height / 2) / im.width; return topH * (1 + BOOK_FORESHORTEN); }
+function drawBook(ctx, im, x, y, w, framed) {
+  const half = im.height / 2;
+  const topW = w * 0.94, topH = topW * half / im.width;
+  const botH = topH * BOOK_FORESHORTEN, botWb = w * 1.0, botWt = topW;
+  const tx = x + (w - topW) / 2, bz = w * 0.03, R = topW * 0.06;
+  const yFold = y + topH;
+  // sombra sobre la mesa, bajo la mitad apoyada
+  ctx.save(); ctx.fillStyle = "rgba(43,23,20,.35)"; ctx.filter = `blur(${w * 0.025}px)`;
+  ctx.beginPath(); ctx.ellipse(x + w / 2, yFold + botH + bz, w * 0.5, botH * 0.16, 0, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+  // cuerpo (solo con marco dibujado: el oficial ya trae el suyo)
+  ctx.fillStyle = framed ? "rgba(0,0,0,0)" : "#16141c";
+  rr(ctx, tx - bz, y - bz, topW + bz * 2, topH + bz, [R + bz, R + bz, 0, 0]); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(tx - bz, yFold); ctx.lineTo(tx + topW + bz, yFold);
+  ctx.lineTo(x + botWb + bz * 1.2, yFold + botH + bz * 1.3); ctx.lineTo(x - bz * 1.2, yFold + botH + bz * 1.3); ctx.closePath(); ctx.fill();
+  // mitad de arriba
+  ctx.save(); rr(ctx, tx, y, topW, topH, [R, R, 0, 0]); ctx.clip();
+  ctx.drawImage(im, 0, 0, im.width, half, tx, y, topW, topH); ctx.restore();
+  // mitad de abajo por franjas (trapecio)
+  const rows = Math.ceil(botH);
+  for (let i = 0; i < rows; i++) {
+    const t0 = i / rows, t1 = (i + 1) / rows;
+    const v0 = half + half * (t0 * 0.55 + t0 * t0 * 0.45), v1 = half + half * (t1 * 0.55 + t1 * t1 * 0.45);
+    const ww = botWt + (botWb - botWt) * t0, xx = x + (w - ww) / 2;
+    ctx.drawImage(im, 0, v0, im.width, Math.max(1, v1 - v0), xx, yFold + i, ww, 1.6);
+  }
+  // pliegue
+  const fg = ctx.createLinearGradient(0, yFold - topH * 0.06, 0, yFold + botH * 0.12);
+  fg.addColorStop(0, "rgba(0,0,0,0)"); fg.addColorStop(.5, "rgba(0,0,0,.22)"); fg.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = fg; ctx.fillRect(x - bz, yFold - topH * 0.06, w + bz * 2, topH * 0.06 + botH * 0.12);
+  return { h: topH + botH + bz * 2 };
+}
+
+// ---------- Dúo en «L» en 3D (WebGL2) ----------
+// Dos mitades iguales del Dúo abierto (la textura es la pantalla con su marco, ya compuesta en plano), unidas por la
+// bisagra: la de abajo apoyada en la mesa y la de arriba inclinada hacia atrás. El grosor sale de apilar la misma
+// silueta (esquinas redondas incluidas) hacia atrás y más oscura. Se dibuja al doble de resolución y se reduce, con
+// mipmaps y filtrado anisótropo, para que el texto inclinado no se pixele.
+// Color del canto (el marco interior de Apple es negro en los dos acabados; el canto es el que cambia).
+const EDGE = { "night-sky": [0.17, 0.19, 0.24], "star-white": [0.80, 0.79, 0.76], drawn: [0.30, 0.29, 0.33] };
+const BOOK = { tilt: 80, elev: 40, fov: 22, thick: 0.03, layers: 40 };
+let GL = null;
+function glInit() {
+  if (GL !== null) return GL;
+  const c = document.createElement("canvas");
+  const gl = c.getContext("webgl2", { antialias: true, premultipliedAlpha: true, preserveDrawingBuffer: true, alpha: true });
+  if (!gl) return (GL = false);
+  const vs = `#version 300 es
+  in vec3 p; in vec2 uv; in float sh; uniform mat4 m; out vec2 vuv; out float vsh;
+  void main(){ vuv=uv; vsh=sh; gl_Position=m*vec4(p,1.0); }`;
+  const fs = `#version 300 es
+  precision highp float; in vec2 vuv; in float vsh; uniform sampler2D t; uniform float side; uniform vec3 edge; out vec4 o;
+  void main(){
+    vec4 c = texture(t, vuv);
+    if (side > 0.5) { if (c.a < 0.5) discard; o = vec4(edge * vsh, 1.0); return; }   // canto: aluminio del color del aparato
+    if (c.a < 0.004) discard;
+    float crease = 1.0 - 0.22 * exp(-pow((vuv.y - 0.5) / 0.006, 2.0));   // pliegue de la bisagra
+    o = vec4(c.rgb * vsh * crease, c.a);
+  }`;
+  const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw gl.getShaderInfoLog(s); return s; };
+  const pr = gl.createProgram(); gl.attachShader(pr, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(pr, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(pr);
+  const aniso = gl.getExtension("EXT_texture_filter_anisotropic");
+  GL = { c, gl, pr, aniso, tex: gl.createTexture(), buf: gl.createBuffer(), max: Math.min(gl.getParameter(gl.MAX_RENDERBUFFER_SIZE), gl.getParameter(gl.MAX_TEXTURE_SIZE), 8192) };
+  return GL;
+}
+function mat4mul(a, b) { const o = new Float32Array(16); for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) { let s = 0; for (let k = 0; k < 4; k++) s += a[k * 4 + j] * b[i * 4 + k]; o[i * 4 + j] = s; } return o; }
+function persp(fov, asp, n, f) { const t = 1 / Math.tan(fov * Math.PI / 360); return new Float32Array([t / asp, 0, 0, 0, 0, t, 0, 0, 0, 0, (f + n) / (n - f), -1, 0, 0, 2 * f * n / (n - f), 0]); }
+function lookAt(e, c, u) {
+  const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]], nrm = (a) => { const l = Math.hypot(...a); return a.map((x) => x / l); };
+  const cr = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]], dt = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+  const z = nrm(sub(e, c)), x = nrm(cr(u, z)), y = cr(z, x);
+  return new Float32Array([x[0], y[0], z[0], 0, x[1], y[1], z[1], 0, x[2], y[2], z[2], 0, -dt(x, e), -dt(y, e), -dt(z, e), 1]);
+}
+// Devuelve false si no hay WebGL2 (se usa entonces el dibujo plano de respaldo).
+function bookGL(ctx, flat, ax, ay, aw, ah, scale, edge) {
+  const G = glInit(); if (!G) return false;
+  const { gl, c, pr } = G;
+  const r = flat.height / flat.width, h = r / 2, T = BOOK.thick, a = BOOK.tilt * Math.PI / 180;
+  const dTop = [0, Math.sin(a), -Math.cos(a)], nTop = [0, Math.cos(a), Math.sin(a)];
+  // Una capa = las dos mitades desplazadas `d` hacia su cara trasera (la de pie hacia atrás, la apoyada hacia abajo).
+  const N = 16;
+  const layer = (d, top, bot) => {
+    const V = [];
+    const quad = (p0, p1, p2, p3, v0, v1, s0, s1) => {
+      for (const [p, uv, s] of [[p0, [0, v0], s0], [p1, [1, v0], s0], [p2, [1, v1], s1], [p0, [0, v0], s0], [p2, [1, v1], s1], [p3, [0, v1], s1]]) V.push(p[0], p[1], p[2], uv[0], uv[1], s);
+    };
+    for (let i = 0; i < N; i++) {
+      const s0 = h * i / N, s1 = h * (i + 1) / N;
+      const P = (x, s) => [x, T + dTop[1] * s - nTop[1] * d, dTop[2] * s - nTop[2] * d];
+      quad(P(-0.5, s0), P(0.5, s0), P(0.5, s1), P(-0.5, s1), 0.5 - s0 / h * 0.5, 0.5 - s1 / h * 0.5, top(i / N), top((i + 1) / N));
+    }
+    for (let i = 0; i < N; i++) {
+      const z0 = h * i / N, z1 = h * (i + 1) / N, y = T - d;
+      quad([-0.5, y, z0], [0.5, y, z0], [0.5, y, z1], [-0.5, y, z1], 0.5 + z0 / h * 0.5, 0.5 + z1 / h * 0.5, bot, bot);
+    }
+    return V;
+  };
+  const front = layer(0, (f) => 1.0 - 0.04 * f, 0.97);
+  // cámara y encuadre (con el aparato completo, grosor incluido)
+  const k = ctx.getTransform().a;
+  // supermuestreo hasta 2×, sin pasar de ~9 Mpx de búfer (los teléfonos se quedan sin memoria de GPU)
+  const SS = Math.max(1, Math.min(2, G.max / (Math.max(aw, ah) * k), Math.sqrt(9e6 / (aw * ah * k * k))));
+  const cw = Math.round(aw * k * SS), ch = Math.round(ah * k * SS);
+  c.width = cw; c.height = ch;
+  const el = BOOK.elev * Math.PI / 180, tgt = [0, h * 0.3, h * 0.42], dist = h * 4.6;
+  const eye = [0, tgt[1] + dist * Math.sin(el), tgt[2] + dist * Math.cos(el)];
+  let M = mat4mul(persp(BOOK.fov, cw / ch, 0.05, 50), lookAt(eye, tgt, [0, 1, 0]));
+  let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
+  for (const V of [front, layer(T, () => 1, 1)]) for (let i = 0; i < V.length; i += 6) {
+    const q = [0, 0, 0, 0];
+    for (let j = 0; j < 4; j++) q[j] = M[j] * V[i] + M[4 + j] * V[i + 1] + M[8 + j] * V[i + 2] + M[12 + j];
+    const X = q[0] / q[3], Y = q[1] / q[3]; x0 = Math.min(x0, X); x1 = Math.max(x1, X); y0 = Math.min(y0, Y); y1 = Math.max(y1, Y);
+  }
+  const s = Math.min(1.9 / (x1 - x0), 1.94 / (y1 - y0)) * Math.min(1, scale);
+  const tx = -(x0 + x1) / 2 * s, ty = -(y0 + y1) / 2 * s;
+  M = mat4mul(new Float32Array([s, 0, 0, 0, 0, s, 0, 0, 0, 0, 1, 0, tx, ty, 0, 1]), M);
+  gl.viewport(0, 0, cw, ch); gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL); gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+  gl.useProgram(pr);
+  gl.bindTexture(gl.TEXTURE_2D, G.tex);
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, true);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, flat);
+  gl.generateMipmap(gl.TEXTURE_2D);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  if (G.aniso) gl.texParameterf(gl.TEXTURE_2D, G.aniso.TEXTURE_MAX_ANISOTROPY_EXT, gl.getParameter(G.aniso.MAX_TEXTURE_MAX_ANISOTROPY_EXT));
+  gl.bindBuffer(gl.ARRAY_BUFFER, G.buf);
+  const at = (n, size, off) => { const l = gl.getAttribLocation(pr, n); gl.enableVertexAttribArray(l); gl.vertexAttribPointer(l, size, gl.FLOAT, false, 24, off); };
+  gl.uniformMatrix4fv(gl.getUniformLocation(pr, "m"), false, M);
+  const draw = (V, side) => {
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(V), gl.STREAM_DRAW);
+    at("p", 3, 0); at("uv", 2, 12); at("sh", 1, 20);
+    gl.uniform1f(gl.getUniformLocation(pr, "side"), side);
+    gl.drawArrays(gl.TRIANGLES, 0, V.length / 6);
+  };
+  // canto: de la capa más honda a la más cercana, más oscuro hacia atrás
+  gl.uniform3fv(gl.getUniformLocation(pr, "edge"), edge || EDGE.drawn);
+  for (let j = BOOK.layers; j >= 1; j--) { const f = j / BOOK.layers, sd = 0.72 + 0.28 * Math.sin(Math.PI * f); draw(layer(T * f, () => sd, sd * 0.8), 1); }
+  draw(front, 0);
+  ctx.save(); ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(c, ax, ay, aw, ah); ctx.restore();
+  return true;
+}
+// Recorta el margen transparente del PNG del marco: el 3D necesita el borde real del aparato.
+const boundsCache = new Map();
+function cropToDevice(flat, bim, key) {
+  let b = boundsCache.get(key);
+  if (!b) {
+    const c = document.createElement("canvas"); c.width = bim.width; c.height = bim.height;
+    const x = c.getContext("2d", { willReadFrequently: true }); x.drawImage(bim, 0, 0);
+    const a = x.getImageData(0, 0, c.width, c.height).data; let x0 = c.width, x1 = 0, y0 = c.height, y1 = 0;
+    for (let y = 0; y < c.height; y++) for (let xx = 0; xx < c.width; xx++) if (a[(y * c.width + xx) * 4 + 3] > 24) { if (xx < x0) x0 = xx; if (xx > x1) x1 = xx; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+    b = { x: x0, y: y0, w: x1 - x0 + 1, h: y1 - y0 + 1 }; boundsCache.set(key, b);
+  }
+  const o = document.createElement("canvas"); o.width = b.w; o.height = b.h;
+  o.getContext("2d").drawImage(flat, b.x, b.y, b.w, b.h, 0, 0, b.w, b.h);
+  return o;
+}
+// Marco dibujado para la «L»: cuerpo negro y captura con esquinas redondas, en plano.
+function drawnFlat(im) {
+  const b = Math.round(im.width * 0.045), R = im.width * 0.075;
+  const c = document.createElement("canvas"); c.width = im.width + b * 2; c.height = im.height + b * 2;
+  const x = c.getContext("2d");
+  rr(x, 0, 0, c.width, c.height, R + b); x.fillStyle = "#08070b"; x.fill();
+  // aro metálico del borde, como en el marco dibujado de los demás aparatos
+  const lw = Math.max(3, b * 0.16), g = x.createLinearGradient(0, 0, c.width, c.height);
+  g.addColorStop(0, "#77737f"); g.addColorStop(0.5, "#3a3741"); g.addColorStop(1, "#6d6976");
+  rr(x, lw / 2, lw / 2, c.width - lw, c.height - lw, R + b - lw / 2); x.lineWidth = lw; x.strokeStyle = g; x.stroke();
+  x.save(); rr(x, b, b, im.width, im.height, R); x.clip(); x.drawImage(im, b, b); x.restore();
+  return c;
+}
+
+// Imagen «watch»: el iPhone con el temporizador y, delante, el Apple Watch con su captura real.
+async function render(canvas, d, s, opt) {
+  await renderBase(canvas, d, s, opt);
+  if (s.screen !== "watch" || !CONFIG.watch[LANG]) return;
+  const dd = devFor(d, s), W = dd.out[0], H = dd.out[1], k = canvas.width / W;
+  const ctx = canvas.getContext("2d"); ctx.setTransform(k, 0, 0, k, 0, 0);
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high";
+  const im = await loadImg(CONFIG.watch[LANG]);
+  const sw = Math.min(W, H * 0.62) * 0.36, sh = sw * im.height / im.width, b = sw * 0.085;
+  const bw = sw + b * 2, bh = sh + b * 2, x = W - bw - W * 0.045, y = H * 0.56;
+  ctx.save();
+  ctx.shadowColor = "rgba(43,23,20,.4)"; ctx.shadowBlur = bw * 0.12; ctx.shadowOffsetY = bw * 0.04;
+  rr(ctx, x, y, bw, bh, bw * 0.27); ctx.fillStyle = "#1c1a1a"; ctx.fill();
+  ctx.restore();
+  // corona digital y botón lateral
+  ctx.fillStyle = "#2a2727"; rr(ctx, x + bw - b * 0.15, y + bh * 0.24, b * 0.55, bh * 0.17, b * 0.2); ctx.fill();
+  rr(ctx, x + bw - b * 0.1, y + bh * 0.5, b * 0.4, bh * 0.15, b * 0.16); ctx.fill();
+  const g = ctx.createLinearGradient(x, y, x + bw, y + bh); g.addColorStop(0, "#5a5656"); g.addColorStop(0.5, "#2a2727"); g.addColorStop(1, "#615c5c");
+  rr(ctx, x, y, bw, bh, bw * 0.27); ctx.lineWidth = Math.max(2, b * 0.12); ctx.strokeStyle = g; ctx.stroke();
+  ctx.save(); rr(ctx, x + b, y + b, sw, sh, sw * 0.22); ctx.clip(); ctx.drawImage(im, x + b, y + b, sw, sh); ctx.restore();
+}
+
+async function renderBase(canvas, d, s, opt) {
+  d = devFor(d, s);
+  const W = d.out[0], H = d.out[1];
+  const k = opt.preview ? opt.preview / Math.max(W, H) : 1;
+  canvas.width = Math.round(W * k); canvas.height = Math.round(H * k);
+  const ctx = canvas.getContext("2d");
+  ctx.setTransform(k, 0, 0, k, 0, 0); ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high";
+  const st = state[d.id], bg = bgOf(st, s);
+  const n = Math.max(1, st.slides.length), idx = Math.max(0, st.slides.indexOf(s)), pano = st.layout === "panoramica";
+  const g = pano ? ctx.createLinearGradient(-idx * W, 0, (n - idx) * W, H) : ctx.createLinearGradient(0, 0, 0, H);
+  if (pano) { g.addColorStop(0, bg.a); g.addColorStop(0.5, bg.b); g.addColorStop(1, bg.a); } else { g.addColorStop(0, bg.a); g.addColorStop(1, bg.b); }
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+  drawDeco(ctx, W, H, { ...st, deco: s.deco || st.deco }, bg, idx, n, pano);
+  const landscape = W > H;
+  const capArea = { cx: W / 2, y: H * (landscape ? 0.06 : 0.055), w: W, landscape };
+  const capBottom = drawCaption(ctx, W, H, s, bg, capArea, st);
+  const src = shotSrc(d, modeOf(st, s), s.screen);
+  if (!src) {
+    ctx.fillStyle = bg.sub; ctx.font = `700 ${W * 0.03}px ${FONT}`; ctx.textAlign = "center";
+    ctx.fillText("Falta la captura para esta postura", W / 2, H * 0.6); return;
+  }
+  const im = await loadImg(src);
+  // El aparato arranca debajo del texto más alto de la serie: todas las imágenes lo llevan del mismo tamaño y a la
+  // misma altura, como en las fichas de las apps que más convierten.
+  let capRoom = capBottom;
+  for (const o of st.slides) capRoom = Math.max(capRoom, drawCaption(ctx, W, H, o, bg, capArea, st, true));
+  // «Altura del aparato» puede subirlo, pero nunca encima del texto de esta imagen (en aparatos más bajos, como el
+  // teléfono Android, el mismo ajuste que en iPhone lo metía en el subtítulo).
+  const top = Math.max(capRoom + H * (0.035 + st.drop), capBottom + H * 0.015);
+  const lay = layoutOf(d.frame === "duoBook" ? "clasica" : st.layout, W, H, top, idx, landscape);
+  const drawDevice = async (ctx) => {
+  const bz = bezelOf(d);
+  if (bz) {
+    // Marco oficial de Apple: la captura entra en su hueco a tamaño 1:1 (mismas medidas) y el marco va encima.
+    const bim = await loadImg("bezels/" + bz.file);
+    const [hx, hy, hw, hh] = bz.hole;
+    const flat = document.createElement("canvas"); flat.width = bim.width; flat.height = bim.height;
+    const fx = flat.getContext("2d");
+    fitShot(fx, im, hx, hy, hw, hh);
+    fx.globalCompositeOperation = "destination-in"; fx.drawImage(holeMask(bim, bz.file), 0, 0);
+    fx.globalCompositeOperation = "source-over"; fx.drawImage(bim, 0, 0);
+    const availH = H - top;
+    if (d.frame === "duoBook") {
+      if (bookGL(ctx, cropToDevice(flat, bim, bz.file), 0, top, W, (H - top) * 0.97, st.scale, EDGE[bz.id])) return;
+      let w = W * 0.96 * st.scale; const room = (H - top) * 0.96;
+      if (bookHeight(flat, w) > room) w *= room / bookHeight(flat, w);
+      drawBook(ctx, flat, (W - w) / 2, top + Math.max(0, (room - bookHeight(flat, w)) / 2), w, true); return;
+    }
+    let bw = W * (landscape ? 0.84 : (d.frame === "tablet" ? 0.84 : d.frame === "duoOpen" ? 0.92 : 0.8)) * st.scale;
+    // horizontal y tableta vertical: el aparato completo cabe en el alto libre (Protagonista lo amplía después a propósito)
+    if (landscape || d.frame === "tablet" || d.id === "duo") bw = Math.min(bw, availH * 0.97 * bim.width / bim.height * st.scale);
+    const bh = bw * bim.height / bim.width;
+    ctx.save(); ctx.shadowColor = "rgba(43,23,20,.3)"; ctx.shadowBlur = bw * 0.05; ctx.shadowOffsetY = bw * 0.018;
+    ctx.drawImage(flat, (W - bw) / 2, top, bw, bh); ctx.restore();
+    return { x: (W - bw) / 2, y: top, w: bw, h: bh };
+  }
+  if (d.frame === "duoBook") {
+    if (bookGL(ctx, drawnFlat(im), 0, top, W, (H - top) * 0.97, st.scale)) return;
+    let w = W * 0.92 * st.scale; const room = (H - top) * 0.96;
+    if (bookHeight(im, w) > room) w *= room / bookHeight(im, w);
+    drawBook(ctx, im, (W - w) / 2, top + Math.max(0, (room - bookHeight(im, w)) / 2), w); return;
+  }
+  let w;
+  if (landscape) {
+    // el alto incluye el marco dibujado (dos bordes) y el desplazamiento de 0.035·w, para que no se corte abajo
+    const kf = d.frame === "duoOpen" ? 0.022 : (d.frame === "tablet" || d.frame === "tabletLand") ? 0.028 : 0.034;
+    w = Math.min(W * 0.84, (H - top) * 0.96 / (im.height / im.width + 2 * kf + 0.035)) * st.scale;
+  }
+  else if (d.frame === "tablet") w = Math.min(W * 0.8, (H - top) * 0.96 / (im.height / im.width + 2 * 0.028 + 0.035)) * st.scale;
+  else w = W * 0.74 * st.scale;
+  const ph = drawPhone(ctx, im, (W - w) / 2, top + w * 0.035, w, d.frame).h;
+  const pb = w * ((d.frame === "tablet" || d.frame === "tabletLand") ? 0.028 : d.frame === "duoOpen" ? 0.022 : 0.034);
+  return { x: (W - w) / 2 - pb, y: top + w * 0.035 - pb, w: w + pb * 2, h: ph };
+  };
+  if (!lay.rot) { ctx.save(); applyAxis(ctx, lay); await drawDevice(ctx); ctx.restore(); return; }
+  // Aparato girado. Composición: gira sobre su propio centro, queda centrado a lo ancho con las dos esquinas de arriba
+  // a la vista (debajo del texto) y solo se sale por abajo, como en las fichas de las apps más descargadas.
+  // Nitidez: se dibuja derecho al doble de resolución (ahí la captura y el marco se reducen con el filtro de alta
+  // calidad), se gira casi a 1:1 y al final se reduce sin giro. La captura nunca se estira ni se amplía.
+  const cw = canvas.width, ch = canvas.height;
+  const SS = Math.max(1, Math.min(2, Math.sqrt(16e6 / (cw * ch)))), sw = Math.round(cw * SS), sh = Math.round(ch * SS), q = k * SS;
+  const mk = () => { const c = document.createElement("canvas"); c.width = sw; c.height = sh; const x = c.getContext("2d"); x.imageSmoothingEnabled = true; x.imageSmoothingQuality = "high"; return [c, x]; };
+  const [flatC, fx] = mk(); fx.setTransform(q, 0, 0, q, 0, 0);
+  const r = await drawDevice(fx);
+  const th = lay.rot, c = Math.abs(Math.cos(th)), sn = Math.abs(Math.sin(th));
+  const bbW = r.w * c + r.h * sn, bbH = r.w * sn + r.h * c, room = H - top;
+  const sg = idx % 2 ? 1 : -1;
+  let sc = (pano ? 0.92 : 0.96) * W / bbW;
+  if (landscape || d.frame === "tablet" || d.id === "duo") sc = Math.min(sc, room * 0.97 / bbH);
+  sc = Math.min(sc * (st.scale || 1), 1.15);
+  const tx = W / 2 + (pano ? sg * W * (landscape ? 0.04 : 0.06) : 0);
+  const ty = top + H * 0.012 + (landscape ? Math.max(0, (room - bbH * sc) / 2) : 0) + bbH * sc / 2;
+  const [rotC, rx] = mk();
+  rx.translate(tx * q, ty * q); rx.rotate(th); rx.scale(sc, sc); rx.translate(-(r.x + r.w / 2) * q, -(r.y + r.h / 2) * q);
+  rx.drawImage(flatC, 0, 0);
+  flatC.width = flatC.height = 0;
+  ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(rotC, 0, 0, cw, ch); ctx.restore();
+  rotC.width = rotC.height = 0;
+}
+
+// ---------- Interfaz ----------
+function renderTabs() {
+  $("tabs").innerHTML = "";
+  for (const d of CONFIG.devices) {
+    const b = document.createElement("button"); b.className = "tab"; b.type = "button"; b.role = "tab";
+    b.setAttribute("aria-selected", d.id === cur.dev);
+    b.innerHTML = `${d.name}<small>${state[d.id].slides.length}/${CONFIG.max}</small>`;
+    b.onclick = () => { cur = { dev: d.id, i: 0 }; refreshAll(); };
+    $("tabs").appendChild(b);
+  }
+}
+
+function fileName(d, i) {
+  const s = state[d.id].slides[i];
+  return `${CONFIG.prefix}_${LANG}_${d.id}_${String(i + 1).padStart(2, "0")}_${s.screen}_${d.out[0]}x${d.out[1]}.png`;
+}
+
+async function renderStrip() {
+  const d = dev(), st = state[d.id];
+  $("spec").textContent = `${d.slot} · ${d.out[0]}×${d.out[1]} px · ${st.slides.length} de ${CONFIG.max} · ${d.note || ""}`;
+  const strip = $("strip"); strip.innerHTML = "";
+  if (!shotsFor(d, st.mode)) {
+    strip.innerHTML = `<div class="empty">${d.missing || "Aún no hay capturas para esta postura."}</div>`;
+    return;
+  }
+  st.slides.forEach((s, i) => {
+    const c = document.createElement("div"); c.className = "card"; c.setAttribute("aria-current", i === cur.i);
+    const cv = document.createElement("canvas");
+    const n = document.createElement("div"); n.className = "n";
+    n.innerHTML = `<span>${i + 1}</span>`;
+    const dl = document.createElement("button"); dl.type = "button"; dl.textContent = "PNG"; dl.title = "Descargar esta imagen";
+    dl.onclick = (e) => { e.stopPropagation(); downloadOne(d, i); };
+    n.appendChild(dl); c.append(cv, n);
+    c.onclick = () => { cur.i = i; refreshEditor(); markCurrent(); };
+    strip.appendChild(c);
+    render(cv, d, s, { preview: 260 });
+  });
+  if (st.slides.length < CONFIG.max) {
+    const a = document.createElement("button"); a.className = "add"; a.type = "button"; a.textContent = "+ Añadir";
+    a.onclick = () => { const k = screenKey(shotsFor(d, st.mode).names[0]); st.slides.push(slideFor(k, LANG)); cur.i = st.slides.length - 1; persist(); refreshAll(); };
+    strip.appendChild(a);
+  }
+}
+function markCurrent() { [...$("strip").querySelectorAll(".card")].forEach((c, i) => c.setAttribute("aria-current", i === cur.i)); }
+
+let bigTimer = 0;
+function renderBig() {
+  clearTimeout(bigTimer);
+  bigTimer = setTimeout(() => {
+    const d = dev(), s = state[d.id].slides[cur.i];
+    if (!s || !shotsFor(d, state[d.id].mode)) { const c = $("big"); c.width = 10; c.height = 10; return; }
+    render($("big"), d, s, { preview: Math.round(Math.min(2200, Math.max(1100, innerHeight * 0.72 * (devicePixelRatio || 1)))) });
+    const card = $("strip").querySelectorAll(".card canvas")[cur.i]; if (card) render(card, d, s, { preview: 260 });
+  }, 60);
+}
+
+function refreshEditor() {
+  const d = dev(), st = state[d.id], s = st.slides[cur.i];
+  const dd = devFor(d, s), set = shotsFor(dd, modeOf(st, s)), has = !!(s && set);
+  $("poseBox").hidden = $("canvasBox").hidden = d.id !== "duo";
+  if (d.id === "duo") {
+    [...$("pose").children].forEach((b) => b.setAttribute("aria-pressed", b.dataset.v === ((s && s.pose) || "cerrado")));
+    [...$("canvas").children].forEach((b) => b.setAttribute("aria-pressed", b.dataset.v === st.canvas));
+  }
+  for (const id of ["tag", "title", "subtitle", "dlOne", "remove", "reset"]) $(id).disabled = !has;
+  $("title").value = s ? s.title : ""; $("subtitle").value = s ? s.subtitle : ""; $("tag").value = s ? (s.tag || "") : "";
+  for (const k of ["layout", "deco", "align"]) [...$(k).children].forEach((b) => b.setAttribute("aria-pressed", b.dataset.v === st[k]));
+  $("layoutNote").textContent = LAYOUT_NOTES[st.layout] || ""; $("tsize").value = st.tsize;
+  updateTip();
+  [...$("mode").children].forEach((b) => b.setAttribute("aria-pressed", b.dataset.v === st.mode));
+  const fm = $("frameMode"); fm.innerHTML = "";
+  for (const b of [...(d.bezels || []), { id: "drawn", name: "Dibujado" }]) {
+    const btn = document.createElement("button"); btn.type = "button"; btn.dataset.v = b.id; btn.textContent = b.name;
+    btn.setAttribute("aria-pressed", st.frame === b.id); fm.appendChild(btn);
+  }
+  $("frameNote").textContent = bezelOf(d) ? d.bezelNote || "" : (d.bezels ? "Marco genérico dibujado en la página." : d.bezelNote || "");
+  $("scale").value = st.scale; $("drop").value = st.drop;
+  $("bgs").innerHTML = "";
+  for (const b of BGS) {
+    const sw = document.createElement("button"); sw.type = "button"; sw.className = "swatch"; sw.title = b.name; sw.setAttribute("aria-label", "Fondo " + b.name);
+    sw.style.background = `linear-gradient(${b.a}, ${b.b})`; sw.setAttribute("aria-pressed", st.bg === b.id);
+    sw.onclick = () => { st.bg = b.id; persist(); refreshEditor(); renderStrip(); };
+    $("bgs").appendChild(sw);
+  }
+  const sb = $("sbgs"); sb.innerHTML = "";
+  const serieBtn = document.createElement("button"); serieBtn.type = "button"; serieBtn.className = "ghost"; serieBtn.textContent = "Como la serie";
+  serieBtn.setAttribute("aria-pressed", !(s && s.bg)); serieBtn.style.padding = "6px 10px";
+  serieBtn.onclick = () => { if (!s) return; delete s.bg; persist(); refreshEditor(); renderStrip(); };
+  sb.appendChild(serieBtn);
+  for (const b of BGS) {
+    const sw = document.createElement("button"); sw.type = "button"; sw.className = "swatch"; sw.title = b.name; sw.setAttribute("aria-label", "Fondo de esta imagen: " + b.name);
+    sw.style.background = `linear-gradient(${b.a}, ${b.b})`; sw.setAttribute("aria-pressed", !!(s && s.bg === b.id));
+    sw.onclick = () => { if (!s) return; s.bg = b.id; persist(); refreshEditor(); renderStrip(); };
+    sb.appendChild(sw);
+  }
+  [...$("smode").children].forEach((b) => b.setAttribute("aria-pressed", b.dataset.v === ((s && s.mode) || "")));
+  [...$("sdeco").children].forEach((b) => b.setAttribute("aria-pressed", b.dataset.v === ((s && s.deco) || "")));
+  const pk = $("picker"); pk.innerHTML = "";
+  if (set) {
+    const sprite = `thumbs/${dd.shots}-${LANG}-${modeOf(st, s)}.jpg`, tw = set.tw * 0.6, th = set.th * 0.6;
+    set.names.forEach((name, j) => {
+      const b = document.createElement("button"); b.type = "button"; b.className = "thumb";
+      b.style.width = tw + "px"; b.style.height = th + "px";
+      b.style.backgroundImage = `url(${sprite})`; b.style.backgroundSize = `${set.tw * set.names.length * 0.6}px ${th}px`;
+      b.style.backgroundPosition = `-${j * tw}px 0`;
+      const k = screenKey(name); b.title = k; b.setAttribute("aria-label", "Pantalla " + k);
+      b.setAttribute("aria-pressed", s && s.screen === k);
+      b.onclick = () => {
+        const old = CAPTIONS[s.screen] || ["", ""];
+        const keep = s.title !== old[0] || s.subtitle !== old[1];
+        s.screen = k; if (!keep && CAPTIONS[k]) { s.title = CAPTIONS[k][0]; s.subtitle = CAPTIONS[k][1]; }
+        persist(); refreshEditor(); renderBig();
+      };
+      pk.appendChild(b);
+    });
+  }
+  $("limit").textContent = CONFIG.limitNote;
+  renderBig();
+}
+
+function refreshAll() {
+  [...$("lang").children].forEach((b) => b.setAttribute("aria-pressed", b.dataset.v === LANG));
+  renderTabs(); renderStrip(); refreshEditor();
+}
+$("lang").onclick = (e) => {
+  const v = e.target.dataset.v; if (!LANGS.includes(v) || v === LANG) return;
+  LANG = v; CAPTIONS = CAPTIONS_ALL[v]; state = STATES[v]; cur.i = 0; persist(); refreshAll();
+};
+
+// Consejo en vivo: las primeras tres imágenes deciden la mayoría de las descargas y los títulos cortos se leen en la miniatura.
+function updateTip() {
+  const s = state[cur.dev].slides[cur.i], el = $("tip");
+  if (!s) { el.textContent = ""; return; }
+  const n = plainText(s.title).split(/\s+/).filter(Boolean).length, parts = [];
+  if (cur.i < 3) parts.push(`Imagen ${cur.i + 1} de las 3 primeras: es la que más gente ve en los resultados de búsqueda.`);
+  if (n > 6) parts.push(`El título tiene ${n} palabras; las fichas que mejor convierten usan 6 o menos.`);
+  if (!/\*/.test(s.title)) parts.push("Prueba a resaltar la palabra clave.");
+  el.textContent = parts.join(" "); el.className = "note" + (n > 6 ? " warn" : "");
+}
+
+$("title").oninput = (e) => { state[cur.dev].slides[cur.i].title = e.target.value; persist(); updateTip(); renderBig(); };
+$("tag").oninput = (e) => { state[cur.dev].slides[cur.i].tag = e.target.value; persist(); renderBig(); };
+// el texto de una imagen cambia la altura del aparato en toda la serie: al terminar de escribir se redibuja la tira
+$("title").onchange = $("subtitle").onchange = $("tag").onchange = () => renderStrip();
+$("canvas").onclick = (e) => { const v = e.target.dataset.v; if (!DUO_CANVAS[v] || !state.duo) return; state.duo.canvas = v; persist(); refreshAll(); };
+// Cambiar de postura: si la pantalla no existe en esa postura (la L solo tiene la historia), toma la primera disponible.
+$("pose").onclick = (e) => {
+  const v = e.target.dataset.v, d = dev(), st = state[d.id], s = st.slides[cur.i]; if (!POSES.includes(v) || !s) return;
+  s.pose = v;
+  const set = shotsFor(devFor(d, s), modeOf(st, s));
+  if (set && !set.names.some((n) => screenKey(n) === s.screen)) {
+    const old = CAPTIONS[s.screen] || ["", ""], keep = s.title !== old[0] || s.subtitle !== old[1];
+    s.screen = screenKey(set.names[0]);
+    if (!keep && CAPTIONS[s.screen]) { s.title = CAPTIONS[s.screen][0]; s.subtitle = CAPTIONS[s.screen][1]; }
+  }
+  persist(); refreshEditor(); renderStrip();
+};
+for (const k of ["mode", "deco"]) $("s" + k).onclick = (e) => {
+  const v = e.target.dataset.v, s = state[cur.dev].slides[cur.i]; if (v === undefined || !s) return;
+  if (v) s[k] = v; else delete s[k];
+  persist(); refreshEditor(); renderStrip();
+};
+for (const k of ["layout", "deco", "align"]) $(k).onclick = (e) => { const v = e.target.dataset.v; if (!v) return; state[cur.dev][k] = v; persist(); refreshEditor(); renderStrip(); };
+$("tsize").oninput = (e) => { state[cur.dev].tsize = +e.target.value; persist(); renderBig(); };
+$("tsize").onchange = () => renderStrip();
+$("subtitle").oninput = (e) => { state[cur.dev].slides[cur.i].subtitle = e.target.value; persist(); renderBig(); };
+$("mode").onclick = (e) => { const v = e.target.dataset.v; if (!v) return; state[cur.dev].mode = v; persist(); refreshAll(); };
+$("frameMode").onclick = (e) => { const v = e.target.dataset.v; if (!v) return; state[cur.dev].frame = v; persist(); refreshEditor(); renderStrip(); };
+$("scale").oninput = (e) => { state[cur.dev].scale = +e.target.value; persist(); renderBig(); };
+$("drop").oninput = (e) => { state[cur.dev].drop = +e.target.value; persist(); renderBig(); };
+$("scale").onchange = $("drop").onchange = () => renderStrip();
+$("remove").onclick = () => { const st = state[cur.dev]; st.slides.splice(cur.i, 1); cur.i = Math.max(0, cur.i - 1); persist(); refreshAll(); };
+$("reset").onclick = () => { const s = state[cur.dev].slides[cur.i]; const c = CAPTIONS[s.screen]; if (c) { s.title = c[0]; s.subtitle = c[1]; } persist(); refreshEditor(); };
+// ---------- Descargas ----------
+let downloads = null;
+(async () => { try { downloads = await window.claude?.use?.("downloads"); } catch (e) { downloads = null; } updateDl(); })();
+function updateDl() {
+  const ok = !!downloads;
+  $("dlOne").hidden = !ok; $("dlAll").hidden = !ok; $("dlJson").hidden = !ok;
+  if (!ok) $("status").textContent = "";
+}
+function say(t, bad) { $("status").textContent = t; $("status").style.color = bad ? "var(--warn)" : "var(--ok)"; }
+// PNG de 24 bits SIN canal alfa (App Store Connect y Play lo piden): canvas.toBlob siempre escribe RGBA.
+const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(b) { let c = 0xffffffff; for (let i = 0; i < b.length; i++) c = CRC[(c ^ b[i]) & 255] ^ (c >>> 8); return (c ^ 0xffffffff) >>> 0; }
+function chunk(type, data) {
+  const out = new Uint8Array(12 + data.length), v = new DataView(out.buffer);
+  v.setUint32(0, data.length); for (let i = 0; i < 4; i++) out[4 + i] = type.charCodeAt(i);
+  out.set(data, 8); v.setUint32(8 + data.length, crc32(out.subarray(4, 8 + data.length))); return out;
+}
+async function rgbPng(canvas) {
+  const w = canvas.width, h = canvas.height, px = canvas.getContext("2d").getImageData(0, 0, w, h).data;
+  const raw = new Uint8Array(h * (w * 3 + 1));
+  for (let y = 0, o = 0, q = 0; y < h; y++) { raw[o++] = 0; for (let x = 0; x < w; x++, q += 4) { raw[o++] = px[q]; raw[o++] = px[q + 1]; raw[o++] = px[q + 2]; } }
+  const z = new Uint8Array(await new Response(new Blob([raw]).stream().pipeThrough(new CompressionStream("deflate"))).arrayBuffer());
+  const ihdr = new Uint8Array(13), hv = new DataView(ihdr.buffer);
+  hv.setUint32(0, w); hv.setUint32(4, h); ihdr[8] = 8; ihdr[9] = 2; // 8 bits, color tipo 2 = RGB
+  const sig = new Uint8Array([137, 80, 78, 71, 13, 10, 26, 10]);
+  return new Blob([sig, chunk("IHDR", ihdr), chunk("IDAT", z), chunk("IEND", new Uint8Array(0))], { type: "image/png" });
+}
+async function pngOf(d, i) {
+  const c = document.createElement("canvas"); await render(c, d, state[d.id].slides[i], {});
+  return await rgbPng(c);
+}
+// ---------- Diseño en JSON: el mismo archivo sirve en App Store y en Google Play ----------
+const STYLE_KEYS = ["mode", "bg", "layout", "deco", "align", "tsize", "scale", "drop", "frame", "canvas"];
+function designOf(d, i) {
+  const st = state[d.id], estilo = {};
+  for (const k of STYLE_KEYS) estilo[k] = st[k];
+  return {
+    formato: "pomo-ficha", version: 1, idioma: LANG, creado: new Date().toISOString(),
+    origen: { tienda: CONFIG.store, dispositivo: d.id, nombre: d.name, medida: d.out },
+    imagen: i == null ? null : i + 1,
+    estilo,
+    imagenes: st.slides.map((s) => ({ screen: s.screen, tag: s.tag || "", title: s.title, subtitle: s.subtitle,
+      ...(s.bg ? { bg: s.bg } : {}), ...(s.mode ? { mode: s.mode } : {}), ...(s.deco ? { deco: s.deco } : {}), ...(s.pose ? { pose: s.pose } : {}) })),
+  };
+}
+const designName = (d, i) => i == null ? `${CONFIG.prefix}_${LANG}_${d.id}_diseno.json` : fileName(d, i).replace(/\.png$/, "_diseno.json");
+const designText = (d, i) => JSON.stringify(designOf(d, i), null, 2);
+// Una confirmación a la vez: si la anterior aún se está cerrando, espera un momento y lo intenta otra vez.
+async function saveFile(filename, data) {
+  try { return await downloads.save({ filename, data }); }
+  catch (e) { if (e && e.code === "rate_limited") { await new Promise((r) => setTimeout(r, 900)); return await downloads.save({ filename, data }); } throw e; }
+}
+const failMsg = (e) => e && e.code === "declined" ? "Descarga cancelada." : "No se pudo descargar.";
+async function downloadOne(d, i) {
+  if (!downloads) return;
+  try { say("Generando…"); const blob = await pngOf(d, i); await saveFile(fileName(d, i), blob); say(`Lista: ${fileName(d, i)}`); }
+  catch (e) { say(failMsg(e), e && e.code !== "declined"); return; }
+  // junto con la imagen va su diseño, para repetirlo en la otra tienda o en otro aparato
+  try { await saveFile(designName(d, i), designText(d, i)); say(`Listas: imagen y ${designName(d, i)}`); }
+  catch (e) { say(e && e.code === "declined" ? "Imagen lista; el diseño (.json) no se guardó." : "Imagen lista; no se pudo guardar el diseño (.json).", e && e.code !== "declined"); }
+}
+$("dlJson").onclick = async () => {
+  if (!downloads) return; const d = dev();
+  try { await saveFile(designName(d, null), designText(d, null)); say(`Listo: ${designName(d, null)}`); }
+  catch (e) { say(failMsg(e), e && e.code !== "declined"); }
+};
+
+// Cargar un diseño: aplica el estilo al aparato abierto y trae sus imágenes. Lo que no existe en este aparato
+// (una pantalla sin captura, un marco de otra marca, imágenes de más) se omite y se avisa.
+const clampN = (v, lo, hi, dflt) => Number.isFinite(+v) ? Math.min(hi, Math.max(lo, +v)) : dflt;
+function applyDesign(j) {
+  if (!j || j.formato !== "pomo-ficha" || typeof j.estilo !== "object" || !j.estilo) throw new Error("formato");
+  const d = dev(), st = state[d.id], e = j.estilo, skipped = [];
+  if (e.mode === "light" || e.mode === "dark") st.mode = e.mode;
+  if (BGS.some((b) => b.id === e.bg)) st.bg = e.bg;
+  if (e.layout in LAYOUT_NOTES) st.layout = e.layout;
+  if (["ninguna", "burbujas", "puntos"].includes(e.deco)) st.deco = e.deco;
+  if (e.align === "center" || e.align === "left") st.align = e.align;
+  st.tsize = clampN(e.tsize, 0.8, 1.3, st.tsize); st.scale = clampN(e.scale, 0.6, 1.15, st.scale); st.drop = clampN(e.drop, -0.12, 0.18, st.drop);
+  if (e.frame === "drawn" || (d.bezels || []).some((b) => b.id === e.frame)) st.frame = e.frame;
+  else if (e.frame) skipped.push("el marco");
+  if (d.id === "duo" && DUO_CANVAS[e.canvas]) st.canvas = e.canvas;
+  if (Array.isArray(j.imagenes)) {
+    // diseños de las antiguas pestañas «Dúo · cerrado/abierto/libro»: su postura pasa a cada imagen
+    const oldPose = { "duo-cerrado": "cerrado", "duo-abierto": "abierto", "duo-libro": "libro" }[(j.origen || {}).dispositivo];
+    const poseOf = (x) => POSES.includes(x.pose) ? x.pose : oldPose;
+    const has = (x) => { const set = shotsFor(devFor(d, { pose: poseOf(x) }), x.mode === "dark" || x.mode === "light" ? x.mode : st.mode); return !set || set.names.some((n) => screenKey(n) === x.screen); };
+    const str = (v, n) => String(v == null ? "" : v).slice(0, n);
+    const ok = j.imagenes.filter((x) => x && typeof x.screen === "string" && has(x))
+      .map((x) => ({ screen: x.screen, tag: str(x.tag, 28), title: str(x.title, 80), subtitle: str(x.subtitle, 160),
+        ...(BGS.some((b) => b.id === x.bg) ? { bg: x.bg } : {}), ...(x.mode === "light" || x.mode === "dark" ? { mode: x.mode } : {}),
+        ...(DECOS.includes(x.deco) ? { deco: x.deco } : {}), ...(d.id === "duo" && poseOf(x) ? { pose: poseOf(x) } : {}) }));
+    const miss = j.imagenes.length - ok.length;
+    if (miss) skipped.push(`${miss} ${miss === 1 ? "pantalla sin captura" : "pantallas sin captura"} en este aparato`);
+    if (ok.length > CONFIG.max) skipped.push(`${ok.length - CONFIG.max} de más (máximo ${CONFIG.max})`);
+    if (ok.length) st.slides = ok.slice(0, CONFIG.max);
+  }
+  cur.i = Math.min(Math.max(0, (j.imagen || 1) - 1), Math.max(0, st.slides.length - 1));
+  persist(); refreshAll();
+  say(`Diseño aplicado a ${d.name}.` + (skipped.length ? ` Se omitió: ${skipped.join(", ")}.` : ""), skipped.length > 0);
+}
+$("loadJson").onclick = () => $("jsonFile").click();
+$("jsonFile").onchange = async (ev) => {
+  const f = ev.target.files && ev.target.files[0]; ev.target.value = ""; if (!f) return;
+  try { applyDesign(JSON.parse(await f.text())); }
+  catch (e) { say("Ese archivo no es un diseño de Pomo (.json).", true); }
+};
+$("dlOne").onclick = () => downloadOne(dev(), cur.i);
+$("dlAll").onclick = async () => {
+  if (!downloads) return;
+  const d = dev(), st = state[d.id]; if (!st.slides.length || !shotsFor(d, st.mode)) return;
+  try {
+    const zip = new JSZip();
+    for (let i = 0; i < st.slides.length; i++) { say(`Generando ${i + 1} de ${st.slides.length}…`); zip.file(fileName(d, i), await pngOf(d, i)); }
+    zip.file(designName(d, null), designText(d, null));
+    const blob = await zip.generateAsync({ type: "blob" });
+    await downloads.save({ filename: `${CONFIG.prefix}_${LANG}_${d.id}_${d.out[0]}x${d.out[1]}.zip`, data: blob }); say("Listo el .zip.");
+  } catch (e) { say(e && e.code === "declined" ? "Descarga cancelada." : "No se pudo descargar.", e && e.code !== "declined"); }
+};
+
+(document.fonts ? Promise.all([document.fonts.load('900 40px "Nunito"'), document.fonts.load('600 20px "Nunito"')]).catch(() => {}) : Promise.resolve())
+  .then(refreshAll);
+refreshAll();
+</script>

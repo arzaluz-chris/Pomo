@@ -24,6 +24,10 @@ final class NotificationService {
 
             // Ask in context (first time a session starts) instead of at launch
             if await center.notificationSettings().authorizationStatus == .notDetermined {
+                #if DEBUG
+                // Screenshots and design reviews: no permission prompt over the demo data
+                if UserDefaults.standard.bool(forKey: "PomoDemoData") { return }
+                #endif
                 _ = try? await center.requestAuthorization(options: [.alert, .sound, .badge])
             }
             let status = await center.notificationSettings().authorizationStatus

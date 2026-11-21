@@ -27,6 +27,11 @@ final class LiveActivityManager {
     /// succeeds in the foreground or from a Live Activity intent); paused and idle states
     /// only update an existing one, so its buttons can resume or start the next session.
     func show(_ state: PomodoroState, settings: PomodoroSettings, now: Date = Date()) {
+        #if DEBUG
+        // Screenshots: starting a Live Activity asks for notification permission the first time,
+        // and that prompt would cover the demo screen
+        if UserDefaults.standard.bool(forKey: "PomoDemoData") { return }
+        #endif
         let contentState = PomoActivityAttributes.ContentState(
             timerType: state.type.rawValue,
             isRunning: state.isRunning,
