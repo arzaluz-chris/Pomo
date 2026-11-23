@@ -13,6 +13,13 @@ class WatchConnectivityManager: NSObject, ObservableObject {
 
     private var session: WCSession?
 
+    // Messages produced before activation finishes (e.g. a session recorded during launch)
+    // are kept and sent once the session is activated instead of being dropped.
+    private let pendingLock = NSLock()
+    private var pendingSettings: SettingsSync?
+    private var pendingTimerState: TimerStateSync?
+    private var pendingSessions: [SessionSync] = []
+
     private override init() {
         super.init()
     }
@@ -32,7 +39,7 @@ class WatchConnectivityManager: NSObject, ObservableObject {
 
     func syncSettings(_ settings: SettingsSync) {
         guard let session = session, session.activationState == .activated else {
-            print("[WC] Session not activated, cannot sync settings")
+            pendingLock.withLock { pendingSettings = settings }
             return
         }
 
@@ -52,7 +59,7 @@ class WatchConnectivityManager: NSObject, ObservableObject {
 
     func syncTimerState(_ state: TimerStateSync) {
         guard let session = session, session.activationState == .activated else {
-            print("[WC] Session not activated, cannot sync timer state")
+            pendingLock.withLock { pendingTimerState = state }
             return
         }
 
@@ -78,7 +85,7 @@ class WatchConnectivityManager: NSObject, ObservableObject {
 
     func syncCompletedSession(_ sessionSync: SessionSync) {
         guard let session = session, session.activationState == .activated else {
-            print("[WC] Session not activated, cannot sync session")
+            pendingLock.withLock { pendingSessions.append(sessionSync) }
             return
         }
 
@@ -97,6 +104,22 @@ extension WatchConnectivityManager: WCSessionDelegate {
         } else {
             print("[WC] Activation completed: \(activationState.rawValue)")
         }
+        guard activationState == .activated else { return }
+        flushPending()
+    }
+
+    private func flushPending() {
+        let (settings, state, sessions) = pendingLock.withLock { () -> (SettingsSync?, TimerStateSync?, [SessionSync]) in
+            defer {
+                pendingSettings = nil
+                pendingTimerState = nil
+                pendingSessions = []
+            }
+            return (pendingSettings, pendingTimerState, pendingSessions)
+        }
+        if let settings { syncSettings(settings) }
+        if let state { syncTimerState(state) }
+        sessions.forEach { syncCompletedSession($0) }
     }
 
     // MARK: iOS-only delegate methods

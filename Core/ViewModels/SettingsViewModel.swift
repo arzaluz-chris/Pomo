@@ -17,8 +17,12 @@ class SettingsViewModel: ObservableObject {
     @AppStorage(Constants.UserDefaults.sessionsUntilLongBreak) var sessionsUntilLongBreak: Int = Constants.Defaults.sessionsUntilLongBreak {
         didSet { syncSettingsToWatch() }
     }
-    @AppStorage(Constants.UserDefaults.isNotificationEnabled) var isNotificationEnabled: Bool = true
+    @AppStorage(Constants.UserDefaults.isNotificationEnabled) var isNotificationEnabled: Bool = true {
+        didSet { syncSettingsToWatch() }
+    }
     @AppStorage(Constants.UserDefaults.isSoundEnabled) var isSoundEnabled: Bool = true
+    /// Alarm-style alerts with AlarmKit (iOS 26+).
+    @AppStorage(PomoAlarmPreference.key) var useAlarmAlerts: Bool = false
 
     init() {
         // Establecer valores por defecto si es la primera vez
@@ -37,6 +41,7 @@ class SettingsViewModel: ObservableObject {
         sessionsUntilLongBreak = Constants.Defaults.sessionsUntilLongBreak
         isNotificationEnabled = true
         isSoundEnabled = true
+        useAlarmAlerts = false
     }
 
     private func syncSettingsToWatch() {
@@ -44,7 +49,8 @@ class SettingsViewModel: ObservableObject {
             workDuration: workDuration,
             shortBreakDuration: shortBreakDuration,
             longBreakDuration: longBreakDuration,
-            sessionsUntilLongBreak: sessionsUntilLongBreak
+            sessionsUntilLongBreak: sessionsUntilLongBreak,
+            notificationsEnabled: isNotificationEnabled
         )
         WatchConnectivityManager.shared.syncSettings(settings)
     }

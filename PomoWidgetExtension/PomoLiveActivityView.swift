@@ -7,28 +7,34 @@ import ActivityKit
 struct PomoLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: PomoActivityAttributes.self) { context in
-            // Lock Screen / Banner presentation
-            PomoLockScreenView(state: context.state)
-                .padding(16)
-                .activityBackgroundTint(.black.opacity(0.7))
-                .activitySystemActionForegroundColor(.white)
+            // Lock Screen / banner / StandBy, and the Apple Watch Smart Stack (.small)
+            PomoLockScreenView(state: context.state, isStale: context.isStale)
+                .activityBackgroundTint(context.state.tint)
+                .activitySystemActionForegroundColor(Color(pomoHex: 0xFFF4E6))
         } dynamicIsland: { context in
             DynamicIsland {
-                // Expanded region
-                DynamicIslandExpandedRegion(.center) {
-                    ExpandedCenterView(state: context.state)
+                DynamicIslandExpandedRegion(.leading) {
+                    ExpandedLeadingView(state: context.state, isStale: context.isStale)
                 }
-
+                DynamicIslandExpandedRegion(.trailing) {
+                    ExpandedTrailingView(state: context.state, isStale: context.isStale)
+                }
+                DynamicIslandExpandedRegion(.center) {
+                    ExpandedCenterView(state: context.state, isStale: context.isStale)
+                }
                 DynamicIslandExpandedRegion(.bottom) {
-                    ExpandedBottomView(state: context.state)
+                    ExpandedBottomView(state: context.state, isStale: context.isStale)
                 }
             } compactLeading: {
-                CompactLeadingView(state: context.state)
+                CompactLeadingView(state: context.state, isStale: context.isStale)
             } compactTrailing: {
-                CompactTrailingView(state: context.state)
+                CompactTrailingView(state: context.state, isStale: context.isStale)
             } minimal: {
-                MinimalView(state: context.state)
+                MinimalView(state: context.state, isStale: context.isStale)
             }
+            .keylineTint(context.state.islandTint)
         }
+        // Custom layout in the Apple Watch Smart Stack (iOS 18 / watchOS 11)
+        .supplementalActivityFamilies([.small])
     }
 }

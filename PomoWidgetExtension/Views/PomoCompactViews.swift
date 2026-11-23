@@ -1,89 +1,65 @@
 // PomoCompactViews.swift
+//
+// Compact and minimal Dynamic Island. When the island is limited in width (iPhone Duo,
+// landscape, several activities) the leading side shows the progress ring and the trailing
+// side stays empty, which the system then hides, as Apple recommends.
 
 import SwiftUI
 import WidgetKit
 
 struct CompactLeadingView: View {
     let state: PomoActivityAttributes.ContentState
-
-    private var isWorkSession: Bool {
-        state.timerType == TimerType.work.rawValue
-    }
+    let isStale: Bool
 
     var body: some View {
-        if isWorkSession {
-            Image("PomoIcon")
-                .resizable()
-                .renderingMode(.original)
-                .aspectRatio(contentMode: .fit)
-                .frame(width: 16, height: 16)
-        } else {
-            Image(systemName: "cup.and.saucer.fill")
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(Color("PomoSecondary"))
+        IslandWidthReader { isLimited in
+            if isLimited {
+                MinimalView(state: state, isStale: isStale)
+            } else {
+                SessionIcon(state: state, size: 18)
+            }
         }
     }
 }
 
 struct CompactTrailingView: View {
     let state: PomoActivityAttributes.ContentState
+    let isStale: Bool
 
     var body: some View {
-        if state.isRunning, let endTime = state.endTime {
-            Text(timerInterval: Date()...endTime, countsDown: true)
-                .monospacedDigit()
-                .font(.system(size: 14, weight: .semibold))
-                .frame(width: 56)
-        } else {
-            Text(formatTime(state.timeRemaining))
-                .monospacedDigit()
-                .font(.system(size: 14, weight: .semibold))
-                .frame(width: 56)
+        IslandWidthReader { isLimited in
+            if isLimited {
+                EmptyView()
+            } else if isStale {
+                Image(systemName: "checkmark.circle.fill")
+                    .foregroundStyle(state.islandTint)
+                    .accessibilityLabel(String(localized: "Session complete", comment: "Live Activity: session finished"))
+            } else {
+                HStack(spacing: 3) {
+                    if !state.isRunning {
+                        Image(systemName: "pause.fill")
+                            .font(.system(size: 10, weight: .black))
+                    }
+                    ActivityCountdownText(state: state, isStale: isStale)
+                        .font(.system(size: 15, weight: .heavy, design: .rounded))
+                        .monospacedDigit()
+                        .frame(width: 50)
+                }
+                .foregroundStyle(state.islandTint)
+            }
         }
-    }
-
-    private func formatTime(_ seconds: Int) -> String {
-        let minutes = seconds / 60
-        let secs = seconds % 60
-        return String(format: "%02d:%02d", minutes, secs)
     }
 }
 
 struct MinimalView: View {
     let state: PomoActivityAttributes.ContentState
-
-    private var isWorkSession: Bool {
-        state.timerType == TimerType.work.rawValue
-    }
-
-    private var tintColor: Color {
-        isWorkSession ? Color("PomoPrimary") : Color("PomoSecondary")
-    }
+    let isStale: Bool
 
     var body: some View {
         ZStack {
-            // Background track
-            Circle()
-                .stroke(tintColor.opacity(0.3), lineWidth: 2)
-
-            // Progress arc
-            Circle()
-                .trim(from: 0, to: CGFloat(state.progress))
-                .stroke(tintColor, style: StrokeStyle(lineWidth: 2, lineCap: .round))
-                .rotationEffect(.degrees(-90))
-
-            // Centered app icon
-            if isWorkSession {
-                Image("PomoIcon")
-                    .resizable()
-                    .renderingMode(.original)
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 14, height: 14)
-            } else {
-                Image(systemName: "cup.and.saucer.fill")
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(tintColor)
-            }
+            ActivityProgressRing(state: state, isStale: isStale, color: state.islandTint,
+                                 track: state.islandTint.opacity(0.3), lineWidth: 2.5)
+            SessionIcon(state: state, size: 11)
         }
     }
 }

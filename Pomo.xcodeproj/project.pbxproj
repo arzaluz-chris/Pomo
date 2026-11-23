@@ -99,11 +99,9 @@
 		119177CA550AE4B14490D427 /* Exceptions for "Core" folder in "PomoWidgetExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Features/Settings/Views/DurationSlider.swift,
 				Features/Settings/Views/SettingsView.swift,
 				Features/Statistics/Views/StatisticsView.swift,
 				Features/Statistics/Views/WeeklyChart.swift,
-				Features/Timer/Views/CircularProgressView.swift,
 				Features/Timer/Views/TimerView.swift,
 				Models/TimerSession.swift,
 				Services/DataService.swift,
@@ -111,7 +109,6 @@
 				Services/NotificationService.swift,
 				Services/ReviewService.swift,
 				Services/SoundService.swift,
-				Services/TimerService.swift,
 				ViewModels/SettingsViewModel.swift,
 				ViewModels/StatisticsViewModel.swift,
 				ViewModels/TimerViewModel.swift,
@@ -122,9 +119,9 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Localizable/InfoPlist.xcstrings,
-				"Sounds/break-complete.mp3",
-				"Sounds/long-break-complete.mp3",
-				"Sounds/work-complete.mp3",
+				"Sounds/break-complete.caf",
+				"Sounds/long-break-complete.caf",
+				"Sounds/work-complete.caf",
 			);
 			target = C1B3D0785DD8AE88FDE6095E /* PomoWidgetExtension */;
 		};
@@ -138,11 +135,9 @@
 		AAAA000E000000000000000E /* Exceptions for "Core" folder in "PomoWatch" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Features/Settings/Views/DurationSlider.swift,
 				Features/Settings/Views/SettingsView.swift,
 				Features/Statistics/Views/StatisticsView.swift,
 				Features/Statistics/Views/WeeklyChart.swift,
-				Features/Timer/Views/CircularProgressView.swift,
 				Features/Timer/Views/TimerView.swift,
 				Models/TimerSession.swift,
 				Services/DataService.swift,
@@ -150,7 +145,6 @@
 				Services/NotificationService.swift,
 				Services/ReviewService.swift,
 				Services/SoundService.swift,
-				Services/TimerService.swift,
 				ViewModels/SettingsViewModel.swift,
 				ViewModels/StatisticsViewModel.swift,
 				ViewModels/TimerViewModel.swift,
@@ -170,9 +164,9 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Localizable/InfoPlist.xcstrings,
-				"Sounds/break-complete.mp3",
-				"Sounds/long-break-complete.mp3",
-				"Sounds/work-complete.mp3",
+				"Sounds/break-complete.caf",
+				"Sounds/long-break-complete.caf",
+				"Sounds/work-complete.caf",
 			);
 			target = AAAA00020000000000000002 /* PomoWatch */;
 		};
@@ -193,11 +187,9 @@
 		BBBB000A000000000000000A /* Exceptions for "Core" folder in "PomoWatchWidgetExtension" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				Features/Settings/Views/DurationSlider.swift,
 				Features/Settings/Views/SettingsView.swift,
 				Features/Statistics/Views/StatisticsView.swift,
 				Features/Statistics/Views/WeeklyChart.swift,
-				Features/Timer/Views/CircularProgressView.swift,
 				Features/Timer/Views/TimerView.swift,
 				Models/TimerSession.swift,
 				Services/DataService.swift,
@@ -205,7 +197,6 @@
 				Services/NotificationService.swift,
 				Services/ReviewService.swift,
 				Services/SoundService.swift,
-				Services/TimerService.swift,
 				ViewModels/SettingsViewModel.swift,
 				ViewModels/StatisticsViewModel.swift,
 				ViewModels/TimerViewModel.swift,
@@ -227,9 +218,9 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Localizable/InfoPlist.xcstrings,
-				"Sounds/break-complete.mp3",
-				"Sounds/long-break-complete.mp3",
-				"Sounds/work-complete.mp3",
+				"Sounds/break-complete.caf",
+				"Sounds/long-break-complete.caf",
+				"Sounds/work-complete.caf",
 			);
 			target = BBBB00020000000000000002 /* PomoWatchWidgetExtension */;
 		};
@@ -622,13 +613,13 @@
 				INFOPLIST_FILE = PomoWidgetExtension/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = PomoWidgetExtension;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 3.0;
+				MARKETING_VERSION = 4.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.christian-arzaluz.Pomo.PomoWidgetExtension";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -655,13 +646,13 @@
 				INFOPLIST_FILE = PomoWidgetExtension/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = PomoWidgetExtension;
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 3.0;
+				MARKETING_VERSION = 4.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.christian-arzaluz.Pomo.PomoWidgetExtension";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
@@ -693,7 +684,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.0;
+				MARKETING_VERSION = 4.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.christian-arzaluz.Pomo.watch";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
@@ -703,7 +694,7 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 4;
-				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+				WATCHOS_DEPLOYMENT_TARGET = 11.0;
 			};
 			name = Debug;
 		};
@@ -725,7 +716,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.0;
+				MARKETING_VERSION = 4.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.christian-arzaluz.Pomo.watch";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
@@ -735,7 +726,7 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 4;
-				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+				WATCHOS_DEPLOYMENT_TARGET = 11.0;
 			};
 			name = Release;
 		};
@@ -793,7 +784,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
@@ -854,7 +845,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 18.5;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
@@ -881,19 +872,18 @@
 				INFOPLIST_KEY_CFBundleDisplayName = Pomo;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2025 Christian Arzaluz. All rights reserved.";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2026 Christian Arzaluz. All rights reserved.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UIRequiredDeviceCapabilities = armv7;
 				INFOPLIST_KEY_UIRequiresFullScreen = NO;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_UIUserInterfaceStyle = Automatic;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.0;
+				MARKETING_VERSION = 4.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.christian-arzaluz.Pomo";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -921,19 +911,18 @@
 				INFOPLIST_KEY_CFBundleDisplayName = Pomo;
 				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = NO;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
-				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2025 Christian Arzaluz. All rights reserved.";
+				INFOPLIST_KEY_NSHumanReadableCopyright = "© 2026 Christian Arzaluz. All rights reserved.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UIRequiredDeviceCapabilities = armv7;
 				INFOPLIST_KEY_UIRequiresFullScreen = NO;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				INFOPLIST_KEY_UIUserInterfaceStyle = Automatic;
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.0;
+				MARKETING_VERSION = 4.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.christian-arzaluz.Pomo";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -964,7 +953,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 3.0;
+				MARKETING_VERSION = 4.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.christian-arzaluz.Pomo.watch.widgets";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
@@ -974,7 +963,7 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 4;
-				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+				WATCHOS_DEPLOYMENT_TARGET = 11.0;
 			};
 			name = Debug;
 		};
@@ -996,7 +985,7 @@
 					"@executable_path/Frameworks",
 					"@executable_path/../../Frameworks",
 				);
-				MARKETING_VERSION = 3.0;
+				MARKETING_VERSION = 4.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.christian-arzaluz.Pomo.watch.widgets";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = watchos;
@@ -1006,7 +995,7 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 4;
-				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+				WATCHOS_DEPLOYMENT_TARGET = 11.0;
 			};
 			name = Release;
 		};

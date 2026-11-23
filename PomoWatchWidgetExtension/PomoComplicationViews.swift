@@ -40,12 +40,7 @@ struct PomoComplicationEntry: TimelineEntry {
     }
 
     var tintColor: Color {
-        switch timerType {
-        case "shortBreak", "longBreak":
-            return .pomoSecondary
-        default:
-            return .pomoPrimary
-        }
+        (TimerType(rawValue: timerType) ?? .work).tint
     }
 
     var progress: Double {
@@ -61,6 +56,15 @@ struct PomoComplicationEntry: TimelineEntry {
 
     var durationMinutes: Int {
         totalDuration / 60
+    }
+
+    /// Remaining time that keeps counting down on the watch face between timeline entries.
+    var liveTimeText: Text {
+        let end = Date(timeIntervalSince1970: endTime)
+        if isActive, end > date {
+            return Text(timerInterval: date...end, countsDown: true)
+        }
+        return Text(timeString)
     }
 
     var currentTimeRemaining: Int {
@@ -129,12 +133,14 @@ struct PomoComplicationProvider: TimelineProvider {
     }
 
     private func currentEntry() -> PomoComplicationEntry {
-        let defaults = UserDefaults.standard
-        let timerType = defaults.string(forKey: "watch_complication_timerType") ?? "work"
-        let timeRemaining = defaults.integer(forKey: "watch_complication_timeRemaining")
-        let isActive = defaults.bool(forKey: "watch_complication_isActive")
-        let totalDuration = defaults.integer(forKey: "watch_complication_totalDuration")
-        let endTime = defaults.double(forKey: "watch_complication_endTime")
+        // Must read from the App Group: the extension's UserDefaults.standard is a different
+        // container from the Watch app's, so it would never see the timer state.
+        let defaults = UserDefaults(suiteName: Constants.AppGroup.identifier) ?? .standard
+        let timerType = defaults.string(forKey: Constants.WatchComplication.timerType) ?? TimerType.work.rawValue
+        let timeRemaining = defaults.integer(forKey: Constants.WatchComplication.timeRemaining)
+        let isActive = defaults.bool(forKey: Constants.WatchComplication.isActive)
+        let totalDuration = defaults.integer(forKey: Constants.WatchComplication.totalDuration)
+        let endTime = defaults.double(forKey: Constants.WatchComplication.endTime)
 
         let actualRemaining: Int
         if isActive && endTime > 0 {
@@ -168,7 +174,7 @@ struct PomoCircularComplication: Widget {
                     Gauge(value: entry.progress) {
                         Image(systemName: "timer")
                     } currentValueLabel: {
-                        Text(entry.timeString)
+                        entry.liveTimeText
                             .font(.system(size: 12, design: .rounded))
                             .monospacedDigit()
                     }
@@ -205,7 +211,7 @@ struct PomoInlineComplication: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: PomoComplicationProvider()) { entry in
             if entry.isActive {
-                Text("\(Image(systemName: "timer")) \(entry.shortDisplayName) \(entry.timeString)")
+                (Text("\(Image(systemName: "timer")) \(entry.shortDisplayName) ") + entry.liveTimeText)
                     .monospacedDigit()
             } else {
                 Text("\(Image(systemName: "timer")) Pomo · \(entry.durationMinutes) min")
@@ -234,7 +240,7 @@ struct PomoRectangularComplication: Widget {
                             .font(.caption2)
                             .fontWeight(.semibold)
                         Spacer()
-                        Text(entry.timeString)
+                        entry.liveTimeText
                             .font(.caption)
                             .fontWeight(.bold)
                             .monospacedDigit()
@@ -274,7 +280,7 @@ struct PomoCornerComplication: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: PomoComplicationProvider()) { entry in
             if entry.isActive {
-                Text(entry.timeString)
+                entry.liveTimeText
                     .font(.system(size: 14, design: .rounded))
                     .fontWeight(.semibold)
                     .monospacedDigit()

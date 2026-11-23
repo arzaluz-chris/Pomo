@@ -1,8 +1,8 @@
-// TimerType.swift
+// Shared/Engine/TimerType.swift
 
 import Foundation
 
-enum TimerType: String, CaseIterable {
+enum TimerType: String, CaseIterable, Codable, Sendable {
     case work = "work"
     case shortBreak = "shortBreak"
     case longBreak = "longBreak"
@@ -29,6 +29,15 @@ enum TimerType: String, CaseIterable {
         }
     }
     
+    /// Minutes the user can choose for this session type (Settings and the timer's drag).
+    var adjustableMinutes: ClosedRange<Int> {
+        switch self {
+        case .work: return 10...60
+        case .shortBreak: return 3...15
+        case .longBreak: return 10...30
+        }
+    }
+
     var soundFileName: String {
         switch self {
         case .work:

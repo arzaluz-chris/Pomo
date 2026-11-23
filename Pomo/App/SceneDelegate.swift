@@ -62,10 +62,9 @@ class SceneDelegate: NSObject, UIWindowSceneDelegate {
             return true
             
         case .rateApp:
-            // Abrir App Store para calificar
-            if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene {
-                SKStoreReviewController.requestReview(in: scene)
-            }
+            // Abrir la página de reseña: requestReview lo limita el sistema y a menudo
+            // no muestra nada, lo que hace que el Quick Action parezca roto
+            ReviewService.shared.openAppStoreForReview()
             return true
         }
     }

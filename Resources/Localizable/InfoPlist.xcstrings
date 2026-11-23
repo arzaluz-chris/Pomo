@@ -190,6 +190,24 @@
           }
         }
       }
+    },
+    "NSAlarmKitUsageDescription" : {
+      "comment" : "Privacy - AlarmKit usage description",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pomo can ring like an alarm when a session ends, even in silent mode or during a Focus. You can turn this on or off in Settings."
+          }
+        },
+        "es" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pomo puede sonar como una alarma al terminar una sesión, incluso en modo silencio o en Concentración. Puedes activarlo o desactivarlo en Ajustes."
+          }
+        }
+      }
     }
   },
   "version" : "1.0"

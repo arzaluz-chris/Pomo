@@ -4,6 +4,8 @@
 <dict>
     <key>NSSupportsLiveActivities</key>
     <true/>
+    <key>NSAlarmKitUsageDescription</key>
+    <string>Pomo can ring like an alarm when a session ends, even in silent mode or during a Focus. You can turn this on or off in Settings.</string>
     <key>NSUserNotificationUsageDescription</key>
     <string>Pomo needs notification permissions to alert you when your work or break sessions complete, helping you maintain your productivity rhythm.</string>
     <key>UIApplicationSceneManifest</key>

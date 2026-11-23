@@ -1,75 +1,97 @@
 // Core/Services/NotificationService.swift
 
+import Foundation
 import UserNotifications
 
-class NotificationService {
-    
-    init() {
-        Task {
-            await requestPermission()
-        }
-    }
-    
-    func requestPermission() async {
-        do {
-            let granted = try await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge])
-            print("Notification permission granted: \(granted)")
-        } catch {
-            print("Error requesting notification permission: \(error)")
-        }
-    }
-    
-    func scheduleTimerCompletionNotification(for type: TimerType, in seconds: TimeInterval) async {
-        guard UserDefaults.standard.bool(forKey: Constants.UserDefaults.isNotificationEnabled) else {
-            print("❌ Notifications disabled by user preference")
-            return
-        }
-        
-        let settings = await UNUserNotificationCenter.current().notificationSettings()
-        guard settings.authorizationStatus == .authorized else {
-            print("❌ No notification permissions")
-            return
-        }
-        
-        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
-        UNUserNotificationCenter.current().removeAllDeliveredNotifications()
-        
-        let content = UNMutableNotificationContent()
-        content.title = NSLocalizedString("Time completed!", comment: "Title for the notification when a timer session ends")
-        
-        switch type {
-        case .work:
-            content.body = NSLocalizedString("You've completed a work session. Take a break!", comment: "Notification body when a work session is completed")
-        case .shortBreak:
-            content.body = NSLocalizedString("Break is over. Time to work!", comment: "Notification body when a short break is over")
-        case .longBreak:
-            content.body = NSLocalizedString("Long break is over. Let's go for another round!", comment: "Notification body when a long break is over")
-        }
-        
-        if UserDefaults.standard.bool(forKey: Constants.UserDefaults.isSoundEnabled) {
-            content.sound = .default
-        }
-        
-        content.interruptionLevel = .timeSensitive
+/// Schedules the end-of-session alert.
+///
+/// The alert is scheduled as soon as a session starts or resumes (not only when the
+/// app goes to the background), so it also covers sessions started from the Live
+/// Activity, from Apple Watch, or while the app is already in the background.
+/// All work runs on one serial queue so a quick start → pause can never leave a
+/// stale alert scheduled.
+@MainActor
+final class NotificationService {
+    private let center = UNUserNotificationCenter.current()
+    private var queue: Task<Void, Never>?
 
-        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: seconds, repeats: false)
-        let request = UNNotificationRequest(
-            identifier: "pomodoro-timer-completion",
-            content: content,
-            trigger: trigger
-        )
-        
-        do {
-            try await UNUserNotificationCenter.current().add(request)
-            print("✅ Scheduled time-sensitive notification for \(type.rawValue) in \(Int(seconds)) seconds")
-        } catch {
-            print("❌ Error scheduling notification: \(error)")
+    func scheduleCompletion(for type: TimerType, at endDate: Date) {
+        enqueue { center in
+            center.removePendingNotificationRequests(withIdentifiers: [Constants.Notifications.timerCompletionIdentifier])
+
+            guard UserDefaults.standard.bool(forKey: Constants.UserDefaults.isNotificationEnabled) else { return }
+            guard endDate.timeIntervalSinceNow > 0 else { return }
+
+            // Ask in context (first time a session starts) instead of at launch
+            if await center.notificationSettings().authorizationStatus == .notDetermined {
+                #if DEBUG
+                // Screenshots and design reviews: no permission prompt over the demo data
+                if UserDefaults.standard.bool(forKey: "PomoDemoData") { return }
+                #endif
+                _ = try? await center.requestAuthorization(options: [.alert, .sound, .badge])
+            }
+            let status = await center.notificationSettings().authorizationStatus
+            guard status == .authorized || status == .provisional else { return }
+
+            // Re-check: the session may have ended while we waited for the permission prompt
+            let interval = endDate.timeIntervalSinceNow
+            guard interval > 0 else { return }
+
+            let content = UNMutableNotificationContent()
+            content.title = NSLocalizedString("Time completed!", comment: "Title for the notification when a timer session ends")
+            switch type {
+            case .work:
+                content.body = NSLocalizedString("You've completed a work session. Take a break!", comment: "Notification body when a work session is completed")
+            case .shortBreak:
+                content.body = NSLocalizedString("Break is over. Time to work!", comment: "Notification body when a short break is over")
+            case .longBreak:
+                content.body = NSLocalizedString("Long break is over. Let's go for another round!", comment: "Notification body when a long break is over")
+            }
+            if UserDefaults.standard.bool(forKey: Constants.UserDefaults.isSoundEnabled) {
+                // Pomo's own sound for each session type (bundled as .caf: notifications don't play .mp3)
+                content.sound = UNNotificationSound(named: UNNotificationSoundName(type.soundFileName + ".caf"))
+            }
+            content.interruptionLevel = .timeSensitive
+
+            let request = UNNotificationRequest(
+                identifier: Constants.Notifications.timerCompletionIdentifier,
+                content: content,
+                trigger: UNTimeIntervalNotificationTrigger(timeInterval: interval, repeats: false)
+            )
+            do {
+                try await center.add(request)
+            } catch {
+                print("❌ Error scheduling notification: \(error)")
+            }
         }
     }
-    
-    func cancelAllNotifications() {
-        UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
-        UNUserNotificationCenter.current().removeAllDeliveredNotifications()
-        UNUserNotificationCenter.current().setBadgeCount(0)
+
+    func cancelCompletion() {
+        enqueue { center in
+            center.removePendingNotificationRequests(withIdentifiers: [Constants.Notifications.timerCompletionIdentifier])
+        }
+    }
+
+    /// Removes alerts already shown in Notification Center (pending ones stay scheduled).
+    func clearDelivered() {
+        enqueue { center in
+            center.removeAllDeliveredNotifications()
+            try? await center.setBadgeCount(0)
+        }
+    }
+
+    /// Waits until every queued operation has finished. Used by App Intents, which
+    /// must finish their work before the system suspends the app again.
+    func waitForPendingWork() async {
+        await queue?.value
+    }
+
+    private func enqueue(_ work: @escaping @MainActor (UNUserNotificationCenter) async -> Void) {
+        let previous = queue
+        let center = self.center
+        queue = Task { @MainActor in
+            await previous?.value
+            await work(center)
+        }
     }
 }

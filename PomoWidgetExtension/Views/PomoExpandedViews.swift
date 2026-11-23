@@ -1,135 +1,98 @@
 // PomoExpandedViews.swift
+//
+// Expanded Dynamic Island: session and time on top, the round controls below.
 
 import SwiftUI
 import WidgetKit
 import AppIntents
 
-struct ExpandedCenterView: View {
+struct ExpandedLeadingView: View {
     let state: PomoActivityAttributes.ContentState
-
-    private var isWorkSession: Bool {
-        state.timerType == TimerType.work.rawValue
-    }
-
-    private var accentColor: Color {
-        isWorkSession ? Color("PomoPrimary") : Color("PomoSecondary")
-    }
+    let isStale: Bool
 
     var body: some View {
-        VStack(spacing: 2) {
-            // Session icon + type label
-            HStack(spacing: 5) {
-                if isWorkSession {
-                    Image("PomoIcon")
-                        .resizable()
-                        .renderingMode(.original)
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 14, height: 14)
-                } else {
-                    Image(systemName: "cup.and.saucer.fill")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(accentColor)
-                }
+        // The leading region is narrow: only the icon here, the session name goes in the center
+        SessionIcon(state: state, size: 18)
+            .padding(.leading, 4)
+    }
+}
 
-                Text(state.timerTypeDisplayName)
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundStyle(.secondary)
-            }
+struct ExpandedTrailingView: View {
+    let state: PomoActivityAttributes.ContentState
+    let isStale: Bool
 
-            // Large centered timer
-            if state.isRunning, let endTime = state.endTime {
-                Text(timerInterval: Date()...endTime, countsDown: true)
-                    .monospacedDigit()
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
-                    .foregroundStyle(.primary)
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: .infinity)
-                    .contentTransition(.numericText(countsDown: true))
-            } else {
-                Text(formatTime(state.timeRemaining))
-                    .monospacedDigit()
-                    .font(.system(size: 28, weight: .bold, design: .rounded))
-                    .foregroundStyle(.primary)
-                    .multilineTextAlignment(.center)
-                    .frame(maxWidth: .infinity)
+    var body: some View {
+        Group {
+            if !state.isRunning && !isStale {
+                Label(String(localized: "Paused", comment: "Timer state label"), systemImage: "pause.fill")
+                    .labelStyle(.titleAndIcon)
+            } else if let endTime = state.endTime, !isStale {
+                Text(endTime, style: .time)
             }
         }
+        .font(.system(size: 13, weight: .bold, design: .rounded))
+        .foregroundStyle(.white.opacity(0.7))
+        .lineLimit(1)
+        // The trailing region proposes a very narrow width: without this "6:25 p.m." wrapped to 3 lines
+        .fixedSize()
+        .padding(.trailing, 4)
     }
+}
 
-    private func formatTime(_ seconds: Int) -> String {
-        let minutes = seconds / 60
-        let secs = seconds % 60
-        return String(format: "%02d:%02d", minutes, secs)
+struct ExpandedCenterView: View {
+    let state: PomoActivityAttributes.ContentState
+    let isStale: Bool
+
+    var body: some View {
+        // Kept short: the expanded island is at most ~160 pt tall, controls included
+        VStack(spacing: 0) {
+            Text(isStale ? String(localized: "Session complete", comment: "Live Activity: session finished")
+                         : state.timerTypeDisplayName)
+                .font(.system(size: 13, weight: .heavy, design: .rounded))
+                .foregroundStyle(state.islandTint)
+                .lineLimit(1)
+            ActivityCountdownText(state: state, isStale: isStale)
+                .font(.system(size: 34, weight: .black, design: .rounded))
+                .monospacedDigit()
+                .foregroundStyle(Color(pomoHex: 0xFFF4E6))
+                .multilineTextAlignment(.center)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+        }
+        .frame(maxWidth: .infinity)
+        .accessibilityElement(children: .combine)
     }
 }
 
 struct ExpandedBottomView: View {
     let state: PomoActivityAttributes.ContentState
+    let isStale: Bool
 
-    private var isWorkSession: Bool {
-        state.timerType == TimerType.work.rawValue
-    }
-
-    private var accentColor: Color {
-        isWorkSession ? Color("PomoPrimary") : Color("PomoSecondary")
-    }
+    private let cream = Color(pomoHex: 0xFFF4E6)
+    private let ink = Color(pomoHex: 0x2B1714)
 
     var body: some View {
-        HStack(spacing: 16) {
-            // Reset button
-            Button(intent: ResetTimerIntent()) {
-                Image(systemName: "arrow.counterclockwise")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .frame(width: 28, height: 28)
-                    .background(Color.white.opacity(0.15))
-                    .clipShape(Circle())
-            }
-            .buttonStyle(.plain)
-
-            // Play/Pause button
-            if state.isRunning {
-                Button(intent: PauseTimerIntent()) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "pause.fill")
-                            .font(.system(size: 12, weight: .semibold))
-                        Text(String(localized: "Pause"))
-                            .font(.system(size: 12, weight: .semibold))
-                    }
-                    .foregroundStyle(.white)
-                    .frame(height: 28)
-                    .padding(.horizontal, 16)
-                    .background(accentColor)
-                    .clipShape(Capsule())
+        // Controls only: the expanded island is capped at ~160 pt and a progress rule here pushed the
+        // buttons out of it (verified on iPhone 17 Pro Max). The compact ring already shows progress.
+        VStack(spacing: 0) {
+            HStack(spacing: 22) {
+                ActivityRoundButton(intent: ResetTimerIntent(), systemImage: "arrow.counterclockwise",
+                                    label: String(localized: "Reset Timer"), diameter: 32,
+                                    foreground: cream, background: cream.opacity(0.16))
+                if state.isRunning && !isStale {
+                    ActivityRoundButton(intent: PauseTimerIntent(), systemImage: "pause.fill",
+                                        label: String(localized: "Pause"), diameter: 42,
+                                        foreground: ink, background: cream)
+                } else {
+                    ActivityRoundButton(intent: PlayTimerIntent(), systemImage: "play.fill",
+                                        label: isStale ? String(localized: "Next", comment: "Live Activity: start next session")
+                                                       : String(localized: "Resume"),
+                                        diameter: 42, foreground: ink, background: cream)
                 }
-                .buttonStyle(.plain)
-            } else {
-                Button(intent: PlayTimerIntent()) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "play.fill")
-                            .font(.system(size: 12, weight: .semibold))
-                        Text(String(localized: "Resume"))
-                            .font(.system(size: 12, weight: .semibold))
-                    }
-                    .foregroundStyle(.white)
-                    .frame(height: 28)
-                    .padding(.horizontal, 16)
-                    .background(accentColor)
-                    .clipShape(Capsule())
-                }
-                .buttonStyle(.plain)
+                ActivityRoundButton(intent: SkipTimerIntent(), systemImage: "forward.end.fill",
+                                    label: String(localized: "Skip Session"), diameter: 32,
+                                    foreground: cream, background: cream.opacity(0.16))
             }
-
-            // Skip button
-            Button(intent: SkipTimerIntent()) {
-                Image(systemName: "forward.fill")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(.white)
-                    .frame(width: 28, height: 28)
-                    .background(Color.white.opacity(0.15))
-                    .clipShape(Circle())
-            }
-            .buttonStyle(.plain)
         }
     }
 }

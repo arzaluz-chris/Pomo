@@ -1,307 +1,613 @@
 // Core/Features/Timer/Views/TimerView.swift
 
 import SwiftUI
+import SwiftData
+
+/// Layout of the timer screen for the current device shape.
+enum TimerLayout {
+    /// iPhone and iPhone Duo outer screen.
+    case compact
+    /// iPhone Duo inner screen held open like a book (or any wide window): timer panel next to
+    /// today's stats, split exactly at the hinge when there is one.
+    case wide(split: PomoFold?)
+    /// iPhone Duo inner screen with a horizontal hinge (rotated, or half folded like a laptop):
+    /// the timer on the top half, the controls on the bottom half.
+    case folded(top: CGFloat, gap: CGFloat)
+}
 
 struct TimerView: View {
-    @StateObject private var viewModel = TimerViewModel()
-    @Environment(\.modelContext) private var modelContext
-    @Namespace private var selectionAnimation
-    
-    // Estado para controlar el color de fondo animado
-    @State private var backgroundGradient = Gradient(colors: [Color.pomoPrimary.opacity(0.3), Color.pomoSecondary.opacity(0.4), .blue.opacity(0.3)])
+    var layout: TimerLayout = .compact
+    @Binding var selectedTab: Int
+
+    @EnvironmentObject private var viewModel: TimerViewModel
 
     var body: some View {
-        if #available(iOS 26, *) {
-            ZStack {
-                // FONDO LÍQUIDO ANIMADO
-                LinearGradient(
-                    gradient: backgroundGradient,
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .ignoresSafeArea()
-                .blur(radius: 60)
-                .animation(.easeInOut(duration: 0.8), value: viewModel.isActive)
+        switch layout {
+        case .compact: CompactTimerLayout()
+        case .wide(let split): WideTimerLayout(selectedTab: $selectedTab, split: split)
+        case .folded(let top, let gap): FoldedTimerLayout(top: top, gap: gap)
+        }
+    }
+}
 
-                // --- CAMBIO ESTRUCTURAL: Se usa VStack con Spacers para controlar la distribución vertical ---
-                VStack(spacing: 0) {
-                    
-                    // --- ANIMACIÓN: El título y el switch solo aparecen si el timer NO está activo ---
-                    if !viewModel.isActive {
-                        HStack(spacing: 8) {
-                            Image("AppIcon-Symbol")
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .frame(width: 40, height: 40)
-                            
-                            Text("Pomo")
-                                .font(.largeTitle)
-                                .fontWeight(.bold)
-                                .foregroundColor(.primary)
-                        }
-                        .padding(.top, 40)
-                        
-                        Spacer()
+// MARK: - Shared pieces
 
-                        let sessionTypes: [TimerType] = [.work, .shortBreak]
-                        HStack(spacing: 0) {
-                            ForEach(sessionTypes, id: \.self) { type in
-                                ZStack {
-                                    if viewModel.currentType == type {
-                                        Capsule()
-                                            .fill(.ultraThinMaterial)
-                                            .shadow(color: .black.opacity(0.1), radius: 2)
-                                            .matchedGeometryEffect(id: "selectionBackground", in: selectionAnimation)
-                                    }
-                                    
-                                    Button(action: {
-                                        withAnimation(.interactiveSpring(response: 0.5, dampingFraction: 0.7)) {
-                                            viewModel.changeTimerType(to: type)
-                                        }
-                                    }) {
-                                        Text(type.displayName)
-                                            .font(.footnote)
-                                            .fontWeight(.semibold)
-                                            .foregroundColor(viewModel.currentType == type ? .pomoPrimary : .secondary)
-                                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                    }
-                                    .buttonStyle(.plain)
-                                }
-                            }
-                        }
-                        .background(.thinMaterial.opacity(0.7), in: Capsule())
-                        .frame(width: 150, height: 40)
-                        .transition(.opacity) // Transición sutil para el switch
-                    }
-                    
-                    // Spacer para empujar el círculo hacia el centro
-                    Spacer()
+/// Strings and values every layout shows.
+@MainActor
+private struct TimerPresentation {
+    let viewModel: TimerViewModel
 
-                    ZStack {
-                        CircularProgressView(progress: viewModel.progress)
-                        
-                        VStack(spacing: 8) {
-                            Text(viewModel.timeString)
-                                .font(.system(size: 52, weight: .semibold, design: .rounded))
-                                .monospacedDigit()
-                                .foregroundColor(.primary)
-                            
-                            Text(viewModel.currentType.displayName)
-                                .font(.headline)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                    .frame(width: Constants.UI.timerCircleSize, height: Constants.UI.timerCircleSize)
-                    .padding(20)
-                    .background(.ultraThinMaterial, in: Circle())
-                    .overlay(
-                        Circle()
-                            .stroke(Color.white.opacity(0.2), lineWidth: 1)
-                    )
+    var type: TimerType { viewModel.currentType }
+    var tint: Color { type.tint }
 
-                    Spacer()
-                    
-                    VStack(spacing: 16) {
-                        Button(action: {
-                            // La animación principal se dispara aquí
-                            withAnimation(.easeInOut(duration: 0.8)) {
-                                viewModel.toggleTimer()
-                            }
-                        }) {
-                            HStack {
-                                Image(systemName: viewModel.isActive ? "pause.fill" : "play.fill")
-                                    .font(.title2)
-                                Text(viewModel.buttonTitle)
-                                    .font(.headline)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .frame(height: Constants.UI.buttonHeight)
-                            .background(Color.pomoPrimary)
-                            .foregroundColor(.white)
-                            .clipShape(Capsule())
-                            .shadow(color: .pomoPrimary.opacity(0.5), radius: 10, y: 5)
-                        }
-                        
-                        HStack(spacing: 16) {
-                            Button(action: {
-                                withAnimation(.easeInOut(duration: 0.8)) { // La vista vuelve a la normalidad con animación
-                                    viewModel.resetTimer()
-                                }
-                            }) {
-                                HStack {
-                                    Image(systemName: "arrow.clockwise")
-                                    Text("Reiniciar")
-                                }
-                                .frame(maxWidth: .infinity)
-                            }
-                            
-                            if viewModel.isActive {
-                                Button(action: {
-                                    withAnimation(.easeInOut(duration: 0.8)) { // La vista vuelve a la normalidad con animación
-                                        viewModel.skipSession()
-                                    }
-                                }) {
-                                    HStack {
-                                        Image(systemName: "forward.fill")
-                                        Text("Saltar")
-                                    }
-                                    .frame(maxWidth: .infinity)
-                                }
-                                .transition(.opacity.combined(with: .scale))
-                            }
-                        }
-                        .buttonStyle(.bordered)
-                        .tint(.primary)
-                        .controlSize(.regular)
-                    }
-                    .padding(.horizontal, 40)
-                    
-                }
-                .padding(.bottom, 40)
+    var cyclePosition: (current: Int, total: Int) {
+        let total = max(1, viewModel.settings.sessionsUntilLongBreak)
+        let completed = viewModel.completedSessions
+        // The running focus session counts as the next one in the cycle
+        let done = completed == 0 ? 0 : ((completed - 1) % total) + 1
+        let current = type == .work && !viewModel.state.isIdle ? (done % total) + 1 : max(done, 1)
+        return (min(current, total), total)
+    }
+
+    var pillText: String {
+        let cycle = cyclePosition
+        switch type {
+        case .work:
+            return String(localized: "\(type.displayName) · \(cycle.current) of \(cycle.total)", comment: "Mode pill: session type and position in the cycle")
+        case .shortBreak, .longBreak:
+            let minutes = viewModel.plannedDuration / 60
+            return "\(type.displayName) · \(minutes) min"
+        }
+    }
+
+    var subtitle: String {
+        if viewModel.isAdjustingDuration {
+            return String(localized: "Up for more, down for less", comment: "Timer subtitle while dragging to change the session length")
+        }
+        if viewModel.isPaused {
+            return String(localized: "Paused", comment: "Timer state label")
+        }
+        if viewModel.isActive, let endDate = viewModel.state.endDate {
+            let time = endDate.formatted(date: .omitted, time: .shortened)
+            if type == .work {
+                return String(localized: "Ends at \(time)", comment: "Running timer subtitle with the end time")
             }
-            .onAppear {
-                viewModel.dataService.setModelContext(modelContext)
-            }
-            .onChange(of: viewModel.isActive) { isActive in
-                if isActive {
-                    // Gradiente para el modo enfoque con los colores de la app
-                    self.backgroundGradient = Gradient(colors: [Color.pomoSecondary.opacity(0.5), Color.pomoPrimary.opacity(0.4)])
-                } else {
-                    // Gradiente original
-                    self.backgroundGradient = Gradient(colors: [Color.pomoPrimary.opacity(0.3), Color.pomoSecondary.opacity(0.4), .blue.opacity(0.3)])
+            return String(localized: "Back to work at \(time)", comment: "Running break subtitle with the end time")
+        }
+        // Idle: the subtitle teaches the hold-and-slide gesture that changes the length
+        return String(localized: "Hold and slide to adjust", comment: "Timer idle subtitle: hint for the gesture that changes the session length")
+    }
+
+    var primaryLabel: String {
+        if viewModel.isActive { return NSLocalizedString("PAUSE", comment: "Pause button title") }
+        if viewModel.isPaused { return NSLocalizedString("RESUME", comment: "Resume button title") }
+        return NSLocalizedString("START", comment: "Start button title")
+    }
+
+    var accessibilityTimeValue: String {
+        let remaining = Duration.seconds(viewModel.timeRemaining)
+            .formatted(.units(allowed: [.minutes, .seconds], width: .wide))
+        if viewModel.isPaused {
+            return String(localized: "Paused, \(remaining) remaining", comment: "VoiceOver value of a paused timer")
+        }
+        return String(localized: "\(remaining) remaining", comment: "VoiceOver value of the timer")
+    }
+}
+
+/// Session type picker (idle) or the current session's pill.
+private struct ModeControl: View {
+    @EnvironmentObject private var viewModel: TimerViewModel
+    @Namespace private var selection
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        let presentation = TimerPresentation(viewModel: viewModel)
+        if viewModel.state.isIdle {
+            HStack(spacing: 2) {
+                ForEach(TimerType.allCases, id: \.self) { type in
+                    let isSelected = viewModel.currentType == type
+                    Button {
+                        withAnimation(reduceMotion ? nil : .snappy) { viewModel.changeTimerType(to: type) }
+                    } label: {
+                        Text(type.displayName)
+                            .font(.pomoRounded(.subheadline))
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.75)
+                            .foregroundStyle(isSelected ? type.tint : PomoPalette.cream)
+                            .padding(.horizontal, PomoSpace.s)
+                            .frame(minHeight: 36)
+                            .background {
+                                if isSelected {
+                                    Capsule().fill(PomoPalette.cream)
+                                        .matchedGeometryEffect(id: "mode", in: selection)
+                                }
+                            }
+                            .contentShape(Capsule())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityAddTraits(isSelected ? .isSelected : [])
                 }
             }
+            .padding(4)
+            .background(PomoPalette.ink.opacity(0.22), in: Capsule())
         } else {
-            // CÓDIGO ORIGINAL PARA iOS 18 Y ANTERIORES
-            ZStack {
-                // Background
-                Color.pomoBackground
-                    .ignoresSafeArea()
-                
-                VStack(spacing: 40) {
-                    // Header
-                    Text("🍅 Pomo")
-                        .font(.largeTitle)
-                        .fontWeight(.bold)
-                        .foregroundColor(.pomoPrimary)
-                        .padding(.top, 40)
-                    
-                    Spacer()
-                    
-                    // Session Type Selector
-                    HStack(spacing: 20) {
-                        ForEach([TimerType.work, .shortBreak], id: \.self) { type in
-                            Button(action: {
-                                viewModel.changeTimerType(to: type)
-                            }) {
-                                Text(type.displayName)
-                                    .font(.subheadline)
-                                    .fontWeight(viewModel.currentType == type ? .bold : .regular)
-                                    .foregroundColor(viewModel.currentType == type ? .pomoPrimary : .secondary)
-                                    .padding(.horizontal, 16)
-                                    .padding(.vertical, 8)
-                                    .background(
-                                        Capsule()
-                                            .fill(viewModel.currentType == type ? Color.pomoPrimary.opacity(0.2) : Color.clear)
-                                    )
-                            }
-                            .disabled(viewModel.isActive) // Deshabilitar cambio durante timer activo
-                        }
-                    }
-                    .opacity(viewModel.isActive ? 0.6 : 1.0)
-                    
-                    // Timer Circle
-                    ZStack {
-                        CircularProgressView(progress: viewModel.progress)
-                        
-                        VStack(spacing: 8) {
-                            Text(viewModel.timeString)
-                                .font(.system(size: 48, weight: .medium, design: .rounded))
-                                .monospacedDigit()
-                                .foregroundColor(.pomoPrimary)
-                            
-                            Text(viewModel.currentType.displayName)
-                                .font(.headline)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                    .frame(width: Constants.UI.timerCircleSize, height: Constants.UI.timerCircleSize)
-                    
-                    // Control Buttons
-                    VStack(spacing: 16) {
-                        // Main button (Play/Pause)
-                        Button(action: {
-                            withAnimation(.easeInOut(duration: 0.2)) {
-                                viewModel.toggleTimer()
-                            }
-                        }) {
-                            HStack {
-                                Image(systemName: viewModel.isActive ? "pause.fill" : "play.fill")
-                                    .font(.title2)
-                                Text(viewModel.buttonTitle)
-                                    .font(.headline)
-                            }
-                            .frame(maxWidth: .infinity)
-                            .frame(height: Constants.UI.buttonHeight)
-                            .background(Color.pomoPrimary)
-                            .foregroundColor(.white)
-                            .cornerRadius(Constants.UI.cornerRadius)
-                        }
-                        
-                        // Secondary buttons
-                        HStack(spacing: 16) {
-                            // Reset button
-                            Button(action: {
-                                withAnimation(.easeInOut(duration: 0.2)) {
-                                    viewModel.resetTimer()
-                                }
-                            }) {
-                                HStack {
-                                    Image(systemName: "arrow.clockwise")
-                                        .font(.body)
-                                    Text("Reiniciar")
-                                        .font(.subheadline)
-                                }
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 44)
-                                .background(Color.secondary.opacity(0.2))
-                                .foregroundColor(.primary)
-                                .cornerRadius(22)
-                            }
-                            
-                            // Skip button (only when active)
-                            if viewModel.isActive {
-                                Button(action: {
-                                    withAnimation(.easeInOut(duration: 0.2)) {
-                                        viewModel.skipSession()
-                                    }
-                                }) {
-                                    HStack {
-                                        Image(systemName: "forward.fill")
-                                            .font(.body)
-                                        Text("Saltar")
-                                            .font(.subheadline)
-                                    }
-                                    .frame(maxWidth: .infinity)
-                                    .frame(height: 44)
-                                    .background(Color.secondary.opacity(0.2))
-                                    .foregroundColor(.primary)
-                                    .cornerRadius(22)
-                                }
-                                .transition(.opacity.combined(with: .scale))
-                            }
-                        }
-                        .padding(.horizontal, 40)
-                    }
-                    .padding(.horizontal, 40)
-                    
-                    Spacer()
-                }
-                .padding()
-            }
-            .onAppear {
-                viewModel.dataService.setModelContext(modelContext)
+            PomoFieldPill(text: presentation.pillText)
+        }
+    }
+}
+
+/// Big time, with its subtitle. Before the session starts, holding it and sliding up or
+/// down changes the session length.
+private struct TimeBlock: View {
+    @EnvironmentObject private var viewModel: TimerViewModel
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    var size: CGFloat
+    var subtitleFont: Font = .pomoRounded(.headline, weight: .bold)
+
+    var body: some View {
+        let presentation = TimerPresentation(viewModel: viewModel)
+        let adjusting = viewModel.isAdjustingDuration
+        VStack(spacing: 6) {
+            Text(viewModel.timeString)
+                .font(.pomoNumber(size: size))
+                .lineLimit(1)
+                .minimumScaleFactor(0.4)
+                .contentTransition(.numericText(countsDown: !adjusting))
+                .foregroundStyle(PomoPalette.cream)
+                .scaleEffect(adjusting && !reduceMotion ? 1.08 : 1)
+            Text(presentation.subtitle)
+                .font(subtitleFont)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+                .foregroundStyle(presentation.type.onFieldSecondary)
+                .contentTransition(.opacity)
+        }
+        .animation(reduceMotion ? nil : .snappy(duration: 0.25), value: adjusting)
+        .animation(reduceMotion ? nil : .snappy(duration: 0.15), value: viewModel.draftMinutes)
+        .durationAdjustable()
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(presentation.type.displayName)
+        .accessibilityValue(presentation.accessibilityTimeValue)
+        .accessibilityAddTraits(.updatesFrequently)
+        .accessibilityHint(viewModel.canAdjustDuration
+                           ? String(localized: "Swipe up or down to change the length", comment: "VoiceOver hint of the idle timer")
+                           : "")
+        .accessibilityAdjustableAction { direction in
+            switch direction {
+            case .increment: viewModel.stepDuration(by: 1)
+            case .decrement: viewModel.stepDuration(by: -1)
+            @unknown default: break
             }
         }
+    }
+}
+
+/// Hold (long press), then slide up for more minutes or down for fewer, with a haptic tick
+/// for every minute, like the system Timer. Only before the session starts; the new length
+/// is saved as that session type's duration when the finger lifts.
+private struct DurationAdjuster: ViewModifier {
+    @EnvironmentObject private var viewModel: TimerViewModel
+    @GestureState private var isHolding = false
+    @State private var startMinutes: Int?
+    /// Vertical travel for one minute.
+    private let pointsPerMinute: CGFloat = 14
+
+    func body(content: Content) -> some View {
+        content
+            .contentShape(Rectangle())
+            .gesture(adjustGesture, isEnabled: viewModel.canAdjustDuration)
+            .onChange(of: isHolding) { _, holding in
+                // Also runs when the system cancels the gesture
+                guard !holding else { return }
+                startMinutes = nil
+                viewModel.endAdjustingDuration()
+            }
+    }
+
+    private var adjustGesture: some Gesture {
+        LongPressGesture(minimumDuration: 0.3)
+            .sequenced(before: DragGesture(minimumDistance: 0, coordinateSpace: .global))
+            .updating($isHolding) { value, state, _ in
+                if case .second(true, _) = value { state = true }
+            }
+            .onChanged { value in
+                guard case .second(true, let drag) = value else { return }
+                if startMinutes == nil {
+                    startMinutes = viewModel.beginAdjustingDuration()
+                }
+                guard let start = startMinutes, let drag else { return }
+                let steps = Int((-drag.translation.height / pointsPerMinute).rounded())
+                viewModel.adjustDuration(to: start + steps)
+            }
+    }
+}
+
+private extension View {
+    func durationAdjustable() -> some View { modifier(DurationAdjuster()) }
+}
+
+/// Reset, play/pause and skip.
+private struct ControlsRow: View {
+    @EnvironmentObject private var viewModel: TimerViewModel
+    var primaryDiameter: CGFloat = 88
+    var secondaryDiameter: CGFloat = 60
+    var spacing: CGFloat = 28
+
+    var body: some View {
+        let presentation = TimerPresentation(viewModel: viewModel)
+        HStack(spacing: spacing) {
+            PomoRoundButton(systemImage: "arrow.counterclockwise", label: String(localized: "Reiniciar"),
+                            diameter: secondaryDiameter) { viewModel.resetTimer() }
+                .disabled(viewModel.state.isIdle)
+                .opacity(viewModel.state.isIdle ? 0.5 : 1)
+            PomoRoundButton(systemImage: viewModel.isActive ? "pause.fill" : "play.fill",
+                            label: presentation.primaryLabel, role: .primary,
+                            diameter: primaryDiameter) { viewModel.toggleTimer() }
+            PomoRoundButton(systemImage: "forward.end.fill", label: String(localized: "Saltar"),
+                            diameter: secondaryDiameter) { viewModel.skipSession() }
+                .disabled(viewModel.state.isIdle)
+                .opacity(viewModel.state.isIdle ? 0.5 : 1)
+        }
+    }
+}
+
+/// Header on the colored field: mark, name and today's count.
+private struct FieldHeader: View {
+    @EnvironmentObject private var viewModel: TimerViewModel
+
+    var body: some View {
+        HStack {
+            HStack(spacing: PomoSpace.xs) {
+                PomoMark(tint: PomoPalette.cream, leafTint: viewModel.currentType.accent, showsDial: false)
+                    .frame(width: 26, height: 26)
+                Text("Pomo")
+                    .font(.pomoRounded(.title2, weight: .black))
+                    .foregroundStyle(PomoPalette.cream)
+            }
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isHeader)
+            Spacer()
+            TodayBadge()
+        }
+    }
+}
+
+/// "3 today" badge.
+private struct TodayBadge: View {
+    @EnvironmentObject private var viewModel: TimerViewModel
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Circle().fill(viewModel.currentType.accent).frame(width: 8, height: 8)
+            Text(String(localized: "\(viewModel.completedSessions) today", comment: "Badge: pomodoros completed today"))
+                .font(.pomoRounded(.subheadline))
+                .monospacedDigit()
+        }
+        .foregroundStyle(PomoPalette.ink)
+        .padding(.horizontal, PomoSpace.s)
+        .frame(minHeight: 32)
+        .background(PomoPalette.cream, in: Capsule())
+        .accessibilityElement(children: .combine)
+    }
+}
+
+/// The turning dial for the current session.
+private struct SessionDial: View {
+    @EnvironmentObject private var viewModel: TimerViewModel
+    var radiusRatio: CGFloat = 0.82
+
+    var body: some View {
+        KitchenDial(remaining: Double(viewModel.timeRemaining),
+                    total: Double(viewModel.plannedDuration),
+                    type: viewModel.currentType,
+                    radiusRatio: radiusRatio,
+                    turnAnimation: viewModel.isAdjustingDuration ? .snappy(duration: 0.2) : .linear(duration: 1))
+            .durationAdjustable()
+    }
+}
+
+// MARK: - Compact (iPhone, iPhone Duo outer screen)
+
+private struct CompactTimerLayout: View {
+    @EnvironmentObject private var viewModel: TimerViewModel
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @ScaledMetric(relativeTo: .largeTitle) private var timeSize: CGFloat = 108
+
+    var body: some View {
+        GeometryReader { proxy in
+            let dialTop = max(proxy.size.height * 0.46, 330)
+            ZStack(alignment: .top) {
+                viewModel.currentType.tint.ignoresSafeArea()
+
+                // The dial runs edge to edge, under side safe areas too (iPhone Duo's sensor bar)
+                GeometryReader { screen in
+                    SessionDial()
+                        .frame(width: screen.size.width, height: max(0, screen.size.height - dialTop - proxy.safeAreaInsets.top))
+                        .offset(y: dialTop + proxy.safeAreaInsets.top)
+                }
+                .ignoresSafeArea()
+
+                VStack(spacing: 0) {
+                    FieldHeader()
+                        .padding(.horizontal, PomoSpace.l)
+                        .padding(.top, PomoSpace.xs)
+
+                    ModeControl()
+                        .padding(.top, PomoSpace.xl)
+                        .padding(.horizontal, PomoSpace.m)
+
+                    TimeBlock(size: min(timeSize, proxy.size.width * 0.3))
+                        .padding(.top, PomoSpace.m)
+
+                    Spacer(minLength: 0)
+
+                    ControlsRow()
+                        .padding(.bottom, PomoSpace.m)
+                }
+            }
+        }
+        .animation(reduceMotion ? nil : .smooth(duration: 0.4), value: viewModel.currentType)
+        .animation(reduceMotion ? nil : .smooth(duration: 0.4), value: viewModel.state.phase)
+    }
+}
+
+// MARK: - Wide (iPhone Duo inner screen)
+
+private struct WideTimerLayout: View {
+    @Binding var selectedTab: Int
+    var split: PomoFold?
+    @EnvironmentObject private var viewModel: TimerViewModel
+
+    var body: some View {
+        if let split, split.axis == .vertical {
+            hingeSplit(split)
+        } else {
+            sideBySide
+        }
+    }
+
+    /// Open like a book: the colored timer fills the pane before the hinge, today's stats and
+    /// the sections sit after it, so nothing crosses the fold.
+    private func hingeSplit(_ fold: PomoFold) -> some View {
+        HStack(spacing: 0) {
+            ZStack(alignment: .top) {
+                viewModel.currentType.tint
+                GeometryReader { proxy in
+                    SessionDial(radiusRatio: 0.8)
+                        .frame(height: proxy.size.height * 0.5)
+                        .frame(maxHeight: .infinity, alignment: .bottom)
+                }
+                VStack(spacing: 0) {
+                    ModeControl()
+                        .padding(.top, PomoSpace.l)
+                        .padding(.horizontal, PomoSpace.s)
+                    TimeBlock(size: min(104, fold.before * 0.24))
+                        .padding(.top, PomoSpace.s)
+                    Spacer(minLength: 0)
+                    ControlsRow(primaryDiameter: 84, secondaryDiameter: 58, spacing: 24)
+                        .padding(.bottom, PomoSpace.l)
+                }
+            }
+            .frame(width: fold.before)
+            .ignoresSafeArea()
+
+            Rectangle()
+                .fill(PomoPalette.hairline)
+                .frame(width: 2)
+                .frame(width: fold.gap)
+                .accessibilityHidden(true)
+
+            ScrollView {
+                VStack(alignment: .leading, spacing: PomoSpace.m) {
+                    HStack {
+                        PomoMark(tint: viewModel.currentType.tint, leafTint: viewModel.currentType.accent, showsDial: false)
+                            .frame(width: 28, height: 28)
+                        Text("Pomo")
+                            .font(.pomoRounded(.title2, weight: .black))
+                            .foregroundStyle(PomoPalette.inkText)
+                        Spacer()
+                    }
+                    PomoTabBar(selection: $selectedTab, tint: viewModel.currentType.tint)
+                    TodaySummary(style: .column)
+                }
+                .padding(.horizontal, PomoSpace.l)
+                .padding(.vertical, PomoSpace.m)
+            }
+            .frame(maxWidth: .infinity)
+            .background { PomoPage() }
+        }
+        .background { PomoPage() }
+    }
+
+    private var sideBySide: some View {
+        VStack(spacing: PomoSpace.l) {
+            HStack {
+                HStack(spacing: PomoSpace.xs) {
+                    PomoMark(tint: viewModel.currentType.tint, leafTint: viewModel.currentType.accent, showsDial: false)
+                        .frame(width: 30, height: 30)
+                    Text("Pomo")
+                        .font(.pomoRounded(.title2, weight: .black))
+                        .foregroundStyle(PomoPalette.inkText)
+                }
+                Spacer()
+                PomoTabBar(selection: $selectedTab, tint: viewModel.currentType.tint, showsAllTitles: true)
+                    .fixedSize()
+            }
+
+            HStack(alignment: .top, spacing: PomoSpace.l - 4) {
+                timerPanel
+                    .frame(maxWidth: .infinity)
+                    .layoutPriority(1.3)
+                TodaySummary(style: .column)
+                    .frame(maxWidth: 260)
+            }
+        }
+        .padding(.horizontal, PomoSpace.l + 6)
+        .padding(.top, PomoSpace.xs)
+        .padding(.bottom, PomoSpace.m)
+        .background { PomoPage() }
+    }
+
+    private var timerPanel: some View {
+        GeometryReader { proxy in
+            ZStack(alignment: .top) {
+                viewModel.currentType.tint
+                SessionDial(radiusRatio: 0.78)
+                    .frame(height: proxy.size.height * 0.62)
+                    .frame(maxHeight: .infinity, alignment: .bottom)
+                VStack(spacing: 0) {
+                    ModeControl()
+                        .padding(.top, PomoSpace.l)
+                        .padding(.horizontal, PomoSpace.s)
+                    TimeBlock(size: min(104, proxy.size.width * 0.3))
+                        .padding(.top, PomoSpace.m)
+                    Spacer(minLength: 0)
+                    ControlsRow(primaryDiameter: 84, secondaryDiameter: 58, spacing: 24)
+                        .padding(.bottom, PomoSpace.l)
+                }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: PomoRadius.xl, style: .continuous))
+        }
+    }
+}
+
+// MARK: - Folded (iPhone Duo half folded)
+
+private struct FoldedTimerLayout: View {
+    /// Height of the half above the hinge (measured by the system) and the hinge itself.
+    var top: CGFloat
+    var gap: CGFloat
+    @EnvironmentObject private var viewModel: TimerViewModel
+
+    var body: some View {
+        GeometryReader { proxy in
+            let upper = top
+            VStack(spacing: 0) {
+                ZStack(alignment: .top) {
+                    viewModel.currentType.tint
+                    SessionDial(radiusRatio: proxy.size.width < 760 ? 0.62 : 0.42)
+                        .frame(height: upper * 0.26)
+                        .frame(maxHeight: .infinity, alignment: .bottom)
+                    VStack(spacing: PomoSpace.s) {
+                        ModeControl()
+                        TimeBlock(size: min(128, upper * 0.42), subtitleFont: .pomoRounded(.title3, weight: .bold))
+                    }
+                    .padding(.top, PomoSpace.l)
+                }
+                .frame(height: upper)
+                .clipped()
+
+                Rectangle().fill(PomoPalette.hairline).frame(height: 2).frame(height: gap)
+                    .frame(maxWidth: .infinity)
+                    .background(PomoPalette.background)
+                    .accessibilityHidden(true)
+
+                Group {
+                    if proxy.size.width < 760 {
+                        // Portrait inner screen: controls, then today's numbers in a row
+                        VStack(spacing: PomoSpace.xl) {
+                            ControlsRow(primaryDiameter: 112, secondaryDiameter: 72, spacing: 32)
+                            TodaySummary(style: .tiles)
+                        }
+                        .padding(.horizontal, PomoSpace.l)
+                    } else {
+                        HStack(spacing: PomoSpace.xl) {
+                            ControlsRow(primaryDiameter: 112, secondaryDiameter: 72, spacing: 28)
+                            TodaySummary(style: .rows)
+                                .frame(maxWidth: 360)
+                        }
+                        .padding(.horizontal, PomoSpace.xxl)
+                    }
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background { PomoPage() }
+            }
+        }
+        .ignoresSafeArea(edges: .top)
+    }
+}
+
+// MARK: - Today summary (Duo layouts)
+
+/// Today's pomodoros, focus time, streak and (in a column) the week.
+struct TodaySummary: View {
+    enum Style { case column, rows, tiles }
+    var style: Style
+
+    @StateObject private var stats = StatisticsViewModel()
+    @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var timer: TimerViewModel
+
+    var body: some View {
+        Group {
+            switch style {
+            case .column: column
+            case .rows: rows
+            case .tiles: tiles
+            }
+        }
+        .task(id: timer.completedSessions) {
+            stats.dataService.setModelContext(modelContext)
+            await stats.loadData()
+        }
+    }
+
+    private var streakText: String {
+        "\(stats.currentStreak) \(stats.currentStreak == 1 ? String(localized: "día") : String(localized: "días"))"
+    }
+
+    private var column: some View {
+        VStack(alignment: .leading, spacing: PomoSpace.s) {
+            Text("Hoy")
+                .font(.pomoRounded(.title3, weight: .black))
+                .foregroundStyle(PomoPalette.inkText)
+                .accessibilityAddTraits(.isHeader)
+            PomoStatTile(value: "\(stats.todayPomodoros)", label: String(localized: "Pomodoros"), tint: PomoPalette.focus)
+            PomoStatTile(value: stats.todayTimeString, label: String(localized: "Tiempo total"), tint: PomoPalette.shortBreak)
+            PomoStatTile(value: streakText, label: String(localized: "Racha actual"), tint: PomoPalette.leaf)
+            VStack(alignment: .leading, spacing: PomoSpace.s) {
+                Text("Esta semana")
+                    .font(.pomoRounded(.subheadline, weight: .black))
+                    .foregroundStyle(PomoPalette.inkText)
+                WeeklyChart(data: stats.weeklyData, compact: true)
+                    .frame(minHeight: 110)
+            }
+            .pomoCard()
+        }
+    }
+
+    private var rows: some View {
+        VStack(spacing: PomoSpace.s) {
+            row(String(localized: "Pomodoros"), "\(stats.todayPomodoros)", PomoPalette.focus)
+            row(String(localized: "Tiempo total"), stats.todayTimeString, PomoPalette.shortBreak)
+            row(String(localized: "Racha actual"), streakText, PomoPalette.leaf)
+        }
+    }
+
+    private var tiles: some View {
+        HStack(spacing: PomoSpace.s) {
+            PomoStatTile(value: "\(stats.todayPomodoros)", label: String(localized: "Pomodoros"), tint: PomoPalette.focus)
+            PomoStatTile(value: stats.todayTimeString, label: String(localized: "Tiempo total"), tint: PomoPalette.shortBreak)
+            PomoStatTile(value: streakText, label: String(localized: "Racha actual"), tint: PomoPalette.leaf)
+        }
+    }
+
+    private func row(_ label: String, _ value: String, _ tint: Color) -> some View {
+        HStack {
+            Text(label)
+                .font(.subheadline.weight(.bold))
+                .foregroundStyle(PomoPalette.muted)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+            Spacer(minLength: PomoSpace.xs)
+            Text(value)
+                .font(.pomoRounded(.title2, weight: .black))
+                .monospacedDigit()
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+                .foregroundStyle(tint)
+        }
+        .pomoCard(padding: PomoSpace.s + 2)
+        .accessibilityElement(children: .combine)
     }
 }

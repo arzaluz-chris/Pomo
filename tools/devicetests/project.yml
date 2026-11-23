@@ -1,0 +1,36 @@
+# Device test harness: UI tests that drive the installed Pomo app and SpringBoard (Dynamic Island,
+# Live Activity buttons) on a real iPhone. Generate with `xcodegen`, then see README.md.
+name: PomoDeviceTests
+options:
+  bundleIdPrefix: com.christian-arzaluz.pomo.devicetests
+  deploymentTarget:
+    iOS: "18.0"
+settings:
+  base:
+    DEVELOPMENT_TEAM: WQCQ3T6U7T
+    CODE_SIGN_STYLE: Automatic
+    SWIFT_VERSION: "6.0"
+targets:
+  PomoTestHost:
+    type: application
+    platform: iOS
+    sources: [Host]
+    info:
+      path: Host/Info.plist
+      properties:
+        UILaunchScreen: {}
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.christian-arzaluz.pomo.devicetests.host
+        GENERATE_INFOPLIST_FILE: YES
+  PomoDeviceUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources: [UITests]
+    dependencies:
+      - target: PomoTestHost
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.christian-arzaluz.pomo.devicetests.uitests
+        TEST_TARGET_NAME: PomoTestHost
+        GENERATE_INFOPLIST_FILE: YES
