@@ -325,7 +325,9 @@ final class TimerViewModel: ObservableObject {
     private func scheduleCompletionAlert(for state: PomodoroState) {
         let useAlarm = PomoAlarmPreference.isActive
         if state.isRunning, let endDate = state.endDate {
-            if useAlarm, #available(iOS 26, *) {
+            // Without AlarmKit permission (never granted, or revoked later in Settings) fall back to the
+            // notification: otherwise the session would end with no alert at all
+            if useAlarm, #available(iOS 26, *), PomoAlarmService.shared.isAuthorized {
                 notificationService.cancelCompletion()
                 PomoAlarmService.shared.scheduleCompletion(for: state.type, at: endDate)
                 return

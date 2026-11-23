@@ -65,7 +65,10 @@ final class PomoAlarmService {
             do {
                 let configuration = AlarmManager.AlarmConfiguration<PomoAlarmMetadata>(
                     schedule: .fixed(endDate),
-                    attributes: attributes
+                    attributes: attributes,
+                    // Pomo's sound, looped until stopped; with Sound off the system alarm tone (an alarm always rings)
+                    sound: UserDefaults.standard.bool(forKey: Constants.UserDefaults.isSoundEnabled)
+                        ? .named(type.soundFileName + ".caf") : .default
                 )
                 _ = try await manager.schedule(id: id, configuration: configuration)
                 UserDefaults.standard.set(id.uuidString, forKey: alarmIDKey)

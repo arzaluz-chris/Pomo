@@ -119,9 +119,9 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Localizable/InfoPlist.xcstrings,
-				"Sounds/break-complete.mp3",
-				"Sounds/long-break-complete.mp3",
-				"Sounds/work-complete.mp3",
+				"Sounds/break-complete.caf",
+				"Sounds/long-break-complete.caf",
+				"Sounds/work-complete.caf",
 			);
 			target = C1B3D0785DD8AE88FDE6095E /* PomoWidgetExtension */;
 		};
@@ -164,9 +164,9 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Localizable/InfoPlist.xcstrings,
-				"Sounds/break-complete.mp3",
-				"Sounds/long-break-complete.mp3",
-				"Sounds/work-complete.mp3",
+				"Sounds/break-complete.caf",
+				"Sounds/long-break-complete.caf",
+				"Sounds/work-complete.caf",
 			);
 			target = AAAA00020000000000000002 /* PomoWatch */;
 		};
@@ -218,9 +218,9 @@
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Localizable/InfoPlist.xcstrings,
-				"Sounds/break-complete.mp3",
-				"Sounds/long-break-complete.mp3",
-				"Sounds/work-complete.mp3",
+				"Sounds/break-complete.caf",
+				"Sounds/long-break-complete.caf",
+				"Sounds/work-complete.caf",
 			);
 			target = BBBB00020000000000000002 /* PomoWatchWidgetExtension */;
 		};

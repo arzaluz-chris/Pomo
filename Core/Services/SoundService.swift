@@ -19,7 +19,7 @@ class SoundService {
     }
     
     func playSound(for type: TimerType) {
-        guard let url = Bundle.main.url(forResource: type.soundFileName, withExtension: "mp3") else {
+        guard let url = Bundle.main.url(forResource: type.soundFileName, withExtension: "caf") else {
             print("Sound file not found: \(type.soundFileName)")
             return
         }

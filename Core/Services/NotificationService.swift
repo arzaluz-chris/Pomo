@@ -48,7 +48,8 @@ final class NotificationService {
                 content.body = NSLocalizedString("Long break is over. Let's go for another round!", comment: "Notification body when a long break is over")
             }
             if UserDefaults.standard.bool(forKey: Constants.UserDefaults.isSoundEnabled) {
-                content.sound = .default
+                // Pomo's own sound for each session type (bundled as .caf: notifications don't play .mp3)
+                content.sound = UNNotificationSound(named: UNNotificationSoundName(type.soundFileName + ".caf"))
             }
             content.interruptionLevel = .timeSensitive
 
