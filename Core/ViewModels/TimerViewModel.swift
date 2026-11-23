@@ -109,6 +109,15 @@ final class TimerViewModel: ObservableObject {
 
         // Apply an action a Live Activity button stored while the app could not handle it
         checkForLiveActivityAction()
+
+        #if DEBUG
+        // Device testing without touching the phone: `devicectl device process launch ... -PomoDebugAction startBreak`
+        // (durations can be overridden the same way, e.g. `-shortBreakDuration 1`)
+        if let raw = UserDefaults.standard.string(forKey: "PomoDebugAction"),
+           let action = PomoTimerAction(rawValue: raw) {
+            Task { await perform(action) }
+        }
+        #endif
     }
 
     deinit {
